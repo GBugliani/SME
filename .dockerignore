@@ -1,0 +1,10 @@
+.git
+.venv
+**/node_modules
+**/dist
+**/__pycache__
+*.docx
+Diagramas
+.env
+.artifacts
+backups

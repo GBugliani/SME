@@ -1,0 +1,3 @@
+storeDir: ../.artifacts/pnpm-store
+allowBuilds:
+  esbuild: true

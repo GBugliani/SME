@@ -1,0 +1,53 @@
+Painel de indicadores epidemiológicos municipais com alerta de surto
+
+Municípios pequenos frequentemente não têm equipe de vigilância epidemiológica estruturada para acompanhar tendências de doenças de notificação (ex: dengue, síndrome gripal) e identificar sinais precoces de surto.
+
+Escopo do MVP
+    Coleta periódica de dados públicos de vigilância epidemiológica (ex: InfoGripe/SIVEP-Gripe, DATASUS) para um município ou região, com painel de tendência e alerta automático quando a série apresentar crescimento fora do padrão histórico.
+Ângulo científico
+    Avaliar a sensibilidade e o tempo de antecedência do método de detecção de anomalia (ex: limiar móvel/CUSUM simples) frente a picos históricos conhecidos na série pública utilizada.
+Stack sugerida
+    Python
+    Airflow\cron
+    PostgreSQL
+    React (dashboard)
+
+Escopo detalhado do MVP
+
+    Coletor agendado que importa periodicamente os dados públicos de vigilância epidemiológica para o município/região configurado
+    Tratamento e padronização básica dos dados coletados (datas, casos por semana epidemiológica, agregação por município/região)
+    Painel com a série histórica de casos e a tendência recente destacada visualmente
+    Método de detecção de anomalia (ex: limiar sobre média móvel) sinalizando semanas com crescimento fora do padrão histórico
+    Alerta automático (painel/e-mail) quando o método de detecção identificar um possível início de surto
+
+Requisitos funcionais
+
+    RF01. O sistema deve coletar periodicamente, de forma automatizada, os dados públicos de vigilância epidemiológica para o município/região configurado.
+    RF02. O sistema deve tratar e padronizar os dados coletados (datas, casos por semana epidemiológica, agregação geográfica).
+    RF03. O sistema deve exibir a série histórica de casos em painel com destaque para a tendência recente.
+    RF04. O sistema deve aplicar um método de detecção de anomalia sobre a série histórica para sinalizar semanas com crescimento fora do padrão.
+    RF05. O sistema deve emitir alerta (painel e/ou e-mail) quando o método de detecção identificar um possível início de surto.
+    RF06. O sistema deve permitir configurar o método de detecção de anomalia (ex: limiar, janela da média móvel) sem alteração de código.
+    RF07. O sistema deve permitir comparar a série de mais de um município/região no mesmo painel.
+
+Requisitos não funcionais
+
+    RNF01. A coleta periódica deve ser resiliente    indisponibilidade temporária da fonte pública, reexecutando automaticamente no próximo ciclo.
+    RNF02. A fonte e a data da última atualização dos dados devem ser exibidas de forma visível no painel.
+    RNF03. O método de detecção de anomalia e seus parâmetros devem ser documentados e versionados para reprodutibilidade do artigo.
+    RNF04. O painel deve carregar em até 3 segundos para uma série histórica de alguns anos de um único município.
+    RNF05. O sistema deve avaliar o método de detecção retrospectivamente contra pelo menos um pico histórico conhecido na série pública utilizada.
+
+Arquitetura sugerida
+Padrão E — Coleta externa + ETL + Dashboard
+
+    Coletor agendado (cron/Airflow) que baixa periodicamente os dados públicos (InfoGripe/OpenDataSUS) para os municípios configurados
+    Pipeline de tratamento em Python (pandas) padronizando datas e agregações
+    Entidades: Municipio, SerieEpidemiologica (semana, casos), AlertaSurto
+    Motor de detecção de anomalia (limiar sobre média móvel/CUSUM simples) executado a cada nova coleta
+    PostgreSQL armazenando as séries históricas e alertas gerados
+    Dashboard React com gráfico de série temporal e destaque de semanas de alerta
+
+Base pública sugerida
+
+InfoGripe (Fiocruz) e OpenDataSUS/SIVEP-Gripe (Ministério da Saúde) — séries públicas de notificação de síndrome respiratória aguda grave e influenza por município/estado, atualizadas periodicamente, usadas oficialmente para vigilância epidemiológica no Brasil.
