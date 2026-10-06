@@ -1,14 +1,16 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { api, ApiError, type User, type Source, type SourceInput, type SourcePage } from './api';
 import './styles.css';
 import { saoPauloPath } from './territory';
+import municipalities from './municipalities.json';
+import smeLogo from './assets/sme-logo.png';
 
 const emptySource: SourceInput = { nome: '', tipo: 'csv', url: '', ativa: true, recorte_tipo: 'municipio', recorte_nome: '', recorte_codigo: '', recorte_uf: 'SP' };
 const describe = (error: unknown) => error instanceof Error ? error.message : 'Ocorreu um erro inesperado.';
 
 function Brand() {
-  return <div className="brand">SME</div>;
+  return <div className="brand logo-brand"><svg width="0" height="0" aria-hidden="true"><defs><filter id="logo-background" colorInterpolationFilters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 3 3 3 0 -0.8" /></filter></defs></svg><img src={smeLogo} alt="SME" /></div>;
 }
 
 function Login({ onLogin }: { onLogin: (user: User) => void }) {
@@ -21,7 +23,7 @@ function Login({ onLogin }: { onLogin: (user: User) => void }) {
     catch (err) { setError(describe(err)); } finally { setBusy(false); }
   }
   return <div className="login-shell"><header className="topbar"><Brand /></header><main className="login-layout">
-    <section className="login-story"><div><span className="eyebrow">MONITORAMENTO</span><h1>Monitoramento epidemiológico</h1><p>Fontes públicas e dados epidemiológicos por município e região.</p></div><div className="login-map"><svg viewBox="-30 -30 780 500" role="img" aria-label="Contorno do estado de São Paulo"><path d={saoPauloPath} fill="#1c2b43" stroke="#668ad0" strokeWidth="1.5"/><text x="320" y="220" className="map-state">SP</text><text x="320" y="250" className="map-state-caption">SÃO PAULO</text></svg><span className="login-map-caption">São Paulo · SP</span></div></section>
+    <section className="login-story"><div><span className="eyebrow">MONITORAMENTO</span><h1>Monitoramento epidemiológico</h1><p>Fontes públicas e dados epidemiológicos por município e região.</p></div><div className="login-map"><svg viewBox="-30 -30 780 500" role="img" aria-label="Contorno do estado de São Paulo"><path d={saoPauloPath} fill="#1c2b43" stroke="#668ad0" strokeWidth="1.5"/></svg><span className="login-map-caption">São Paulo · SP</span></div></section>
     <section className="login-panel"><form onSubmit={submit} className="login-form"><span className="eyebrow">ACESSO AO SISTEMA</span><h2>Entrar no SME</h2><p className="muted">Informe seu e-mail e senha.</p>
       <label>E-mail<input name="email" type="email" autoComplete="username" placeholder="voce@instituicao.gov.br" required maxLength={254} /></label>
       <label>Senha<input name="password" type="password" autoComplete="current-password" placeholder="Sua senha" required maxLength={1024} /></label>
@@ -69,7 +71,32 @@ function Workspace({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editor, setEditor] = useState<Source | 'new' | null>(null);
-  const [zoom, setZoom] = useState(1);
+  const [mapView, setMapView] = useState({ zoom: 0.8, pan: { x: 0, y: 0 } });
+  const { zoom, pan } = mapView;
+  const mapRef = useRef<SVGSVGElement>(null);
+  const [hoveredCity, setHoveredCity] = useState<{ id: string; name: string; x: number; y: number } | null>(null);
+  function changeZoom(factor: number, anchor = { x: 360, y: 220 }) {
+    setMapView(view => {
+      const next = Math.max(.6, Math.min(10, view.zoom * factor));
+      const ratio = next / view.zoom;
+      return { zoom: next, pan: { x: anchor.x - 360 - (anchor.x - 360 - view.pan.x) * ratio, y: anchor.y - 220 - (anchor.y - 220 - view.pan.y) * ratio } };
+    });
+  }
+  useEffect(() => {
+    const svg = mapRef.current;
+    if (!svg || tab !== 'inicio') return;
+    const wheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const matrix = svg.getScreenCTM();
+      if (!matrix) return;
+      const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
+      const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1);
+      changeZoom(Math.exp(-Math.max(-160, Math.min(160, delta)) * .002), point);
+    };
+    svg.addEventListener('wheel', wheel, { passive: false });
+    return () => svg.removeEventListener('wheel', wheel);
+  }, [tab]);
+  const drag = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
   const [showDataFlow, setShowDataFlow] = useState(false);
   async function load(number = 1) {
     setLoading(true); setError('');
@@ -82,9 +109,9 @@ function Workspace({ user, onLogout }: { user: User; onLogout: () => void }) {
     try { await api('/auth/logout/', 'POST'); onLogout(); }
     catch (err) { if (err instanceof ApiError && err.status === 401) onLogout(); else setError(describe(err)); }
   }
-  return <div className="app-shell">
+  return <div className={`app-shell ${tab === 'inicio' ? 'monitoring-shell' : ''}`}>
 
-    <header className="topbar"><div className="brand">SME</div><nav aria-label="Navegação principal"><button className={tab === 'inicio' ? 'selected' : ''} onClick={() => { setTab('inicio'); setEditor(null); }}>Monitoramento</button>{user.administrador && <button className={tab === 'fontes' ? 'selected' : ''} onClick={() => { setTab('fontes'); setSuccess(''); }}>Fontes de dados</button>}</nav><div className="header-actions"><div className="account"><span className="avatar" title={user.nome}>{user.nome[0].toUpperCase()}</span><button className="secondary" onClick={signOut}>Sair</button></div></div></header>
+    <header className="topbar"><Brand /><nav aria-label="Navegação principal"><button className={tab === 'inicio' ? 'selected' : ''} onClick={() => { setTab('inicio'); setEditor(null); }}>Monitoramento</button>{user.administrador && <button className={tab === 'fontes' ? 'selected' : ''} onClick={() => { setTab('fontes'); setSuccess(''); }}>Fontes de dados</button>}</nav><div className="header-actions"><div className="account"><span className="avatar" title={user.nome}>{user.nome[0].toUpperCase()}</span><button className="secondary" onClick={signOut}>Sair</button></div></div></header>
     <main className="content">
       {error && <div className="error" role="alert">{error} {user.administrador && <button className="secondary" onClick={() => void load(page.page)}>Tentar novamente</button>}</div>}
       {success && <div className="success" role="status">{success}</div>}
@@ -95,7 +122,7 @@ function Workspace({ user, onLogout }: { user: User; onLogout: () => void }) {
           <section className="card summary-card"><div className="section-heading"><span className="eyebrow">BASE DE MONITORAMENTO</span><span className="badge inactive">Em preparação</span></div><h2>Resumo do monitoramento</h2><div className="primary-metric"><strong>{user.administrador ? loading ? '…' : error ? '—' : String(page.count).padStart(2, '0') : '—'}</strong><span>fontes públicas<br />cadastradas</span></div><div className="metric-rule" /><dl className="status-list"><div><dt>Coleta</dt><dd>Aguardando integração</dd></div><div><dt>Indicadores</dt><dd>Não disponíveis</dd></div><div><dt>Seu perfil</dt><dd>{user.administrador ? 'Administrador' : 'Usuário'}</dd></div></dl>{user.administrador && <button className="text-button" onClick={() => setTab('fontes')}>Gerenciar fontes <span>↗</span></button>}</section>
 
         </aside>
-        <section className="territory-panel" aria-label="Mapa de referência do estado de São Paulo"><div className="map-toolbar"><span className="map-tab">Território</span><span className="muted">Recorte de referência · SP</span><span className="map-legend"><i />Sem classificação epidemiológica</span></div><div className="map-stage"><div className="map-coordinate">23° S / 47° O <span>SUDESTE · BRASIL</span></div><svg viewBox="-30 -30 780 500" role="img" aria-labelledby="map-title map-description"><title id="map-title">Contorno do estado de São Paulo</title><desc id="map-description">Mapa geográfico de referência, sem dados de casos ou classificação de risco.</desc><defs><pattern id="map-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#86a9ee" strokeOpacity=".12" strokeWidth=".7" /></pattern><linearGradient id="map-fill" x2="1" y2="1"><stop stopColor="#293b5c"/><stop offset="1" stopColor="#142238"/></linearGradient></defs><g transform={`translate(360 220) scale(${zoom}) translate(-360 -220)`}><path d={saoPauloPath} fill="url(#map-fill)" stroke="#668ad0" strokeWidth="1.5"/><path d={saoPauloPath} fill="url(#map-grid)"/><text x="320" y="220" className="map-state">SP</text><text x="320" y="246" className="map-state-caption">SÃO PAULO</text></g></svg><div className="map-zoom"><button aria-label="Ampliar mapa" disabled={zoom >= 1.6} onClick={() => setZoom(z => Math.min(1.6, z + .2))}>+</button><button aria-label="Reduzir mapa" disabled={zoom <= 1} onClick={() => setZoom(z => Math.max(1, z - .2))}>−</button></div><div className="map-note"><span className="eyebrow">VISUALIZAÇÃO TERRITORIAL</span><strong>Dados ainda não disponíveis</strong><p>A distribuição de casos depende da coleta e validação dos dados.</p></div></div><div className="map-bottom"><span>Malha territorial · IBGE</span><span>Referência geográfica, sem indicadores de risco</span></div></section>
+        <section className="territory-panel" aria-label="Mapa de referência do estado de São Paulo"><div className="map-toolbar"><span className="map-tab">Território</span><span className="muted">Recorte de referência · SP</span><span className="map-legend"><i />Sem classificação epidemiológica</span></div><div className="map-stage"><div className="map-coordinate">23° S / 47° O <span>SUDESTE · BRASIL</span></div><svg ref={mapRef} className="interactive-map" viewBox="-30 -30 780 500" role="img" aria-labelledby="map-title map-description" onPointerDown={e => { if (e.button !== 0) return; e.currentTarget.setPointerCapture(e.pointerId); setHoveredCity(null); drag.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y }; }} onPointerMove={e => { if (!drag.current) return; const matrix = e.currentTarget.getScreenCTM(); if (!matrix) return; const inverse = matrix.inverse(); const start = new DOMPoint(drag.current.x, drag.current.y).matrixTransform(inverse); const current = new DOMPoint(e.clientX, e.clientY).matrixTransform(inverse); const nextPan = { x: drag.current.panX + current.x - start.x, y: drag.current.panY + current.y - start.y }; setMapView(view => ({ ...view, pan: nextPan })); }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }}><title id="map-title">Contorno do estado de São Paulo</title><desc id="map-description">Mapa geográfico de referência, sem dados de casos ou classificação de risco.</desc><defs><linearGradient id="map-fill" x2="1" y2="1"><stop stopColor="#293b5c"/><stop offset="1" stopColor="#142238"/></linearGradient></defs><g transform={`translate(${pan.x} ${pan.y}) translate(360 220) scale(${zoom}) translate(-360 -220)`}><path d={saoPauloPath} fill="url(#map-fill)" stroke="#668ad0" strokeWidth="1.5"/>{municipalities.map(city => <path key={city.id} d={city.path} className={`municipality ${hoveredCity?.id === city.id ? 'highlighted' : ''}`} fill="transparent" stroke="#4a6286" strokeWidth=".65" onPointerMove={event => { if (drag.current) return; setHoveredCity({ id: city.id, name: city.name, x: Math.max(12, Math.min(window.innerWidth - 272, event.clientX + 16)), y: Math.max(12, Math.min(window.innerHeight - 140, event.clientY + 16)) }); }} onPointerLeave={() => setHoveredCity(null)}><title>{city.name} · IBGE {city.id}</title></path>)}</g></svg>{hoveredCity && <div className="municipality-tooltip" role="status" style={{ left: hoveredCity.x, top: hoveredCity.y }}><strong>{hoveredCity.name}</strong><span>São Paulo · IBGE {hoveredCity.id}</span><p>Dados epidemiológicos ainda não disponíveis.</p></div>}<div className="map-zoom"><button aria-label="Ampliar mapa" disabled={zoom >= 10} onClick={() => changeZoom(1.3)}>+</button><button aria-label="Reduzir mapa" disabled={zoom <= .6} onClick={() => changeZoom(1 / 1.3)}>−</button><button className="map-reset" aria-label="Restaurar posição e zoom do mapa" title="Restaurar mapa" onClick={() => { setMapView({ zoom: 0.8, pan: { x: 0, y: 0 } }); }}><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/><circle cx="12" cy="12" r="3"/></svg></button></div><div className="map-note"><span className="eyebrow">VISUALIZAÇÃO TERRITORIAL</span><strong>Dados ainda não disponíveis</strong><p>A distribuição de casos depende da coleta e validação dos dados.</p></div></div><div className="map-bottom"><span>Malha territorial · IBGE</span><span>Referência geográfica, sem indicadores de risco</span></div></section>
         <aside className="dashboard-right"><section className="card"><div className="section-heading"><h3>Fontes cadastradas</h3><span className="counter">{user.administrador ? page.count : '—'}</span></div>{loading ? <p role="status" className="muted">Carregando fontes…</p> : !user.administrador ? <p className="muted">As fontes são configuradas pelo administrador da equipe.</p> : page.sources.length ? <><div className="source-feed">{page.sources.slice(0, 5).map(s => <div key={s.id}><span className={`source-dot ${s.ativa ? 'enabled' : ''}`} /><div><strong>{s.nome}</strong><small>{s.recorte_nome} · {s.recorte_uf || s.recorte_tipo}</small><span className="feed-status">{s.ativa ? 'Habilitada' : 'Desabilitada'} · {s.tipo.toUpperCase()}</span></div></div>)}</div>{page.count > 5 && <small>Exibindo {Math.min(5, page.sources.length)} de {page.count} fontes.</small>}</> : <div className="compact-empty"><span aria-hidden="true">↗</span><h3>Nenhuma fonte cadastrada</h3><p className="muted">Associe dados públicos a um município ou região.</p></div>}{user.administrador && <button className="text-button" onClick={() => { setTab('fontes'); setEditor('new'); }}>Cadastrar fonte <span>+</span></button>}</section><section className="card series-card"><span className="eyebrow">EVOLUÇÃO TEMPORAL</span><h3>Séries epidemiológicas</h3><div className="chart-empty"><span>Sem séries disponíveis</span></div><p className="muted">A curva será exibida após a coleta e validação dos dados.</p></section></aside>
       </div></>
       : <><div className="page-heading"><div><span className="eyebrow">ADMINISTRAÇÃO</span><h1>Fontes de dados</h1><p className="muted">Gerencie a origem dos dados e os territórios monitorados.</p></div><div className="source-heading-actions"><div className="flow-help"><button className="secondary help-button" aria-label="Fluxo dos dados" aria-expanded={showDataFlow} aria-controls="data-flow-panel" onClick={() => setShowDataFlow(v => !v)}>?</button>{showDataFlow && <section className="card pipeline-card" id="data-flow-panel" aria-label="Fluxo dos dados"><div className="section-heading"><span className="eyebrow">FLUXO DOS DADOS</span><button className="secondary flow-close" aria-label="Fechar fluxo dos dados" onClick={() => setShowDataFlow(false)}>×</button></div><h3>Etapas de integração</h3><ol><li className="current"><span>01</span><div><strong>Configurar fontes</strong><small>Cadastro disponível</small></div></li><li><span>02</span><div><strong>Coletar e validar</strong><small>Próxima etapa de integração</small></div></li><li><span>03</span><div><strong>Acompanhar indicadores</strong><small>Aguardando dados validados</small></div></li></ol></section>}</div>{!editor && <button onClick={() => { setEditor('new'); setSuccess(''); }}>+ Cadastrar fonte</button>}</div></div>{editor ?
@@ -123,11 +150,3 @@ function App() {
 }
 
 createRoot(document.getElementById('root')!).render(<App />);
-
-
-
-
-
-
-
-
