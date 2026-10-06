@@ -2,13 +2,13 @@
 
 ## Proposta
 
-Começar com **dengue em um município do estado de São Paulo**, usando **InfoDengue**. Depois de validar coleta e série histórica, ampliar para outros municípios paulistas. A escolha do município permanece aberta; São Paulo capital foi usado apenas para verificar a API.
+Começar com **dengue em um município do estado de São Paulo**, usando **InfoDengue**. Depois de validar coleta e série histórica, ampliar para outros municípios paulistas. O piloto implementado usa São Paulo capital (IBGE 3550308); a expansão para outros municípios fica para uma etapa posterior.
 
 Não é necessário restringir o desenho do banco a SP. O custo está sobretudo em baixar/processar arquivos brutos volumosos e em repetir consultas, e não em guardar algumas centenas de observações semanais por município. Exemplo ilustrativo: 10 municípios × 52 semanas × 5 anos × 1 agravo = aproximadamente 2.600 registros. Isso não é benchmark nem garantia de tempo de resposta.
 
 ## O que foi verificado
 
-Em 04/10/2026 foi feita uma consulta pública de dengue de São Paulo capital (IBGE 3550308) para as semanas 1 a 52 de 2024. A API respondeu com **52 registros semanais** e identificou o município como São Paulo. Nenhum dado foi importado no banco do SME.
+Em 04/10/2026 foi feita uma consulta pública de dengue de São Paulo capital (IBGE 3550308) para as semanas 1 a 52 de 2024. A API respondeu com **52 registros semanais** e identificou o município como São Paulo. Na verificação inicial, nenhum dado foi importado. Em 05/10/2026, o coletor implementado importou esses 52 registros brutos no PostgreSQL, preservando origem e histórico das execuções. Veja o [guia de coleta](COLETA_INFODENGUE.md).
 
 [Consulta de amostra](https://info.dengue.mat.br/api/alertcity?geocode=3550308&disease=dengue&format=json&ew_start=1&ew_end=52&ey_start=2024&ey_end=2024)
 
@@ -24,6 +24,10 @@ O [serviço público](https://info.dengue.mat.br/services/api) permite filtrar m
 - Validar licença, atribuição, limites de uso e estabilidade do endpoint antes da integração regular.
 - Conferir cobertura e qualidade de cada município adicional; uma resposta bem-sucedida para a capital não prova cobertura completa do estado.
 
-O endpoint de amostra tem período fixo e serve para homologação. O coletor precisará montar janelas móveis, e não repetir para sempre essa URL de 2024.
+O endpoint de amostra tem período fixo e serve para homologação. O coletor atual respeita o período cadastrado. Antes de operar o monitoramento atual, é necessário configurar um período recente; janelas móveis serão tratadas em uma etapa posterior.
 
 InfoGripe/SIVEP-Gripe continuam candidatos se a equipe optar por agravos respiratórios; esse caminho exige avaliação específica de formato, cobertura municipal e volume dos arquivos.
+
+## Ampliação da coleta — 06/10/2026
+
+O coletor de dengue do InfoDengue agora aceita os municípios de SP, validando nome e código IBGE no catálogo de 645 municípios. Apenas fontes cadastradas, compatíveis e habilitadas são consultadas. O Airflow executa uma tarefa por fonte, com até duas coletas simultâneas; a restrição anterior à capital e a cinco fontes foi removida. Outros agravos e provedores continuam exigindo integração própria. Consulte [o guia de coleta](COLETA_INFODENGUE.md).

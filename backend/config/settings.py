@@ -53,3 +53,5 @@ SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 if os.environ.get("TRUST_PROXY", "false").lower() == "true":
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 DATA_UPLOAD_MAX_MEMORY_SIZE = 64 * 1024
+
+COLLECTION_TOKEN = os.environ.get("COLETA_TOKEN", "")

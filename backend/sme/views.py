@@ -1,4 +1,9 @@
 import hashlib
+import secrets
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from .collection import eligible_source_ids, collect_source, collect_pilot, CollectionError, ADAPTERS
+from .models import ExecucaoColeta
 import json
 from datetime import timedelta
 from functools import wraps
@@ -55,8 +60,15 @@ def user_data(user):
 
 
 def source_data(source):
+    try:
+        ADAPTERS["infodengue"].validate(source)
+        available = source.ativa
+    except CollectionError:
+        available = False
+    latest = source.coletas.first()
     return {"id": source.pk, "nome": source.nome, "tipo": source.tipo, "url": source.url,
             "ativa": source.ativa, "ultima_coleta_em": source.ultima_coleta_em,
+            "coleta_disponivel": available, "ultima_execucao": run_data(latest),
             "recorte_tipo": source.recorte.tipo, "recorte_nome": source.recorte.nome,
             "recorte_codigo": source.recorte.codigo, "recorte_uf": source.recorte.uf}
 
@@ -163,3 +175,59 @@ def source_detail(request, source_id):
     except FonteEpidemiologica.DoesNotExist:
         return error("Fonte não encontrada.", 404)
     return persist_source(request, source)
+
+
+def run_data(run):
+    if run is None:
+        return None
+    return {"id": run.pk, "status": run.status, "iniciada_em": run.iniciada_em,
+            "finalizada_em": run.finalizada_em, "mensagem": run.mensagem,
+            "quantidade_registros": run.quantidade_registros, "repetida": run.repetida,
+            "origem": run.origem}
+
+
+@require_http_methods(["GET", "POST"])
+@authorized(admin=True)
+def source_collection(request, source_id):
+    try:
+        source = FonteEpidemiologica.objects.get(pk=source_id)
+    except FonteEpidemiologica.DoesNotExist:
+        return error("Fonte não encontrada.", 404)
+    if request.method == "GET":
+        return JsonResponse({"execucoes": [run_data(r) for r in source.coletas.all()[:10]]})
+    try:
+        run = collect_source(source.pk, user=request.user)
+    except CollectionError as exc:
+        return error(str(exc), 409)
+    if run.status == "erro":
+        return error(run.mensagem, 502, execucao=run_data(run))
+    return JsonResponse({"execucao": run_data(run)})
+
+
+@csrf_exempt
+@require_POST
+def scheduled_collection(request):
+    # Credencial separada para chamada interna do Airflow; nenhuma sessão de usuário.
+    token = settings.COLLECTION_TOKEN
+    supplied = request.headers.get("X-Coleta-Token", "")
+    if not token or not secrets.compare_digest(token, supplied):
+        return error("Credencial de coleta inválida.", 403)
+    try:
+        body = json.loads(request.body or b"{}")
+        if not isinstance(body, dict):
+            return error("Requisição inválida.", 400)
+    except ValueError:
+        return error("JSON inválido.", 400)
+    if body.get("action") == "list":
+        return JsonResponse({"fontes": eligible_source_ids()})
+    if "fonte_id" in body:
+        source_id = body["fonte_id"]
+        if type(source_id) is not int or source_id not in eligible_source_ids():
+            return error("Fonte não habilitada para coleta.", 400)
+        try:
+            runs = [collect_source(source_id, origin="airflow")]
+        except CollectionError as exc:
+            return error(str(exc), 409)
+    else:
+        runs = collect_pilot()
+    return JsonResponse({"execucoes": [run_data(r) for r in runs]}, status=502 if any(r.status == "erro" for r in runs) else 200)

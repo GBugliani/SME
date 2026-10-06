@@ -70,3 +70,5 @@
 .logo-brand{position:relative;display:block;width:145px;height:54px;flex-shrink:0;overflow:hidden;mix-blend-mode:screen}.logo-brand img{position:absolute;width:308px;max-width:none;height:auto;left:-83px;top:-50px}.topbar .logo-brand{max-width:none}
 @media(max-width:760px){.logo-brand{width:120px;height:45px}.logo-brand img{width:255px;left:-69px;top:-41px}}
 .logo-brand{mix-blend-mode:normal}.logo-brand img{filter:url(#logo-background)}
+
+.source-actions{display:flex;flex-wrap:wrap;gap:8px;min-width:220px}.collection-history{position:relative;z-index:5;pointer-events:auto;margin-bottom:20px}.collection-history ul{padding:0;list-style:none}.collection-history li{padding:16px 0;border-bottom:1px solid var(--line)}.collection-history li p{margin:8px 0}.collection-history li:last-child{border-bottom:0}

@@ -72,4 +72,4 @@ O arquivo `config.test_settings` permite testes isolados com SQLite quando não 
 
 Em 04/10/2026, Git foi encontrado. Docker, Python e npm próprios do usuário não estavam disponíveis no PATH verificado. Foram usados Python 3.12 e Node 24 internos do Codex para preparar dependências e testar; esses runtimes não substituem uma instalação de desenvolvimento independente. Nenhum instalador de sistema foi executado.
 
-Airflow e pandas entrarão com o pipeline de coleta. Airflow será executado em Linux via container, conforme a [documentação oficial de instalação](https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html).
+Airflow já faz parte do Docker Compose e agenda a coleta do piloto diariamente às 06h, com o Docker em execução. Não é necessário instalar Airflow no Windows. Veja o [guia de coleta](COLETA_INFODENGUE.md). O processamento com pandas fica para a Sprint 2.

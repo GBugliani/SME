@@ -74,3 +74,34 @@ class TentativaLogin(models.Model):
     chave = models.CharField(max_length=64, unique=True)
     falhas = models.PositiveIntegerField(default=0)
     inicio = models.DateTimeField()
+
+
+class LoteColeta(models.Model):
+    fonte = models.ForeignKey(FonteEpidemiologica, on_delete=models.PROTECT, related_name="lotes")
+    adaptador = models.CharField(max_length=30)
+    agravo = models.CharField(max_length=30)
+    url_origem = models.URLField(max_length=2000)
+    territorio_codigo = models.CharField(max_length=7)
+    sha256 = models.CharField(max_length=64)
+    dados_brutos = models.JSONField()
+    quantidade_registros = models.PositiveIntegerField()
+    criada_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["fonte", "sha256"], name="lote_fonte_hash_unique")]
+
+
+class ExecucaoColeta(models.Model):
+    fonte = models.ForeignKey(FonteEpidemiologica, on_delete=models.PROTECT, related_name="coletas")
+    status = models.CharField(max_length=15, choices=[("executando", "Executando"), ("sucesso", "Sucesso"), ("vazia", "Sem registros"), ("erro", "Falha")])
+    iniciada_em = models.DateTimeField(auto_now_add=True)
+    finalizada_em = models.DateTimeField(null=True)
+    mensagem = models.CharField(max_length=300, blank=True)
+    quantidade_registros = models.PositiveIntegerField(default=0)
+    lote = models.ForeignKey(LoteColeta, null=True, on_delete=models.PROTECT)
+    repetida = models.BooleanField(default=False)
+    origem = models.CharField(max_length=15, default="manual")
+
+    class Meta:
+        ordering = ["-iniciada_em", "-pk"]
+        constraints = [models.UniqueConstraint(fields=["fonte"], condition=models.Q(status="executando"), name="uma_coleta_ativa_por_fonte")]

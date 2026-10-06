@@ -9,25 +9,25 @@ A fonte principal é `Documentacao_Software_Sistema_Monitoramento_Epidemiológic
 | 3 | 18–24/10/2026 | HU07, HU08, HU09 e QA | 24/10/2026 |
 | 4 | 25/10–01/11/2026 | HU12, HU13, HU14 e QA | 02/11/2026 |
 
-## Sprint 1 — incremento atual
+## Sprint 1 — estado atual (05/10/2026)
 
 | Item | Estado | Evidência / pendência |
 |---|---|---|
-| HU01 / RF07 / UC07 | Implementado; homologação local pendente | Login React/API, sessão, logout, rejeição de inativos e usuários desconhecidos |
-| HU02 / RF02 / UC02 | Implementado; homologação local pendente | Cadastro e edição de fontes vinculadas a município ou região |
-| Banco de dados | Configurado; execução PostgreSQL pendente | Modelos, migração inicial e Compose PostgreSQL |
-| HU02 / RF01 / UC01 | Pendente | Escolher primeiro município/agravo; implementar adaptador e agendamento Airflow |
-| QA | Parcial | Testes automatizados locais; executar Compose/PostgreSQL e roteiro manual |
+| HU01 / RF07 / UC07 | Implementado | Login, sessão, logout, autorização e testes SQLite/PostgreSQL |
+| HU02 / RF02 / UC02 | Implementado | Cadastro/edição/desabilitação de fontes por município ou região |
+| Banco de dados | Executado em PostgreSQL/Docker | Migrações e persistência verificadas; volume preservado |
+| HU02 / RF01 / UC01 | Implementado no piloto dengue/São Paulo | API InfoDengue, dados brutos, histórico e DAG Airflow diário às 06h |
+| QA | Verificações técnicas realizadas; aceite da equipe pendente | 30 testes backend em PostgreSQL, 3 frontend, build e fluxo real no navegador |
 
-O objetivo é trabalhar por incrementos dentro da sprint. A coleta é explicitamente contabilizada como pendência da Sprint 1, porque HU02 também referencia RF01. Não foi silenciosamente transferida para outra sprint.
+A fonte previamente cadastrada foi coletada: 52 semanas de 2024. Agendamento Airflow e repetição sem duplicação foram verificados. O período é o da URL cadastrada; não equivale a acompanhamento do ano atual. Demais fontes/municípios/agravos ainda não possuem adaptador.
 
-## Próximo incremento da Sprint 1
+## Para encerrar a Sprint 1
 
-1. Instalar/iniciar Docker e validar migrações, login e persistência reais.
-2. Confirmar o recorte inicial. Proposta: dengue, um município de SP, InfoDengue.
-3. Implementar adaptador de coleta e DAG Airflow com rastreio de execução, timeout e nova tentativa no ciclo seguinte.
-4. Coletar dados brutos com origem e horário; a padronização e as séries consolidadas pertencem à HU03/HU04 da Sprint 2.
-5. Executar QA e registrar aceite antes de iniciar a Sprint 2.
+1. A equipe confirmar o aceite do login, cadastro e coleta no seu ambiente.
+2. Confirmar o período de interesse para o piloto. A fonte atual consulta 2024.
+3. Seguir o roteiro e registrar o aceite em `QA_SPRINT_1.md`.
+
+A coleta de RF01 não foi transferida para outra sprint. Normalização/pandas, séries consolidadas e indicadores permanecem em HU03/HU04 da Sprint 2. Referência operacional: `COLETA_INFODENGUE.md`.
 
 ## Planejamento das próximas sprints
 
@@ -43,4 +43,8 @@ O detector básico está na Sprint 2 (HU11), apesar do objetivo da Sprint 4 menc
 - Cadastro de usuários: HU08 menciona usuário, mas UC09 restringe a administrador. Será usado cadastro administrativo, coerente com acesso previamente autorizado.
 - Airflow: adotado pelo Word, apesar de o TXT sugerir Airflow ou cron.
 - O release está indicado em 02/11, um dia após o fim do período da Sprint 4. Datas foram preservadas.
-- Fonte de dados: InfoGripe/DATASUS são exemplos. InfoDengue é uma alternativa coerente com dengue mencionada no escopo e com as referências, ainda sujeita à decisão da equipe.
+- Fonte de dados: InfoGripe/DATASUS são exemplos. InfoDengue foi adotado para o piloto autorizado de dengue em São Paulo; outras fontes exigem adaptadores próprios.
+
+## Ampliação da coleta — 06/10/2026
+
+O coletor de dengue do InfoDengue agora aceita os municípios de SP, validando nome e código IBGE no catálogo de 645 municípios. Apenas fontes cadastradas, compatíveis e habilitadas são consultadas. O Airflow executa uma tarefa por fonte, com até duas coletas simultâneas; a restrição anterior à capital e a cinco fontes foi removida. Outros agravos e provedores continuam exigindo integração própria. Consulte [o guia de coleta](COLETA_INFODENGUE.md).

@@ -2,7 +2,7 @@
 
 ## Componentes
 
-React + TypeScript apresenta o sistema; Django 5.2 fornece a API JSON e regras de negócio; PostgreSQL 17 persiste dados. Nginx serve os arquivos React e encaminha `/api/` à API. O navegador usa uma origem única, simplificando cookies e CSRF. Python/pandas e Airflow terão containers separados quando o pipeline for implementado.
+React + TypeScript apresenta o sistema; Django 5.2 fornece a API JSON e regras de negócio; PostgreSQL 17 persiste dados. Nginx serve os arquivos React e encaminha `/api/` à API. O navegador usa uma origem única, simplificando cookies e CSRF. Airflow executa em container separado e chama a API interna para coleta bruta. Python/pandas para normalização será adicionado na Sprint 2.
 
 O documento especifica Python mas não escolhe framework de API. Django foi adotado para reaproveitar autenticação, hash de senha, sessões, permissões, ORM e migrações. Não há necessidade de construir um sistema próprio de senhas ou armazenar tokens no localStorage. Referência: [Django 5.2](https://docs.djangoproject.com/en/5.2/).
 
@@ -13,7 +13,7 @@ O documento especifica Python mas não escolhe framework de API. Django foi adot
 | Usuario | `Usuario`, e-mail como identificador, estado ativo e hash de senha |
 | PerfilAcesso / Permissao | Infraestrutura Group/Permission do Django; gestão completa na Sprint 3 |
 | RecorteGeografico / Município / Região | Uma tabela com discriminador de tipo, código e UF; evita duplicação para este escopo |
-| FonteEpidemiologica | Fonte vinculada ao recorte, URL, tipo, habilitação e última coleta nula até coleta real |
+| FonteEpidemiologica | Fonte vinculada ao recorte, URL, tipo, habilitação e horário da última coleta concluída |
 | RegistroAuditoria | Registro de criação/alteração de fonte, ator e horário |
 | Agravo / SerieEpidemiologica / RegistroEpidemiologico | Sprint 2 |
 | MetodoDeteccao / ConfiguracaoDeteccao | Método inicial na Sprint 2; Strategy e configuração versionada na Sprint 4 |
@@ -30,11 +30,20 @@ O serviço `save_source` concentra transação, consistência do território e a
 - Sessão armazenada no banco, expiração de oito horas e cookie HttpOnly. Logout invalida a sessão. HTTPS/cookies seguros habilitados fora do modo debug.
 - CSRF inclusive no login; dados de autenticação não vão para localStorage. Cinco erros de login por conta suspendem tentativas por 15 minutos, em estado compartilhado no banco.
 - Limitação por conta deve ser complementada por limite de requisições no proxy, controle de tentativas distribuídas e limpeza periódica de registros expirados antes de publicação.
-- URLs cadastradas devem ser HTTPS e não podem conter credenciais nem apontar literalmente para IP privado. O cadastro não acessa a URL. O futuro coletor precisa de allowlist, verificação de DNS/IP e bloqueio de redirects para rede privada; a validação cadastral sozinha não é uma barreira suficiente contra SSRF.
+- URLs cadastradas devem ser HTTPS e não podem conter credenciais nem apontar literalmente para IP privado. O cadastro não acessa a URL. O coletor InfoDengue usa destino fixo permitido, verifica DNS/IP público, fixa a conexão no IP e rejeita redirects. Novos adaptadores devem preservar essas barreiras; a validação cadastral sozinha não é suficiente contra SSRF.
 - Não são importados dados individuais de pacientes nesta etapa. Segredos ficam fora do versionamento.
 
 ## Evolução e publicação
 
 As três caixas de servidores no diagrama são responsabilidades separadas. No desenvolvimento podem executar na mesma máquina em containers. A publicação deve separar aplicação, processamento e banco logicamente e permitir separação física conforme uso, sem exigir três servidores pagos logo no início.
 
-O Compose é exclusivamente local. HTTPS, backups diários com restauração testada, observabilidade, política de retenção e execução real do pipeline são requisitos do release; não estão implementados por existir um Dockerfile.
+O Compose é exclusivamente local. HTTPS, backups diários com restauração testada, observabilidade, política de retenção e execução confiável do pipeline em produção são requisitos do release. O piloto local foi executado; os demais controles de publicação continuam pendentes.
+
+
+## Coleta do piloto
+
+`collection.py` concentra o adaptador InfoDengue e a persistência transacional de `LoteColeta`/`ExecucaoColeta`. Os dados brutos são preservados; não substituem as entidades de séries da Sprint 2. Veja `COLETA_INFODENGUE.md` para limites, segurança e agendamento.
+
+## Ampliação da coleta — 06/10/2026
+
+O coletor de dengue do InfoDengue agora aceita os municípios de SP, validando nome e código IBGE no catálogo de 645 municípios. Apenas fontes cadastradas, compatíveis e habilitadas são consultadas. O Airflow executa uma tarefa por fonte, com até duas coletas simultâneas; a restrição anterior à capital e a cinco fontes foi removida. Outros agravos e provedores continuam exigindo integração própria. Consulte [o guia de coleta](COLETA_INFODENGUE.md).

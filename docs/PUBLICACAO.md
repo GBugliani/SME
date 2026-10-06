@@ -30,3 +30,8 @@ Para uma demonstração acadêmica, um servidor Linux com containers pode concen
 10. Definir responsáveis por usuários, operação e verificação dos alertas antes do release do MVP.
 
 Referência técnica: [checklist de publicação do Django](https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/). A publicação e os backups automáticos ainda não foram executados.
+
+
+## Airflow do piloto local
+
+O compose agora inclui Airflow 3.3.1 em modo standalone, sem porta publicada, com metadados no volume `airflow_data`. Antes de hospedar, separar scheduler/API/dag-processor e migrar metadados para PostgreSQL, dimensionar workers, monitorar falhas, definir retenção dos lotes brutos e guardar `COLETA_TOKEN` no gerenciador de segredos. A execução local validada não representa uma implantação de produção.

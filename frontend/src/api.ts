@@ -3,7 +3,8 @@ export type SourceInput = {
   nome: string; tipo: string; url: string; ativa: boolean;
   recorte_tipo: string; recorte_nome: string; recorte_codigo: string; recorte_uf: string;
 };
-export type Source = SourceInput & { id: number; ultima_coleta_em: string | null };
+export type CollectionRun = { id: number; status: 'executando' | 'sucesso' | 'vazia' | 'erro'; iniciada_em: string; finalizada_em: string | null; mensagem: string; quantidade_registros: number; repetida: boolean; origem: string };
+export type Source = SourceInput & { id: number; ultima_coleta_em: string | null; coleta_disponivel: boolean; ultima_execucao: CollectionRun | null };
 export type SourcePage = { sources: Source[]; count: number; page: number; pages: number };
 
 export class ApiError extends Error {

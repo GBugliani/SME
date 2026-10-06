@@ -20,12 +20,13 @@ services:
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Execute scripts/setup.ps1 antes de iniciar}
       DJANGO_DEBUG: "true"
+      COLETA_TOKEN: ${COLETA_TOKEN:?Execute scripts/setup.ps1 para configurar a coleta}
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend
       POSTGRES_DB: ${POSTGRES_DB:-sme}
       POSTGRES_USER: ${POSTGRES_USER:-sme}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: db
-    command: ["sh", "-c", "python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --access-logfile -"]
+    command: ["sh", "-c", "python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120 --access-logfile -"]
     depends_on:
       db:
         condition: service_healthy
@@ -43,5 +44,22 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+  airflow:
+    image: apache/airflow:3.3.1
+    command: standalone
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+      AIRFLOW__CORE__PARALLELISM: "2"
+      AIRFLOW__SCHEDULER__PARSING_PROCESSES: "1"
+      COLETA_TOKEN: ${COLETA_TOKEN:?Execute scripts/setup.ps1 para configurar a coleta}
+    volumes:
+      - airflow_data:/opt/airflow
+      - ./infra/airflow/dags:/opt/airflow/dags:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
 volumes:
+  airflow_data:
   postgres_data:

@@ -2,6 +2,8 @@ from django.urls import path
 from sme import views
 
 urlpatterns = [
+    path("api/internal/coleta/", views.scheduled_collection),
+    path("api/fontes/<int:source_id>/coletas/", views.source_collection),
     path("api/health/", views.health),
     path("api/auth/csrf/", views.csrf),
     path("api/auth/login/", views.sign_in),
