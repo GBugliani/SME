@@ -2,12 +2,13 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { api, ApiError, type User, type Source, type SourceInput, type SourcePage } from './api';
 import './styles.css';
+import { saoPauloPath } from './territory';
 
 const emptySource: SourceInput = { nome: '', tipo: 'csv', url: '', ativa: true, recorte_tipo: 'municipio', recorte_nome: '', recorte_codigo: '', recorte_uf: 'SP' };
 const describe = (error: unknown) => error instanceof Error ? error.message : 'Ocorreu um erro inesperado.';
 
 function Brand() {
-  return <div className="brand"><span className="brand-icon" aria-hidden="true">✳</span><span>SME<small>Monitoramento epidemiológico</small></span></div>;
+  return <div className="brand">SME</div>;
 }
 
 function Login({ onLogin }: { onLogin: (user: User) => void }) {
@@ -19,16 +20,16 @@ function Login({ onLogin }: { onLogin: (user: User) => void }) {
     try { const data = await api<{ user: User }>('/auth/login/', 'POST', { email: values.get('email'), password: values.get('password') }); onLogin(data.user); }
     catch (err) { setError(describe(err)); } finally { setBusy(false); }
   }
-  return <main className="login-layout">
-    <section className="login-story"><Brand /><div><span className="eyebrow light">VIGILÂNCIA EPIDEMIOLÓGICA MUNICIPAL</span><h1>Informação para<br />cuidar do território.</h1><p>Um ponto de partida para acompanhar dados públicos de saúde e organizar o monitoramento do seu município.</p></div><div className="story-footer"><span className="status-dot" />Sistema de Monitoramento Epidemiológico</div></section>
-    <section className="login-panel"><form onSubmit={submit} className="login-form"><span className="eyebrow">ACESSO AO SISTEMA</span><h2>Bem-vindo ao SME</h2><p className="muted">Entre com a conta autorizada pela sua equipe.</p>
+  return <div className="login-shell"><header className="topbar"><Brand /></header><main className="login-layout">
+    <section className="login-story"><div><span className="eyebrow">MONITORAMENTO</span><h1>Monitoramento epidemiológico</h1><p>Fontes públicas e dados epidemiológicos por município e região.</p></div><div className="login-map"><svg viewBox="-30 -30 780 500" role="img" aria-label="Contorno do estado de São Paulo"><path d={saoPauloPath} fill="#1c2b43" stroke="#668ad0" strokeWidth="1.5"/><text x="320" y="220" className="map-state">SP</text><text x="320" y="250" className="map-state-caption">SÃO PAULO</text></svg><span className="login-map-caption">São Paulo · SP</span></div></section>
+    <section className="login-panel"><form onSubmit={submit} className="login-form"><span className="eyebrow">ACESSO AO SISTEMA</span><h2>Entrar no SME</h2><p className="muted">Informe seu e-mail e senha.</p>
       <label>E-mail<input name="email" type="email" autoComplete="username" placeholder="voce@instituicao.gov.br" required maxLength={254} /></label>
       <label>Senha<input name="password" type="password" autoComplete="current-password" placeholder="Sua senha" required maxLength={1024} /></label>
       {error && <div className="error" role="alert">{error}</div>}
       <button disabled={busy} type="submit">{busy ? 'Entrando…' : 'Entrar no sistema'}<span aria-hidden="true"> →</span></button>
-      <p className="login-note">Precisa de acesso? Solicite uma conta ao administrador responsável.</p>
-    </form><footer>SME · Dados públicos, cuidado local.</footer></section>
-  </main>;
+      <p className="login-note">Para solicitar acesso, contate o administrador.</p>
+    </form></section>
+  </main></div>;
 }
 
 function SourceForm({ source, onSave, onCancel, onExpired }: { source?: Source; onSave: () => void; onCancel: () => void; onExpired: () => void }) {
@@ -68,6 +69,8 @@ function Workspace({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editor, setEditor] = useState<Source | 'new' | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [showDataFlow, setShowDataFlow] = useState(false);
   async function load(number = 1) {
     setLoading(true); setError('');
     try { setPage(await api<SourcePage>(`/fontes/?page=${number}`)); }
@@ -79,18 +82,28 @@ function Workspace({ user, onLogout }: { user: User; onLogout: () => void }) {
     try { await api('/auth/logout/', 'POST'); onLogout(); }
     catch (err) { if (err instanceof ApiError && err.status === 401) onLogout(); else setError(describe(err)); }
   }
-  return <div className="app-shell"><aside className="sidebar"><Brand /><p className="nav-label">ÁREA DE TRABALHO</p><nav aria-label="Navegação principal"><button className={tab === 'inicio' ? 'selected' : ''} onClick={() => { setTab('inicio'); setEditor(null); }}>◫ <span>Visão geral</span></button>{user.administrador && <button className={tab === 'fontes' ? 'selected' : ''} onClick={() => { setTab('fontes'); setSuccess(''); }}>▤ <span>Fontes de dados</span></button>}</nav><div className="sidebar-bottom"><span className="status-dot" />Vigilância municipal<small>Projeto SME · 2026</small></div></aside>
-    <div className="main-area"><header className="topbar"><span>Ambiente de monitoramento</span><div className="account"><span className="avatar">{user.nome[0].toUpperCase()}</span><div>{user.nome}<small>{user.administrador ? 'Administrador' : 'Usuário'}</small></div><button className="secondary" onClick={signOut}>Sair</button></div></header>
-      <main className="content"><div className="page-heading"><div><span className="eyebrow">SME / {tab === 'inicio' ? 'VISÃO GERAL' : 'ADMINISTRAÇÃO'}</span><h1>{tab === 'inicio' ? 'Seu território, em perspectiva.' : 'Fontes de dados'}</h1><p className="muted">{tab === 'inicio' ? 'Organize a base do acompanhamento epidemiológico da sua equipe.' : 'Gerencie a origem dos dados e os territórios monitorados.'}</p></div>{tab === 'fontes' && !editor && <button onClick={() => { setEditor('new'); setSuccess(''); }}>+ Cadastrar fonte</button>}</div>
+  return <div className="app-shell">
+
+    <header className="topbar"><div className="brand">SME</div><nav aria-label="Navegação principal"><button className={tab === 'inicio' ? 'selected' : ''} onClick={() => { setTab('inicio'); setEditor(null); }}>Monitoramento</button>{user.administrador && <button className={tab === 'fontes' ? 'selected' : ''} onClick={() => { setTab('fontes'); setSuccess(''); }}>Fontes de dados</button>}</nav><div className="header-actions"><div className="account"><span className="avatar" title={user.nome}>{user.nome[0].toUpperCase()}</span><button className="secondary" onClick={signOut}>Sair</button></div></div></header>
+    <main className="content">
       {error && <div className="error" role="alert">{error} {user.administrador && <button className="secondary" onClick={() => void load(page.page)}>Tentar novamente</button>}</div>}
       {success && <div className="success" role="status">{success}</div>}
-      {tab === 'inicio' ? <><section className="welcome-card"><div><span className="eyebrow light">BASE DE MONITORAMENTO</span><h2>Comece pelas fontes.<br />Construa o acompanhamento.</h2><p>O acesso está configurado. O próximo passo é associar as fontes públicas aos municípios e regiões de interesse.</p>{user.administrador && <button className="white-button" onClick={() => setTab('fontes')}>Gerenciar fontes <span aria-hidden="true">↗</span></button>}</div><div className="territory-art" aria-hidden="true"><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span></div></section>
-        <div className="overview-grid"><section className="card"><span className="eyebrow">{user.administrador ? 'FONTES CADASTRADAS' : 'SEU ACESSO'}</span><strong className="metric">{user.administrador ? (loading ? '…' : error ? '—' : page.count) : 'Ativo'}</strong><p className="muted">{user.administrador ? 'Origens de dados configuradas pela equipe.' : 'Conta autorizada para o monitoramento.'}</p></section><section className="card next-card"><span className="eyebrow">SÉRIES EPIDEMIOLÓGICAS</span><h3>Aguardando integração de dados</h3><p className="muted">Os indicadores e gráficos serão disponibilizados após a implementação e validação da coleta. Ainda não há dados epidemiológicos neste ambiente.</p></section></div></>
-      : editor ? <SourceForm key={editor === 'new' ? 'new' : editor.id} source={editor === 'new' ? undefined : editor} onCancel={() => setEditor(null)} onExpired={onLogout} onSave={() => { setEditor(null); setSuccess('Fonte salva com sucesso.'); void load(); }} />
+      {tab === 'inicio' ? <>
+      <div className="dashboard-heading"><div><span className="eyebrow">PAINEL TERRITORIAL</span><h1>Monitoramento epidemiológico</h1></div><span className="scope-pill">São Paulo · SP</span></div>
+      <div className="dashboard-grid">
+        <aside className="dashboard-left">
+          <section className="card summary-card"><div className="section-heading"><span className="eyebrow">BASE DE MONITORAMENTO</span><span className="badge inactive">Em preparação</span></div><h2>Resumo do monitoramento</h2><div className="primary-metric"><strong>{user.administrador ? loading ? '…' : error ? '—' : String(page.count).padStart(2, '0') : '—'}</strong><span>fontes públicas<br />cadastradas</span></div><div className="metric-rule" /><dl className="status-list"><div><dt>Coleta</dt><dd>Aguardando integração</dd></div><div><dt>Indicadores</dt><dd>Não disponíveis</dd></div><div><dt>Seu perfil</dt><dd>{user.administrador ? 'Administrador' : 'Usuário'}</dd></div></dl>{user.administrador && <button className="text-button" onClick={() => setTab('fontes')}>Gerenciar fontes <span>↗</span></button>}</section>
+
+        </aside>
+        <section className="territory-panel" aria-label="Mapa de referência do estado de São Paulo"><div className="map-toolbar"><span className="map-tab">Território</span><span className="muted">Recorte de referência · SP</span><span className="map-legend"><i />Sem classificação epidemiológica</span></div><div className="map-stage"><div className="map-coordinate">23° S / 47° O <span>SUDESTE · BRASIL</span></div><svg viewBox="-30 -30 780 500" role="img" aria-labelledby="map-title map-description"><title id="map-title">Contorno do estado de São Paulo</title><desc id="map-description">Mapa geográfico de referência, sem dados de casos ou classificação de risco.</desc><defs><pattern id="map-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#86a9ee" strokeOpacity=".12" strokeWidth=".7" /></pattern><linearGradient id="map-fill" x2="1" y2="1"><stop stopColor="#293b5c"/><stop offset="1" stopColor="#142238"/></linearGradient></defs><g transform={`translate(360 220) scale(${zoom}) translate(-360 -220)`}><path d={saoPauloPath} fill="url(#map-fill)" stroke="#668ad0" strokeWidth="1.5"/><path d={saoPauloPath} fill="url(#map-grid)"/><text x="320" y="220" className="map-state">SP</text><text x="320" y="246" className="map-state-caption">SÃO PAULO</text></g></svg><div className="map-zoom"><button aria-label="Ampliar mapa" disabled={zoom >= 1.6} onClick={() => setZoom(z => Math.min(1.6, z + .2))}>+</button><button aria-label="Reduzir mapa" disabled={zoom <= 1} onClick={() => setZoom(z => Math.max(1, z - .2))}>−</button></div><div className="map-note"><span className="eyebrow">VISUALIZAÇÃO TERRITORIAL</span><strong>Dados ainda não disponíveis</strong><p>A distribuição de casos depende da coleta e validação dos dados.</p></div></div><div className="map-bottom"><span>Malha territorial · IBGE</span><span>Referência geográfica, sem indicadores de risco</span></div></section>
+        <aside className="dashboard-right"><section className="card"><div className="section-heading"><h3>Fontes cadastradas</h3><span className="counter">{user.administrador ? page.count : '—'}</span></div>{loading ? <p role="status" className="muted">Carregando fontes…</p> : !user.administrador ? <p className="muted">As fontes são configuradas pelo administrador da equipe.</p> : page.sources.length ? <><div className="source-feed">{page.sources.slice(0, 5).map(s => <div key={s.id}><span className={`source-dot ${s.ativa ? 'enabled' : ''}`} /><div><strong>{s.nome}</strong><small>{s.recorte_nome} · {s.recorte_uf || s.recorte_tipo}</small><span className="feed-status">{s.ativa ? 'Habilitada' : 'Desabilitada'} · {s.tipo.toUpperCase()}</span></div></div>)}</div>{page.count > 5 && <small>Exibindo {Math.min(5, page.sources.length)} de {page.count} fontes.</small>}</> : <div className="compact-empty"><span aria-hidden="true">↗</span><h3>Nenhuma fonte cadastrada</h3><p className="muted">Associe dados públicos a um município ou região.</p></div>}{user.administrador && <button className="text-button" onClick={() => { setTab('fontes'); setEditor('new'); }}>Cadastrar fonte <span>+</span></button>}</section><section className="card series-card"><span className="eyebrow">EVOLUÇÃO TEMPORAL</span><h3>Séries epidemiológicas</h3><div className="chart-empty"><span>Sem séries disponíveis</span></div><p className="muted">A curva será exibida após a coleta e validação dos dados.</p></section></aside>
+      </div></>
+      : <><div className="page-heading"><div><span className="eyebrow">ADMINISTRAÇÃO</span><h1>Fontes de dados</h1><p className="muted">Gerencie a origem dos dados e os territórios monitorados.</p></div><div className="source-heading-actions"><div className="flow-help"><button className="secondary help-button" aria-label="Fluxo dos dados" aria-expanded={showDataFlow} aria-controls="data-flow-panel" onClick={() => setShowDataFlow(v => !v)}>?</button>{showDataFlow && <section className="card pipeline-card" id="data-flow-panel" aria-label="Fluxo dos dados"><div className="section-heading"><span className="eyebrow">FLUXO DOS DADOS</span><button className="secondary flow-close" aria-label="Fechar fluxo dos dados" onClick={() => setShowDataFlow(false)}>×</button></div><h3>Etapas de integração</h3><ol><li className="current"><span>01</span><div><strong>Configurar fontes</strong><small>Cadastro disponível</small></div></li><li><span>02</span><div><strong>Coletar e validar</strong><small>Próxima etapa de integração</small></div></li><li><span>03</span><div><strong>Acompanhar indicadores</strong><small>Aguardando dados validados</small></div></li></ol></section>}</div>{!editor && <button onClick={() => { setEditor('new'); setSuccess(''); }}>+ Cadastrar fonte</button>}</div></div>{editor ?
+ <SourceForm key={editor === 'new' ? 'new' : editor.id} source={editor === 'new' ? undefined : editor} onCancel={() => setEditor(null)} onExpired={onLogout} onSave={() => { setEditor(null); setSuccess('Fonte salva com sucesso.'); void load(); }} />
       : <section className="card source-list"><div className="section-heading"><h2>Origens cadastradas</h2><span className="counter">{page.count} {page.count === 1 ? 'fonte' : 'fontes'}</span></div>{loading ? <p role="status">Carregando fontes…</p> : page.sources.length === 0 ? <div className="empty-state"><span className="empty-icon" aria-hidden="true">▤</span><h3>Nenhuma fonte cadastrada</h3><p>Adicione uma fonte pública e associe o território<br />para preparar o monitoramento.</p><button className="secondary" onClick={() => setEditor('new')}>Cadastrar primeira fonte</button></div> : <><div className="table-scroll"><table><thead><tr><th>Fonte / território</th><th>Formato</th><th>Situação</th><th>Última coleta</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{page.sources.map(s => <tr key={s.id}><td><strong>{s.nome}</strong><small>{s.recorte_nome}{s.recorte_uf && ` / ${s.recorte_uf}`} · {s.recorte_codigo}</small><a href={s.url} target="_blank" rel="noreferrer">Ver fonte ↗</a></td><td>{s.tipo.toUpperCase()}</td><td><span className={`badge ${s.ativa ? '' : 'inactive'}`}>{s.ativa ? 'Habilitada' : 'Desabilitada'}</span></td><td>{s.ultima_coleta_em ? new Date(s.ultima_coleta_em).toLocaleString('pt-BR') : 'Não realizada'}</td><td><button className="secondary" aria-label={`Editar ${s.nome}`} onClick={() => { setEditor(s); setSuccess(''); }}>Editar</button></td></tr>)}</tbody></table></div><div className="pagination"><button className="secondary" disabled={page.page <= 1} onClick={() => void load(page.page - 1)}>Anterior</button><span>Página {page.page} de {page.pages}</span><button className="secondary" disabled={page.page >= page.pages} onClick={() => void load(page.page + 1)}>Próxima</button></div></>}
-      </section>}
-      <footer className="content-footer">Sistema de Monitoramento Epidemiológico<span>Fonte e atualização serão exibidas junto aos dados coletados.</span></footer></main>
-    </div></div>;
+      </section>}</>}
+      </main></div>;
+
 }
 
 function App() {
@@ -110,3 +123,11 @@ function App() {
 }
 
 createRoot(document.getElementById('root')!).render(<App />);
+
+
+
+
+
+
+
+
