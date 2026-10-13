@@ -1,10 +1,17 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { api, ApiError, type User, type Source, type SourceInput, type SourcePage, type CollectionRun } from './api';
 import './styles.css';
+import { IndicatorFilters, SeriesChart, PasswordDialog, number, trend, type Indicators } from './monitoring';
 import { saoPauloPath } from './territory';
-import municipalities from './municipalities.json';
-import smeLogo from './assets/sme-logo.png';
+import smeLogo from './assets/sme-logo.webp';
+import immediateRegions from './regions.json';
+import {Notice,useTimedMessage} from './notifications';
+import {SourceFeed} from './source-feed';
+import {territoryLabel,sourcePeriodLabel} from './source-labels';
+import {AssistedSourceForm,infoDengueParams} from './source-setup';
+import {AccountMenu} from './account-menu';
+type Municipality = { id: string; name: string; path: string };
 
 const emptySource: SourceInput = { nome: '', tipo: 'csv', url: '', ativa: true, recorte_tipo: 'municipio', recorte_nome: '', recorte_codigo: '', recorte_uf: 'SP' };
 const describe = (error: unknown) => error instanceof Error ? error.message : 'Ocorreu um erro inesperado.';
@@ -15,29 +22,36 @@ function Brand() {
 
 function Login({ onLogin }: { onLogin: (user: User) => void }) {
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [registering,setRegistering]=useState(false);
+  const [registrationEnabled,setRegistrationEnabled]=useState(false);
+  const [showPassword,setShowPassword]=useState(false);
+  useEffect(()=>{void api<{registrationEnabled:boolean}>('/auth/csrf/').then(data=>setRegistrationEnabled(data.registrationEnabled)).catch(()=>{});},[]);
+  const [error, setError] = useTimedMessage();
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError('');
     const values = new FormData(event.currentTarget);
-    try { const data = await api<{ user: User }>('/auth/login/', 'POST', { email: values.get('email'), password: values.get('password') }); onLogin(data.user); }
+    try { const data = await api<{ user: User }>(registering ? '/auth/register/' : '/auth/login/', 'POST', { email: values.get('email'), password: values.get('password'), ...(registering ? {nome:values.get('nome'),password_confirmation:values.get('password_confirmation')} : {}) }); onLogin(data.user); }
     catch (err) { setError(describe(err)); } finally { setBusy(false); }
   }
   return <div className="login-shell"><header className="topbar"><Brand /></header><main className="login-layout">
     <section className="login-story"><div><span className="eyebrow">MONITORAMENTO</span><h1>Monitoramento epidemiológico</h1><p>Fontes públicas e dados epidemiológicos por município e região.</p></div><div className="login-map"><svg viewBox="-30 -30 780 500" role="img" aria-label="Contorno do estado de São Paulo"><path d={saoPauloPath} fill="#1c2b43" stroke="#668ad0" strokeWidth="1.5"/></svg><span className="login-map-caption">São Paulo · SP</span></div></section>
-    <section className="login-panel"><form onSubmit={submit} className="login-form"><span className="eyebrow">ACESSO AO SISTEMA</span><h2>Entrar no SME</h2><p className="muted">Informe seu e-mail e senha.</p>
-      <label>E-mail<input name="email" type="email" autoComplete="username" placeholder="voce@instituicao.gov.br" required maxLength={254} /></label>
-      <label>Senha<input name="password" type="password" autoComplete="current-password" placeholder="Sua senha" required maxLength={1024} /></label>
-      {error && <div className="error" role="alert">{error}</div>}
-      <button disabled={busy} type="submit">{busy ? 'Entrando…' : 'Entrar no sistema'}<span aria-hidden="true"> →</span></button>
-      <p className="login-note">Para solicitar acesso, contate o administrador.</p>
+    <section className="login-panel"><form key={registering?'register':'login'} onSubmit={submit} className="login-form"><span className="eyebrow">ACESSO AO SISTEMA</span><h2>{registering?'Criar conta':'Entrar no SME'}</h2><p className="muted">{registering?'Preencha seus dados para criar uma conta de usuário.':'Informe seu e-mail e senha.'}</p>
+      {registering&&<label>Nome<input name="nome" autoComplete="name" required maxLength={150}/></label>}
+      <label>E-mail<input name="email" type="email" autoComplete={registering?'email':'username'} required maxLength={254} /></label>
+      <label>Senha<div className="login-password-field"><input id="login-password" name="password" type={showPassword?'text':'password'} autoComplete={registering?'new-password':'current-password'} required maxLength={1024} minLength={registering?12:undefined} /><button className="password-visibility" type="button" aria-label={showPassword?'Ocultar senha':'Mostrar senha'} aria-pressed={showPassword} aria-controls="login-password" onClick={()=>setShowPassword(value=>!value)}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>{showPassword&&<path d="m3 3 18 18"/>}</svg></button></div></label>
+      {registering&&<><small>Use pelo menos 12 caracteres.</small><label>Confirmar senha<input name="password_confirmation" type={showPassword?'text':'password'} autoComplete="new-password" required minLength={12} maxLength={1024}/></label></>}
+      <Notice message={error}/>
+      <button disabled={busy} type="submit">{busy ? registering?'Criando conta…':'Entrando…' : registering?'Criar conta':'Entrar no sistema'}<span aria-hidden="true"> →</span></button>
+      {registrationEnabled?<button className="secondary login-switch" type="button" disabled={busy} onClick={()=>{setRegistering(value=>!value);setShowPassword(false);setError('');}}>{registering?'Já tenho conta · Entrar':'Criar uma conta'}</button>:<p className="login-note">Para solicitar acesso, contate o administrador.</p>}
     </form></section>
   </main></div>;
 }
 
 function SourceForm({ source, onSave, onCancel, onExpired }: { source?: Source; onSave: () => void; onCancel: () => void; onExpired: () => void }) {
+  const [manual,setManual]=useState(Boolean(source&&!infoDengueParams(source)));
   const [values, setValues] = useState<SourceInput>(source ?? emptySource);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useTimedMessage();
   const [fields, setFields] = useState<Record<string, string[]>>({});
   function field(key: keyof SourceInput, value: string | boolean) { setValues(v => ({ ...v, [key]: value })); }
   async function submit(event: FormEvent) {
@@ -50,6 +64,7 @@ function SourceForm({ source, onSave, onCancel, onExpired }: { source?: Source; 
   }
   const hint = (key: string) => fields[key] && <span className="field-error" id={`error-${key}`}>{fields[key].join(' ')}</span>;
   const input = (key: keyof SourceInput, label: string, placeholder: string, maxLength: number, type = 'text') => <label>{label}<input type={type} value={String(values[key])} onChange={e => field(key, e.target.value)} placeholder={placeholder} maxLength={maxLength} required aria-invalid={Boolean(fields[key])} aria-describedby={fields[key] ? `error-${key}` : undefined} />{hint(key)}</label>;
+  if(!manual)return <AssistedSourceForm source={source} onSave={onSave} onCancel={onCancel} onExpired={onExpired} onManual={()=>setManual(true)}/>;
   return <section className="card form-card"><div className="section-heading"><div><span className="eyebrow">CONFIGURAÇÃO</span><h2>{source ? 'Editar fonte' : 'Cadastrar fonte pública'}</h2></div><button className="secondary" onClick={onCancel} disabled={busy}>Cancelar</button></div>
     <p className="muted">Associe um endereço público ao território que será acompanhado. Após salvar uma fonte InfoDengue de dengue em um município de SP, use “Coletar agora” ou aguarde o agendamento diário.</p>
     <form onSubmit={submit}>
@@ -58,7 +73,7 @@ function SourceForm({ source, onSave, onCancel, onExpired }: { source?: Source; 
       <div className="form-grid"><label>Tipo de território<select value={values.recorte_tipo} onChange={e => { field('recorte_tipo', e.target.value); field('recorte_codigo', ''); }}><option value="municipio">Município</option><option value="regiao">Região</option></select>{hint('recorte_tipo')}</label>{input('recorte_nome', 'Nome do território', 'Ex.: São Paulo', 150)}</div>
       <div className="form-grid">{input('recorte_codigo', values.recorte_tipo === 'municipio' ? 'Código IBGE (7 dígitos)' : 'Código da região', values.recorte_tipo === 'municipio' ? '3550308' : 'Código na fonte de dados', 50)}<label>UF{values.recorte_tipo === 'regiao' && ' (opcional)'}<input value={values.recorte_uf} onChange={e => field('recorte_uf', e.target.value.toUpperCase())} maxLength={2} required={values.recorte_tipo === 'municipio'} aria-invalid={Boolean(fields.recorte_uf)} />{hint('recorte_uf')}</label></div>
       <label className="checkbox"><input type="checkbox" checked={values.ativa} onChange={e => field('ativa', e.target.checked)} />Habilitada para coleta</label>
-      {error && <div className="error" role="alert">{error}{fields.__all__ && <p>{fields.__all__.join(' ')}</p>}</div>}
+      <Notice message={error}>{fields.__all__ && <p>{fields.__all__.join(' ')}</p>}</Notice>
       <div className="form-actions"><button type="submit" disabled={busy}>{busy ? 'Salvando…' : 'Salvar fonte'}</button></div>
     </form>
   </section>;
@@ -66,84 +81,251 @@ function SourceForm({ source, onSave, onCancel, onExpired }: { source?: Source; 
 
 function Workspace({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [tab, setTab] = useState('inicio');
-  const [page, setPage] = useState<SourcePage>({ sources: [], count: 0, page: 1, pages: 1 });
+  const currentTab=useRef(tab);currentTab.current=tab;
+  const contentRef=useRef<HTMLElement>(null);
+  const previousScreen=useRef(tab);
+  useLayoutEffect(()=>{
+    if(previousScreen.current===tab)return;
+    previousScreen.current=tab;
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const animation=contentRef.current?.animate([{opacity:0},{opacity:1}],{duration:260,easing:'ease-out'});
+    return()=>animation?.cancel();
+  },[tab]);
+  const [indicators, setIndicators] = useState<Indicators|null>(null);
+  const latestWeek = indicators?.serie.slice().reverse().find(point => point.casos !== null);
+  const [refreshIndicators,setRefreshIndicators] = useState(0);
+  const [passwordDialog,setPasswordDialog] = useState(false);
+  const territory = useRef<Indicators['territorio']|null>(null);
+  if (indicators) territory.current = indicators.territorio;
+  const selectedCodes = useMemo(()=>new Set(indicators?.territorio.tipo === 'regiao'
+    ? (immediateRegions as Record<string,string[]>)[indicators.territorio.codigo] || []
+    : indicators ? [indicators.territorio.codigo] : []),[indicators]);
+  const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
+  useEffect(() => {
+    if (tab !== 'inicio') return;
+    let active = true;
+    import('./municipalities.json').then(data => { if (active) setMunicipalities(data.default); }).catch(() => { if (active) setError('Não foi possível carregar os limites municipais. Atualize a página para tentar novamente.'); });
+    return () => { active = false; };
+  }, [tab]);
+  const [page, setPage] = useState<SourcePage>({ sources: [], count: 0, page: 1, pages: 1, coleta_realizada: false });
+  const [sourceSearch,setSourceSearch]=useState('');
+  const sourceSearchRef=useRef(sourceSearch);sourceSearchRef.current=sourceSearch;
+  const sourceRequest=useRef(0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useTimedMessage();
+  const [success, setSuccess] = useTimedMessage(5000);
   const [editor, setEditor] = useState<Source | 'new' | null>(null);
   const [mapView, setMapView] = useState({ zoom: 0.8, pan: { x: 0, y: 0 } });
-  const { zoom, pan } = mapView;
+  const currentMapView = useRef(mapView);
+  const mapGroup = useRef<SVGGElement>(null);
+  const mapAnimation = useRef<number|null>(null);
+  function cancelMapAnimation() {
+    if(mapAnimation.current!==null){cancelAnimationFrame(mapAnimation.current);setMapView(currentMapView.current);}
+    mapAnimation.current=null;
+  }
+  function moveMap(target: typeof mapView, animated=true, duration=700) {
+    cancelMapAnimation();
+    // Anima apenas o grupo SVG; não reconstrói os 645 municípios em cada quadro.
+    const write=(view:typeof mapView,commit=true)=>{
+      currentMapView.current=view;
+      mapGroup.current?.setAttribute('transform',`translate(${view.pan.x} ${view.pan.y}) translate(360 220) scale(${view.zoom}) translate(-360 -220)`);
+      if(commit)setMapView(view);
+    };
+    if(!animated || window.matchMedia('(prefers-reduced-motion: reduce)').matches){write(target);return;}
+    const start=currentMapView.current, started=performance.now();
+    const frame=(now:number)=>{
+      const progress=Math.min(1,(now-started)/duration);
+      const ease=progress<.5 ? 4*progress**3 : 1-(-2*progress+2)**3/2;
+      write({zoom:start.zoom*(target.zoom/start.zoom)**ease,pan:{x:start.pan.x+(target.pan.x-start.pan.x)*ease,y:start.pan.y+(target.pan.y-start.pan.y)*ease}},false);
+      if(progress<1) mapAnimation.current=requestAnimationFrame(frame);
+      else {mapAnimation.current=null;write(target);}
+    };
+    mapAnimation.current=requestAnimationFrame(frame);
+  }
+  const { zoom } = mapView;
   const mapRef = useRef<SVGSVGElement>(null);
+  const zoomAnchor = useRef({x:360,y:220});
+  const fitMode = useRef<'estado'|'recorte'>('estado');
+  const lastTerritory = useRef<string|null>(null);
+  function fitMap(mode: 'estado'|'recorte', animated=true) {
+    const svg = mapRef.current;
+    const matrix = svg?.getScreenCTM();
+    if (!svg || !matrix) return;
+    const current = territory.current;
+    const codes = new Set(mode === 'recorte' && current ? current.tipo === 'regiao'
+      ? (immediateRegions as Record<string,string[]>)[current.codigo] || [] : [current.codigo] : []);
+    const shapes = mode === 'recorte' && codes.size
+      ? Array.from(svg.querySelectorAll<SVGPathElement>('[data-municipality]')).filter(p=>codes.has(p.dataset.municipality!))
+      : [svg.querySelector<SVGPathElement>('[data-state]')!];
+    const bounds = shapes.filter(Boolean).map(p=>p.getBBox());
+    if (!bounds.length) return;
+    const left = Math.min(...bounds.map(b=>b.x)), top = Math.min(...bounds.map(b=>b.y));
+    const right = Math.max(...bounds.map(b=>b.x+b.width)), bottom = Math.max(...bounds.map(b=>b.y+b.height));
+    const panel = svg.closest('.territory-panel')!.getBoundingClientRect();
+    let area = {left: panel.left+24, right: panel.right-24, top: Math.max(24,panel.top+48), bottom: Math.min(innerHeight-24,panel.bottom-64)};
+    if (area.bottom-area.top<140 || area.right-area.left<140) area = {left:24,right:innerWidth-24,top:120,bottom:innerHeight-80};
+    const inverse=matrix.inverse();
+    const a=new DOMPoint(area.left,area.top).matrixTransform(inverse), b=new DOMPoint(area.right,area.bottom).matrixTransform(inverse);
+    // Margem mantém os municípios vizinhos visíveis; o estado inteiro cabe mesmo em telas estreitas.
+    const next=Math.min(10, Math.max(.1, Math.min((b.x-a.x)/Math.max(1,right-left),(b.y-a.y)/Math.max(1,bottom-top))*.8));
+    zoomAnchor.current={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+    drag.current=null; setHoveredCity(null);
+    moveMap({zoom:next,pan:{x:(a.x+b.x)/2-360-next*((left+right)/2-360),y:(a.y+b.y)/2-220-next*((top+bottom)/2-220)}},animated);
+  }
+  useEffect(()=>{
+    if(tab !== 'inicio' || !municipalities.length || !indicators) return;
+    const key=`${indicators.territorio.tipo}:${indicators.territorio.codigo}`;
+    if(lastTerritory.current===key) return;
+    const firstSelection=lastTerritory.current===null;
+    fitMode.current='recorte';
+    lastTerritory.current=key;
+    if(!firstSelection && innerWidth<=760) mapRef.current?.closest('.territory-panel')?.scrollIntoView({block:'start'});
+    const frame=requestAnimationFrame(()=>fitMap(fitMode.current));
+    return()=>cancelAnimationFrame(frame);
+  },[indicators?.territorio.tipo,indicators?.territorio.codigo,municipalities,tab]);
+  useEffect(()=>{
+    if(tab!=='inicio') return;
+    let frame=0;
+    let layout='';
+    // Alterações de layout (inclusive a barra de rolagem) não devem interromper uma viagem em curso.
+    const resize=()=>{
+      cancelAnimationFrame(frame);
+      frame=requestAnimationFrame(()=>{
+        const svg=mapRef.current;
+        const panel=svg?.closest('.territory-panel');
+        if(!svg || !panel) return;
+        // A barra de endereço móvel dispara resize durante a rolagem. Só reenquadrar
+        // quando o tamanho do mapa/painel mudar, nunca por sua posição na página.
+        const mapBounds=svg.getBoundingClientRect(), panelBounds=panel.getBoundingClientRect();
+        const next=[mapBounds.width,mapBounds.height,panelBounds.width,panelBounds.height].map(Math.round).join(':');
+        if(next===layout) return;
+        layout=next;
+        fitMap(fitMode.current,mapAnimation.current!==null);
+      });
+    };
+    const observer=new ResizeObserver(resize);
+    if(mapRef.current){observer.observe(mapRef.current);observer.observe(mapRef.current.closest('.territory-panel')!);}
+    window.addEventListener('resize',resize);resize();
+    return()=>{observer.disconnect();window.removeEventListener('resize',resize);cancelAnimationFrame(frame);cancelMapAnimation();};
+  },[tab,municipalities]);
   const [hoveredCity, setHoveredCity] = useState<{ id: string; name: string; x: number; y: number } | null>(null);
-  function changeZoom(factor: number, anchor = { x: 360, y: 220 }) {
-    setMapView(view => {
-      const next = Math.max(.6, Math.min(10, view.zoom * factor));
+  function changeZoom(factor: number, anchor = zoomAnchor.current, animated=true) {
+      const view=currentMapView.current;
+      const next = Math.max(.1, Math.min(10, view.zoom * factor));
       const ratio = next / view.zoom;
-      return { zoom: next, pan: { x: anchor.x - 360 - (anchor.x - 360 - view.pan.x) * ratio, y: anchor.y - 220 - (anchor.y - 220 - view.pan.y) * ratio } };
-    });
+      moveMap({ zoom: next, pan: { x: anchor.x - 360 - (anchor.x - 360 - view.pan.x) * ratio, y: anchor.y - 220 - (anchor.y - 220 - view.pan.y) * ratio } },animated,220);
   }
   useEffect(() => {
     const svg = mapRef.current;
     if (!svg || tab !== 'inicio') return;
     const wheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) return;
       event.preventDefault();
       const matrix = svg.getScreenCTM();
       if (!matrix) return;
       const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
       const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1);
-      changeZoom(Math.exp(-Math.max(-160, Math.min(160, delta)) * .002), point);
+      changeZoom(Math.exp(-Math.max(-160, Math.min(160, delta)) * .002), point,false);
     };
+    let pinch: { distance: number; center: DOMPoint; view: typeof mapView } | null = null;
+    const gesture = (event: TouchEvent) => {
+      if (event.touches.length !== 2) return null;
+      const matrix = svg.getScreenCTM();
+      if (!matrix) return null;
+      const [a, b] = Array.from(event.touches);
+      return { distance: Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY), center: new DOMPoint((a.clientX+b.clientX)/2, (a.clientY+b.clientY)/2).matrixTransform(matrix.inverse()) };
+    };
+    const touchStart = (event: TouchEvent) => {
+      const pair = gesture(event);
+      if (!pair || pair.distance === 0) return;
+      event.preventDefault(); cancelMapAnimation(); drag.current = null; setHoveredCity(null);
+      pinch = { ...pair, view: currentMapView.current };
+    };
+    const touchMove = (event: TouchEvent) => {
+      const pair = gesture(event);
+      if (!pair || !pinch) return;
+      event.preventDefault();
+      const next = Math.max(.1, Math.min(10, pinch.view.zoom * pair.distance / pinch.distance));
+      const ratio = next / pinch.view.zoom;
+      moveMap({zoom:next, pan:{x:pair.center.x-360-(pinch.center.x-360-pinch.view.pan.x)*ratio, y:pair.center.y-220-(pinch.center.y-220-pinch.view.pan.y)*ratio}},false);
+    };
+    const touchEnd = () => { pinch = null; };
     svg.addEventListener('wheel', wheel, { passive: false });
-    return () => svg.removeEventListener('wheel', wheel);
+    svg.addEventListener('touchstart', touchStart, { passive: false });
+    svg.addEventListener('touchmove', touchMove, { passive: false });
+    svg.addEventListener('touchend', touchEnd);
+    svg.addEventListener('touchcancel', touchEnd);
+    return () => {
+      svg.removeEventListener('wheel', wheel);
+      svg.removeEventListener('touchstart', touchStart);
+      svg.removeEventListener('touchmove', touchMove);
+      svg.removeEventListener('touchend', touchEnd);
+      svg.removeEventListener('touchcancel', touchEnd);
+    };
   }, [tab]);
   const drag = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
   const [showDataFlow, setShowDataFlow] = useState(false);
   const [collecting, setCollecting] = useState<number | null>(null);
   const [collectionHistory, setCollectionHistory] = useState<{ source: Source; runs: CollectionRun[] } | null>(null);
   async function collect(source: Source) {
+    const originTab=currentTab.current;
     setCollecting(source.id); setError(''); setSuccess('');
     try {
       const data = await api<{ execucao: CollectionRun }>(`/fontes/${source.id}/coletas/`, 'POST', {});
-      setSuccess(data.execucao.status === 'vazia' ? `${source.nome}: ${data.execucao.mensagem}` : `${source.nome}: ${data.execucao.quantidade_registros} registros brutos coletados.${data.execucao.repetida ? ' Conteúdo já armazenado; sem duplicação.' : ''} Os indicadores ainda aguardam processamento.`);
-    } catch (err) { if (err instanceof ApiError && err.status === 401) onLogout(); else setError(describe(err)); }
-    finally { setCollecting(null); void load(page.page, false); }
+      if(currentTab.current===originTab)setSuccess(data.execucao.status === 'vazia' ? `${source.nome}: ${data.execucao.mensagem}` : `${source.nome}: ${data.execucao.quantidade_registros} registros brutos coletados.${data.execucao.repetida ? ' Conteúdo já armazenado; sem duplicação.' : ''} Consulte a situação do processamento na lista.`);
+    } catch (err) { if (err instanceof ApiError && err.status === 401) onLogout(); else if(currentTab.current===originTab)setError(describe(err)); }
+    finally { setCollecting(null); setRefreshIndicators(v=>v+1); void load(page.page, false); }
   }
   async function showHistory(source: Source) {
     try { const data = await api<{ execucoes: CollectionRun[] }>(`/fontes/${source.id}/coletas/`); setCollectionHistory({ source, runs: data.execucoes }); }
     catch (err) { if (err instanceof ApiError && err.status === 401) onLogout(); else setError(describe(err)); }
   }
   async function load(number = 1, clearError = true) {
+    const version=++sourceRequest.current;
     setLoading(true); if (clearError) setError('');
-    try { setPage(await api<SourcePage>(`/fontes/?page=${number}`)); }
-    catch (err) { if (err instanceof ApiError && err.status === 401) onLogout(); else setError(describe(err)); }
-    finally { setLoading(false); }
+    const params=new URLSearchParams({page:String(number)});
+    if(currentTab.current==='fontes' && sourceSearchRef.current.trim())params.set('q',sourceSearchRef.current.trim());
+    try { const result=await api<SourcePage>(`/fontes/?${params}`);if(version===sourceRequest.current)setPage(result); }
+    catch (err) { if(version===sourceRequest.current){if (err instanceof ApiError && err.status === 401) onLogout(); else setError(describe(err));} }
+    finally { if(version===sourceRequest.current)setLoading(false); }
   }
-  useEffect(() => { if (user.administrador) void load(); }, []);
+  useEffect(() => {
+    ++sourceRequest.current;setLoading(true);
+    const timer=setTimeout(()=>void load(),tab==='fontes'?250:0);
+    return()=>{clearTimeout(timer);++sourceRequest.current;};
+  }, [tab,sourceSearch]);
+  const [processingNotice,setProcessingNotice]=useTimedMessage();
+  useEffect(()=>{const count=page.falhas_processamento||0;setProcessingNotice(count?`${count} ${count===1?'fonte com falha':'fontes com falha'} de processamento. Os dados brutos foram preservados.`:'');},[page.falhas_processamento,setProcessingNotice]);
+  useEffect(()=>{setSuccess('');setError('');setProcessingNotice('');},[tab,setSuccess,setError,setProcessingNotice]);
   async function signOut() {
     try { await api('/auth/logout/', 'POST'); onLogout(); }
     catch (err) { if (err instanceof ApiError && err.status === 401) onLogout(); else setError(describe(err)); }
   }
   return <div className={`app-shell ${tab === 'inicio' ? 'monitoring-shell' : ''}`}>
 
-    <header className="topbar"><Brand /><nav aria-label="Navegação principal"><button className={tab === 'inicio' ? 'selected' : ''} onClick={() => { setTab('inicio'); setEditor(null); }}>Monitoramento</button>{user.administrador && <button className={tab === 'fontes' ? 'selected' : ''} onClick={() => { setTab('fontes'); setSuccess(''); }}>Fontes de dados</button>}</nav><div className="header-actions"><div className="account"><span className="avatar" title={user.nome}>{user.nome[0].toUpperCase()}</span><button className="secondary" onClick={signOut}>Sair</button></div></div></header>
-    <main className="content">
-      {collectionHistory && <section className="card collection-history" aria-label="Histórico de coleta"><div className="section-heading"><h2>Coletas · {collectionHistory.source.nome}</h2><button className="secondary" onClick={() => setCollectionHistory(null)}>Fechar histórico</button></div>{collectionHistory.runs.length === 0 ? <p>Nenhuma coleta executada.</p> : <ul>{collectionHistory.runs.map(run => <li key={run.id}><strong>{run.status === 'sucesso' ? 'Concluída' : run.status === 'vazia' ? 'Sem registros' : run.status === 'erro' ? 'Falha' : 'Executando'} · {new Date(run.iniciada_em).toLocaleString('pt-BR')}</strong><p>{run.mensagem}</p><small>{run.quantidade_registros} registros · {run.origem === 'airflow' ? 'Agendada' : 'Manual'}{run.repetida ? ' · Conteúdo já armazenado' : ''}</small></li>)}</ul>}</section>}
+    <header className="topbar"><Brand /><nav className="main-navigation" data-screen={tab} aria-label="Navegação principal"><span className="navigation-indicator" aria-hidden="true"/><button aria-current={tab === 'inicio' ? 'page' : undefined} className={tab === 'inicio' ? 'selected' : ''} onClick={() => { setTab('inicio'); setEditor(null); }}>Monitoramento</button>{<button aria-current={tab === 'fontes' ? 'page' : undefined} className={tab === 'fontes' ? 'selected' : ''} onClick={() => { setTab('fontes'); setSuccess(''); }}>Fontes de dados</button>}</nav><div className="header-actions"><AccountMenu user={user} onPassword={()=>setPasswordDialog(true)} onLogout={()=>void signOut()}/></div></header>
+    {passwordDialog&&<PasswordDialog onClose={()=>setPasswordDialog(false)} onExpired={onLogout}/>}
+    <main className="content" ref={contentRef}>
+      {tab === 'fontes' && collectionHistory && <section className="card collection-history" aria-label="Histórico de coleta"><div className="section-heading"><div><h2>Coletas · {territoryLabel(collectionHistory.source)}</h2><small>{sourcePeriodLabel(collectionHistory.source)}</small></div><button className="secondary" onClick={() => setCollectionHistory(null)}>Fechar histórico</button></div>{collectionHistory.runs.length === 0 ? <p>Nenhuma coleta executada.</p> : <ul>{collectionHistory.runs.map(run => <li key={run.id}><strong>{run.status === 'sucesso' ? 'Concluída' : run.status === 'vazia' ? 'Sem registros' : run.status === 'erro' ? 'Falha' : 'Executando'} · {new Date(run.iniciada_em).toLocaleString('pt-BR')}</strong><p>{run.mensagem}</p><small>{run.quantidade_registros} registros · {run.origem === 'airflow' ? 'Agendada' : 'Manual'}{run.repetida ? ' · Conteúdo já armazenado' : ''}</small></li>)}</ul>}</section>}
 
-      {error && <div className="error" role="alert">{error} {user.administrador && <button className="secondary" onClick={() => void load(page.page)}>Tentar novamente</button>}</div>}
-      {success && <div className="success" role="status">{success}</div>}
+      <Notice message={user.administrador?processingNotice:''}><button className="secondary" onClick={()=>setTab('fontes')}>Consultar fontes</button></Notice>
+      <Notice message={error}><button className="secondary" onClick={() => void load(page.page)}>Tentar novamente</button></Notice>
+      <Notice message={success} kind="success"/>
       {tab === 'inicio' ? <>
-      <div className="dashboard-heading"><div><span className="eyebrow">PAINEL TERRITORIAL</span><h1>Monitoramento epidemiológico</h1></div><span className="scope-pill">São Paulo · SP</span></div>
+      <div className="dashboard-heading"><div><span className="eyebrow">PAINEL TERRITORIAL</span><h1>Monitoramento epidemiológico</h1></div><div className="dashboard-tools">{indicators && <span className="selected-scope" aria-label={`Território selecionado: ${indicators.territorio.nome}`}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><strong>{indicators.territorio.nome}{indicators.territorio.tipo === 'municipio' ? ' / SP' : ''}</strong></span>}<IndicatorFilters onData={setIndicators} onExpired={onLogout} refresh={refreshIndicators}/></div></div>
       <div className="dashboard-grid">
         <aside className="dashboard-left">
-          <section className="card summary-card"><div className="section-heading"><span className="eyebrow">BASE DE MONITORAMENTO</span><span className="badge inactive">Em preparação</span></div><h2>Resumo do monitoramento</h2><div className="primary-metric"><strong>{user.administrador ? loading ? '…' : error ? '—' : String(page.count).padStart(2, '0') : '—'}</strong><span>fontes públicas<br />cadastradas</span></div><div className="metric-rule" /><dl className="status-list"><div><dt>Coleta</dt><dd>{page.sources.some(s => s.ultima_coleta_em) ? 'Dados brutos coletados' : 'Aguardando coleta'}</dd></div><div><dt>Indicadores</dt><dd>Não disponíveis</dd></div><div><dt>Seu perfil</dt><dd>{user.administrador ? 'Administrador' : 'Usuário'}</dd></div></dl>{user.administrador && <button className="text-button" onClick={() => setTab('fontes')}>Gerenciar fontes <span>↗</span></button>}</section>
-
+          <section className="card summary-card"><div className="section-heading"><span className="eyebrow">BASE DE MONITORAMENTO</span><span className="badge inactive">{indicators?.semanas_com_dados?'Dados disponíveis':'Sem série'}</span></div><h2>Resumo do monitoramento</h2><div className="primary-metric"><strong>{loading ? '…' : error ? '—' : String(page.count).padStart(2, '0')}</strong><span>fontes públicas<br />cadastradas</span></div><div className="metric-rule" /><dl className="status-list"><div><dt>Coleta</dt><dd>{indicators?.semanas_com_dados ? 'Dados processados' : page.coleta_realizada ? 'Aguardando processamento' : 'Aguardando coleta'}</dd></div><div><dt>Casos no período</dt><dd>{indicators&&indicators.semanas_com_dados?number(indicators.casos_total):'—'}</dd></div><div><dt>Tendência</dt><dd>{trend(indicators?.tendencia_percentual)}</dd></div><div><dt>Seu perfil</dt><dd>{user.administrador ? 'Administrador' : 'Usuário'}</dd></div></dl><button className="text-button" onClick={() => setTab('fontes')}>{user.administrador ? 'Gerenciar fontes' : 'Consultar fontes'} <span>↗</span></button></section>
+          <section className="card latest-week-card"><div className="section-heading"><h3>Última semana com dados</h3></div>{latestWeek ? <><p className="muted">{indicators?.territorio.nome} · Semana de {latestWeek.data.split('-').reverse().join('/')}</p><div className="primary-metric"><strong>{number(latestWeek.casos!)}</strong><span>casos<br />notificados</span></div><small>No período selecionado.</small></> : <p className="muted">Nenhuma semana com dados no período selecionado.</p>}</section>
+          <section className="card"><div className="section-heading"><h3>Semanas acima do padrão</h3></div><div className="primary-metric"><strong>{indicators?.semanas_com_dados ? number(indicators.anomalias) : '—'}</strong><span>semanas<br />identificadas</span></div><p className="muted">No período selecionado, conforme o critério do gráfico. Não confirma surto.</p></section>
+          <section className="card"><div className="section-heading"><h3>Cobertura</h3></div>{indicators ? <><div className="primary-metric"><strong>{number(indicators.municipios_cobertos)}</strong><span>de {number(indicators.municipios_regiao)}<br />{indicators.territorio.tipo === 'regiao' ? 'municípios da região' : 'município selecionado'}</span></div><p className="muted">Com dados no período selecionado.</p>{indicators.territorio.tipo === 'regiao' && indicators.municipios_cobertos < indicators.municipios_regiao && <small>Cobertura parcial da região.</small>}</> : <p className="muted">Selecione um recorte para consultar a cobertura.</p>}</section>
         </aside>
-        <section className="territory-panel" aria-label="Mapa de referência do estado de São Paulo"><div className="map-toolbar"><span className="map-tab">Território</span><span className="muted">Recorte de referência · SP</span><span className="map-legend"><i />Sem classificação epidemiológica</span></div><div className="map-stage"><div className="map-coordinate">23° S / 47° O <span>SUDESTE · BRASIL</span></div><svg ref={mapRef} className="interactive-map" viewBox="-30 -30 780 500" role="img" aria-labelledby="map-title map-description" onPointerDown={e => { if (e.button !== 0) return; e.currentTarget.setPointerCapture(e.pointerId); setHoveredCity(null); drag.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y }; }} onPointerMove={e => { if (!drag.current) return; const matrix = e.currentTarget.getScreenCTM(); if (!matrix) return; const inverse = matrix.inverse(); const start = new DOMPoint(drag.current.x, drag.current.y).matrixTransform(inverse); const current = new DOMPoint(e.clientX, e.clientY).matrixTransform(inverse); const nextPan = { x: drag.current.panX + current.x - start.x, y: drag.current.panY + current.y - start.y }; setMapView(view => ({ ...view, pan: nextPan })); }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }}><title id="map-title">Contorno do estado de São Paulo</title><desc id="map-description">Mapa geográfico de referência, sem dados de casos ou classificação de risco.</desc><defs><linearGradient id="map-fill" x2="1" y2="1"><stop stopColor="#293b5c"/><stop offset="1" stopColor="#142238"/></linearGradient></defs><g transform={`translate(${pan.x} ${pan.y}) translate(360 220) scale(${zoom}) translate(-360 -220)`}><path d={saoPauloPath} fill="url(#map-fill)" stroke="#668ad0" strokeWidth="1.5"/>{municipalities.map(city => <path key={city.id} d={city.path} className={`municipality ${hoveredCity?.id === city.id ? 'highlighted' : ''}`} fill="transparent" stroke="#4a6286" strokeWidth=".65" onPointerMove={event => { if (drag.current) return; setHoveredCity({ id: city.id, name: city.name, x: Math.max(12, Math.min(window.innerWidth - 272, event.clientX + 16)), y: Math.max(12, Math.min(window.innerHeight - 140, event.clientY + 16)) }); }} onPointerLeave={() => setHoveredCity(null)}><title>{city.name} · IBGE {city.id}</title></path>)}</g></svg>{hoveredCity && <div className="municipality-tooltip" role="status" style={{ left: hoveredCity.x, top: hoveredCity.y }}><strong>{hoveredCity.name}</strong><span>São Paulo · IBGE {hoveredCity.id}</span><p>Dados epidemiológicos ainda não disponíveis.</p></div>}<div className="map-zoom"><button aria-label="Ampliar mapa" disabled={zoom >= 10} onClick={() => changeZoom(1.3)}>+</button><button aria-label="Reduzir mapa" disabled={zoom <= .6} onClick={() => changeZoom(1 / 1.3)}>−</button><button className="map-reset" aria-label="Restaurar posição e zoom do mapa" title="Restaurar mapa" onClick={() => { setMapView({ zoom: 0.8, pan: { x: 0, y: 0 } }); }}><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/><circle cx="12" cy="12" r="3"/></svg></button></div><div className="map-note"><span className="eyebrow">VISUALIZAÇÃO TERRITORIAL</span><strong>Indicadores ainda não disponíveis</strong><p>Os dados brutos coletados ainda precisam ser padronizados para exibir indicadores.</p></div></div><div className="map-bottom"><span>Malha territorial · IBGE</span><span>Referência geográfica, sem indicadores de risco</span></div></section>
-        <aside className="dashboard-right"><section className="card"><div className="section-heading"><h3>Fontes cadastradas</h3><span className="counter">{user.administrador ? page.count : '—'}</span></div>{loading ? <p role="status" className="muted">Carregando fontes…</p> : !user.administrador ? <p className="muted">As fontes são configuradas pelo administrador da equipe.</p> : page.sources.length ? <><div className="source-feed">{page.sources.slice(0, 5).map(s => <div key={s.id}><span className={`source-dot ${s.ativa ? 'enabled' : ''}`} /><div><strong>{s.nome}</strong><small>{s.recorte_nome} · {s.recorte_uf || s.recorte_tipo}</small><span className="feed-status">{s.ativa ? 'Habilitada' : 'Desabilitada'} · {s.tipo.toUpperCase()}</span></div></div>)}</div>{page.count > 5 && <small>Exibindo {Math.min(5, page.sources.length)} de {page.count} fontes.</small>}</> : <div className="compact-empty"><span aria-hidden="true">↗</span><h3>Nenhuma fonte cadastrada</h3><p className="muted">Associe dados públicos a um município ou região.</p></div>}{user.administrador && <button className="text-button" onClick={() => { setTab('fontes'); setEditor('new'); }}>Cadastrar fonte <span>+</span></button>}</section><section className="card series-card"><span className="eyebrow">EVOLUÇÃO TEMPORAL</span><h3>Séries epidemiológicas</h3><div className="chart-empty"><span>Sem séries disponíveis</span></div><p className="muted">A curva será exibida após a coleta e validação dos dados.</p></section></aside>
+        <section className="territory-panel" aria-label="Mapa de referência do estado de São Paulo"><div className="map-toolbar"><span className="map-tab">Território</span><span className="muted">Recorte de referência · SP</span><span className="map-legend"><i />Sem classificação epidemiológica</span></div><div className="map-stage"><div className="map-coordinate">23° S / 47° O <span>SUDESTE · BRASIL</span></div><svg ref={mapRef} className="interactive-map" viewBox="-30 -30 780 500" role="img" aria-labelledby="map-title map-description" onPointerDown={e => { if (e.pointerType === 'touch' || e.button !== 0) return; cancelMapAnimation(); e.currentTarget.setPointerCapture(e.pointerId); setHoveredCity(null); drag.current = { x: e.clientX, y: e.clientY, panX: currentMapView.current.pan.x, panY: currentMapView.current.pan.y }; }} onPointerMove={e => { if (!drag.current) return; const matrix = e.currentTarget.getScreenCTM(); if (!matrix) return; const inverse = matrix.inverse(); const start = new DOMPoint(drag.current.x, drag.current.y).matrixTransform(inverse); const current = new DOMPoint(e.clientX, e.clientY).matrixTransform(inverse); const nextPan = { x: drag.current.panX + current.x - start.x, y: drag.current.panY + current.y - start.y }; moveMap({ ...currentMapView.current, pan: nextPan },false); }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }}><title id="map-title">Contorno do estado de São Paulo</title><desc id="map-description">Mapa geográfico de referência, sem dados de casos ou classificação de risco.</desc><defs><linearGradient id="map-fill" x2="1" y2="1"><stop stopColor="#293b5c"/><stop offset="1" stopColor="#142238"/></linearGradient></defs><g ref={mapGroup} transform={`translate(${currentMapView.current.pan.x} ${currentMapView.current.pan.y}) translate(360 220) scale(${currentMapView.current.zoom}) translate(-360 -220)`}><path data-state d={saoPauloPath} fill="url(#map-fill)" stroke="#668ad0" strokeWidth="1.5"/>{municipalities.map(city => <path key={city.id} data-municipality={city.id} d={city.path} className={`municipality ${selectedCodes.has(city.id) ? 'selected-territory' : ''} ${hoveredCity?.id === city.id ? 'highlighted' : ''}`} fill="transparent" stroke="#4a6286" strokeWidth=".65" onPointerMove={event => { if (event.pointerType === 'touch' || drag.current) return; setHoveredCity({ id: city.id, name: city.name, x: Math.max(12, Math.min(window.innerWidth - 272, event.clientX + 16)), y: Math.max(12, Math.min(window.innerHeight - 140, event.clientY + 16)) }); }} onPointerLeave={() => setHoveredCity(null)}><title>{city.name} · IBGE {city.id}</title></path>)}</g></svg>{hoveredCity && <div className="municipality-tooltip" role="status" style={{ left: hoveredCity.x, top: hoveredCity.y }}><strong>{hoveredCity.name}</strong><span>São Paulo · IBGE {hoveredCity.id}</span><p>{selectedCodes.has(hoveredCity.id) ? 'Município incluído na consulta atual.' : 'Município fora do recorte consultado.'}</p></div>}<p className="map-gesture-hint"><span className="mouse-gesture">Ctrl + scroll para ampliar</span><span className="touch-gesture">Use dois dedos para ampliar</span></p><div className="map-zoom"><button aria-label="Ampliar mapa" disabled={zoom >= 10} onClick={() => changeZoom(1.3)}>+</button><button aria-label="Reduzir mapa" disabled={zoom <= .1} onClick={() => changeZoom(1 / 1.3)}>−</button><button className="map-reset" aria-label="Restaurar posição e zoom do mapa" title="Restaurar mapa" onClick={() => { fitMode.current = 'estado'; fitMap('estado'); }}><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/><circle cx="12" cy="12" r="3"/></svg></button></div><div className="map-note"><span className="eyebrow">VISUALIZAÇÃO TERRITORIAL</span><strong>{indicators?.territorio.nome||'Sem série selecionada'}</strong><p>{indicators?.territorio.tipo==='regiao' ? `${indicators.municipios_cobertos} de ${indicators.municipios_regiao} municípios da região com série armazenada.` : 'Selecione município, agravo e período nos filtros.'}</p></div></div><div className="map-bottom"><span>Malha territorial · IBGE</span><span>Municípios do recorte destacados · sem classificação de risco</span></div></section>
+        <aside className="dashboard-right"><section className="card"><div className="section-heading"><h3>Fontes cadastradas</h3><span className="counter">{page.count}</span></div>{loading ? <p role="status" className="muted">Carregando fontes…</p> : page.sources.length ? <SourceFeed page={page} onExpired={onLogout}/> : <div className="compact-empty"><span aria-hidden="true">↗</span><h3>Nenhuma fonte cadastrada</h3><p className="muted">Associe dados públicos a um município ou região.</p></div>}{user.administrador && <button className="text-button" onClick={() => { setTab('fontes'); setEditor('new'); }}>Cadastrar fonte <span>+</span></button>}</section><SeriesChart data={indicators}/>{indicators&&<section className="card data-provenance"><div className="section-heading"><h3>Origem dos dados</h3></div><p><strong>{indicators.territorio.nome}</strong> · Dengue</p><p>Período: {indicators.serie.length ? `${indicators.serie[0].data.split('-').reverse().join('/')} a ${indicators.serie.at(-1)!.data.split('-').reverse().join('/')}` : 'Sem dados no período'}</p><p>Última coleta: {indicators.coletado_em ? new Date(indicators.coletado_em).toLocaleString('pt-BR') : '—'}</p><p className="provenance-source-label">{indicators.fontes.length === 1 ? 'Fonte:' : 'Fontes:'}</p>{indicators.fontes.map(f=><p key={f.id}><a href={f.url} target="_blank" rel="noreferrer">{f.nome} ↗</a></p>)}<p>Processamento: {indicators.atualizado_em?new Date(indicators.atualizado_em).toLocaleString('pt-BR'):'Sem dados no período'}</p>{indicators.territorio.tipo==='regiao'&&<p>Agregação dos {indicators.municipios_cobertos} municípios coletados, de {indicators.municipios_regiao} na região. Não representa a região inteira quando a cobertura é parcial.</p>}</section>}</aside>
       </div></>
-      : <><div className="page-heading"><div><span className="eyebrow">ADMINISTRAÇÃO</span><h1>Fontes de dados</h1><p className="muted">Gerencie a origem dos dados e os territórios monitorados.</p></div><div className="source-heading-actions"><div className="flow-help"><button className="secondary help-button" aria-label="Fluxo dos dados" aria-expanded={showDataFlow} aria-controls="data-flow-panel" onClick={() => setShowDataFlow(v => !v)}>?</button>{showDataFlow && <section className="card pipeline-card" id="data-flow-panel" aria-label="Fluxo dos dados"><div className="section-heading"><span className="eyebrow">FLUXO DOS DADOS</span><button className="secondary flow-close" aria-label="Fechar fluxo dos dados" onClick={() => setShowDataFlow(false)}>×</button></div><h3>Etapas de integração</h3><ol><li className="current"><span>01</span><div><strong>Configurar fontes</strong><small>Cadastro disponível</small></div></li><li><span>02</span><div><strong>Coletar dados brutos</strong><small>Agendamento diário · 06h</small></div></li><li><span>03</span><div><strong>Acompanhar indicadores</strong><small>Aguardando dados validados</small></div></li></ol></section>}</div>{!editor && <button onClick={() => { setEditor('new'); setSuccess(''); }}>+ Cadastrar fonte</button>}</div></div>{editor ?
+      : <><div className="page-heading"><div><span className="eyebrow">{user.administrador ? 'ADMINISTRAÇÃO' : 'CONSULTA'}</span><h1>Fontes de dados</h1><p className="muted">{user.administrador ? 'Gerencie a origem dos dados e os territórios monitorados.' : 'Consulte a origem dos dados e os territórios monitorados.'}</p></div><div className="source-heading-actions"><div className="flow-help"><button className="secondary help-button" aria-label="Fluxo dos dados" aria-expanded={showDataFlow} aria-controls="data-flow-panel" onClick={() => setShowDataFlow(v => !v)}>?</button>{showDataFlow && <section className="card pipeline-card" id="data-flow-panel" aria-label="Fluxo dos dados"><div className="section-heading"><span className="eyebrow">FLUXO DOS DADOS</span><button className="secondary flow-close" aria-label="Fechar fluxo dos dados" onClick={() => setShowDataFlow(false)}>×</button></div><h3>Etapas de integração</h3><ol><li className="current"><span>01</span><div><strong>Configurar fontes</strong><small>Cadastro disponível</small></div></li><li><span>02</span><div><strong>Coletar dados brutos</strong><small>Agendamento diário · 06h</small></div></li><li><span>03</span><div><strong>Acompanhar indicadores</strong><small>Aguardando dados validados</small></div></li></ol></section>}</div>{user.administrador && !editor && <button onClick={() => { setEditor('new'); setSuccess(''); }}>+ Cadastrar fonte</button>}</div></div>{user.administrador && editor ?
  <SourceForm key={editor === 'new' ? 'new' : editor.id} source={editor === 'new' ? undefined : editor} onCancel={() => setEditor(null)} onExpired={onLogout} onSave={() => { setEditor(null); setSuccess('Fonte salva com sucesso.'); void load(); }} />
-      : <section className="card source-list"><div className="section-heading"><h2>Origens cadastradas</h2><span className="counter">{page.count} {page.count === 1 ? 'fonte' : 'fontes'}</span></div>{loading ? <p role="status">Carregando fontes…</p> : page.sources.length === 0 ? <div className="empty-state"><span className="empty-icon" aria-hidden="true">▤</span><h3>Nenhuma fonte cadastrada</h3><p>Adicione uma fonte pública e associe o território<br />para preparar o monitoramento.</p><button className="secondary" onClick={() => setEditor('new')}>Cadastrar primeira fonte</button></div> : <><div className="table-scroll"><table><thead><tr><th>Fonte / território</th><th>Formato</th><th>Situação</th><th>Última coleta</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{page.sources.map(s => <tr key={s.id}><td><strong>{s.nome}</strong><small>{s.recorte_nome}{s.recorte_uf && ` / ${s.recorte_uf}`} · {s.recorte_codigo}</small><a href={s.url} target="_blank" rel="noreferrer">Ver fonte ↗</a></td><td>{s.tipo.toUpperCase()}</td><td><span className={`badge ${s.ativa ? '' : 'inactive'}`}>{s.ativa ? 'Habilitada' : 'Desabilitada'}</span></td><td>{s.ultima_coleta_em ? new Date(s.ultima_coleta_em).toLocaleString('pt-BR') : 'Não realizada'}{s.ultima_execucao && <small>{s.ultima_execucao.status === 'erro' ? 'Última tentativa falhou' : s.ultima_execucao.status === 'executando' ? 'Coleta em execução' : `${s.ultima_execucao.quantidade_registros} registros brutos`}</small>}</td><td><div className="source-actions">{s.coleta_disponivel && <button className="secondary" disabled={collecting !== null} onClick={() => void collect(s)}>{collecting === s.id ? 'Coletando…' : 'Coletar agora'}</button>}<button className="secondary" onClick={() => void showHistory(s)}>Histórico</button><button className="secondary" aria-label={`Editar ${s.nome}`} onClick={() => { setEditor(s); setSuccess(''); }}>Editar</button></div></td></tr>)}</tbody></table></div><div className="pagination"><button className="secondary" disabled={page.page <= 1} onClick={() => void load(page.page - 1)}>Anterior</button><span>Página {page.page} de {page.pages}</span><button className="secondary" disabled={page.page >= page.pages} onClick={() => void load(page.page + 1)}>Próxima</button></div></>}
+      : <section className="card source-list"><div className="section-heading"><h2>Origens cadastradas</h2><span className="counter">{page.count} {page.count === 1 ? 'fonte' : 'fontes'}</span></div><div className="source-search"><label htmlFor="source-search">Pesquisar fontes</label><div className="source-search-field"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="source-search" type="search" maxLength={200} placeholder="Município, IBGE ou fonte" value={sourceSearch} onChange={event=>setSourceSearch(event.target.value)}/>{sourceSearch && <button type="button" className="secondary" onClick={()=>setSourceSearch('')}>Limpar</button>}</div></div>{loading ? <p role="status">Carregando fontes…</p> : page.sources.length === 0 ? <div className="empty-state"><span className="empty-icon" aria-hidden="true">▤</span><h3>{sourceSearch.trim() ? 'Nenhuma fonte encontrada' : 'Nenhuma fonte cadastrada'}</h3><p>{sourceSearch.trim() ? 'Tente outro município, código IBGE ou nome de fonte.' : user.administrador ? 'Adicione uma fonte pública para preparar o monitoramento.' : 'Aguarde o cadastro de fontes pelo administrador.'}</p>{user.administrador && !sourceSearch.trim() && <button className="secondary" onClick={() => setEditor('new')}>Cadastrar primeira fonte</button>}</div> : <><div className="table-scroll"><table><thead><tr><th>Território / fonte</th><th>Formato</th><th>Situação</th><th>Última coleta</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{page.sources.map(s => <tr key={s.id}><td><strong>{territoryLabel(s)}</strong><small>{sourcePeriodLabel(s)}</small><a href={s.url} target="_blank" rel="noreferrer">Ver fonte ↗</a></td><td data-label="Formato">{s.tipo.toUpperCase()}</td><td data-label="Situação"><span className={`badge ${s.ativa ? '' : 'inactive'}`}>{s.ativa ? 'Habilitada' : 'Desabilitada'}</span></td><td data-label="Última coleta">{s.ultima_coleta_em ? new Date(s.ultima_coleta_em).toLocaleString('pt-BR') : 'Não realizada'}{s.ultima_execucao && <small>{s.ultima_execucao.status === 'erro' ? 'Última tentativa falhou' : s.ultima_execucao.status === 'executando' ? 'Coleta em execução' : `${s.ultima_execucao.quantidade_registros} registros brutos`}</small>}{s.processamento&&<small className={s.processamento.status==='erro'?'processing-error':''}>{s.processamento.status==='erro'?`Falha no processamento: ${s.processamento.mensagem}`:`${s.processamento.registros} registros padronizados`}</small>}</td><td data-label="Ações"><div className="source-actions">{user.administrador && s.coleta_disponivel && <button className="secondary" disabled={collecting !== null} onClick={() => void collect(s)}>{collecting === s.id ? 'Coletando…' : 'Coletar agora'}</button>}<button className="secondary" onClick={() => void showHistory(s)}>Histórico</button>{user.administrador && <button className="secondary" aria-label={`Editar ${territoryLabel(s)} · ${sourcePeriodLabel(s)}`} onClick={() => { setEditor(s); setSuccess(''); }}>Editar</button>}</div></td></tr>)}</tbody></table></div><div className="pagination"><button className="secondary" disabled={page.page <= 1} onClick={() => void load(page.page - 1)}>Anterior</button><span>Página {page.page} de {page.pages}</span><button className="secondary" disabled={page.page >= page.pages} onClick={() => void load(page.page + 1)}>Próxima</button></div></>}
       </section>}</>}
       </main></div>;
 

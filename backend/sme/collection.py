@@ -139,6 +139,9 @@ def collect_source(source_id, *, origin="manual", user=None):
         run.mensagem = str(exc)[:300] if isinstance(exc, CollectionError) else "Falha interna durante a coleta."
         run.finalizada_em = timezone.now()
         run.save(update_fields=["status", "mensagem", "finalizada_em"])
+    if run.status in ("sucesso", "vazia"):
+        from .processing import process_lote
+        process_lote(run.lote_id)
     return run
 
 

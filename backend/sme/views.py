@@ -7,17 +7,20 @@ from .models import ExecucaoColeta
 import json
 from datetime import timedelta
 from functools import wraps
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.core.paginator import Paginator
 from django.db import DatabaseError, IntegrityError, connection, transaction
+from django.db.models import OuterRef, Subquery, Q
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from .forms import FonteForm
-from .models import FonteEpidemiologica, TentativaLogin
+from .models import FonteEpidemiologica, TentativaLogin, Usuario, RegistroAuditoria
 from .services import save_source
 
 
@@ -66,8 +69,11 @@ def source_data(source):
     except CollectionError:
         available = False
     latest = source.coletas.first()
+    from .models import ProcessamentoLote
+    processing = ProcessamentoLote.objects.filter(lote__fonte=source).order_by("-lote__criada_em", "-pk").first()
     return {"id": source.pk, "nome": source.nome, "tipo": source.tipo, "url": source.url,
             "ativa": source.ativa, "ultima_coleta_em": source.ultima_coleta_em,
+            "processamento": {"status":processing.status,"mensagem":processing.mensagem,"registros":processing.quantidade_registros} if processing else None,
             "coleta_disponivel": available, "ultima_execucao": run_data(latest),
             "recorte_tipo": source.recorte.tipo, "recorte_nome": source.recorte.nome,
             "recorte_codigo": source.recorte.codigo, "recorte_uf": source.recorte.uf}
@@ -87,7 +93,56 @@ def health(request):
 @require_GET
 @never_cache
 def csrf(request):
-    return JsonResponse({"csrfToken": get_token(request)})
+    return JsonResponse({"csrfToken": get_token(request), "registrationEnabled": settings.ALLOW_SELF_REGISTRATION})
+
+
+@require_POST
+@never_cache
+def register(request):
+    if not settings.ALLOW_SELF_REGISTRATION:
+        return error("O cadastro está desabilitado.", 403)
+    if request.user.is_authenticated:
+        return error("Saia da sua conta antes de criar outra.", 400)
+    try:
+        data = payload(request)
+    except ValueError as exc:
+        return error(str(exc))
+    name, email, password, confirmation = (data.get(k) for k in ('nome', 'email', 'password', 'password_confirmation'))
+    if not all(isinstance(v, str) for v in (name, email, password, confirmation)):
+        return error("Preencha nome, e-mail, senha e confirmação.")
+    name, email = name.strip(), email.strip().lower()
+    if not name or len(name)>150 or not email or len(email)>254 or not password or len(password)>1024:
+        return error("Informe nome, e-mail e senha válidos.")
+    if password != confirmation:
+        return error("As senhas não coincidem.")
+    try:
+        validate_email(email)
+        user = Usuario(email=email, first_name=name, is_staff=False, is_superuser=False, is_active=True)
+        validate_password(password, user)
+    except ValidationError as exc:
+        return error(" ".join(exc.messages))
+    # Limite compartilhado por origem; não confiar em cabeçalhos enviados pelo cliente.
+    key = hashlib.sha256(('register:'+request.META.get('REMOTE_ADDR','unknown')).encode()).hexdigest()
+    with transaction.atomic():
+        attempt, _ = TentativaLogin.objects.get_or_create(chave=key, defaults={'inicio':timezone.now()})
+        attempt = TentativaLogin.objects.select_for_update().get(pk=attempt.pk)
+        if timezone.now()-attempt.inicio>=timedelta(minutes=15):
+            attempt.falhas, attempt.inicio = 0, timezone.now()
+        if attempt.falhas>=10:
+            response = error("Muitos cadastros. Tente novamente em 15 minutos.",429)
+            response['Retry-After']='900'
+            return response
+        attempt.falhas+=1
+        attempt.save()
+        try:
+            with transaction.atomic():
+                user.set_password(password)
+                user.save()
+                RegistroAuditoria.objects.create(usuario=user,acao='usuario_cadastrado',entidade='Usuario',entidade_id=user.pk)
+        except IntegrityError:
+            return error("Não foi possível cadastrar este e-mail. Use outro ou entre na sua conta.")
+    login(request,user,backend='django.contrib.auth.backends.ModelBackend')
+    return JsonResponse({'user':user_data(user),'csrfToken':get_token(request)},status=201)
 
 
 @require_POST
@@ -139,6 +194,8 @@ def me(request):
 def persist_source(request, instance=None):
     try:
         data = payload(request)
+        from .source_setup import prepare_source
+        data = prepare_source(data)
     except ValueError as exc:
         return error(str(exc))
     if not isinstance(data.get("ativa"), bool):
@@ -158,13 +215,25 @@ def persist_source(request, instance=None):
 
 
 @require_http_methods(["GET", "POST"])
-@authorized(admin=True)
+@authorized()
 def sources(request):
     if request.method == "POST":
+        if not request.user.is_staff:
+            return error("Esta ação é restrita a administradores.", 403)
         return persist_source(request)
-    page = Paginator(FonteEpidemiologica.objects.select_related("recorte"), 20).get_page(request.GET.get("page", 1))
+    from .models import ProcessamentoLote
+    latest_processing = ProcessamentoLote.objects.filter(lote__fonte=OuterRef("pk")).order_by("-lote__criada_em", "-pk").values("status")[:1]
+    processing_failures = FonteEpidemiologica.objects.annotate(process_status=Subquery(latest_processing)).filter(process_status="erro").count()
+    queryset = FonteEpidemiologica.objects.select_related("recorte")
+    for term in request.GET.get("q", "").strip()[:200].split():
+        queryset = queryset.filter(Q(nome__icontains=term) | Q(recorte__nome__icontains=term)
+                                   | Q(recorte__codigo__icontains=term) | Q(recorte__uf__icontains=term)
+                                   | Q(url__icontains=term))
+    page = Paginator(queryset, 20).get_page(request.GET.get("page", 1))
     return JsonResponse({"sources": [source_data(s) for s in page], "count": page.paginator.count,
-                         "page": page.number, "pages": page.paginator.num_pages})
+                         "page": page.number, "pages": page.paginator.num_pages,
+                         "coleta_realizada": FonteEpidemiologica.objects.filter(ultima_coleta_em__isnull=False).exists(),
+                         "falhas_processamento": processing_failures})
 
 
 @require_http_methods(["PUT"])
@@ -187,8 +256,10 @@ def run_data(run):
 
 
 @require_http_methods(["GET", "POST"])
-@authorized(admin=True)
+@authorized()
 def source_collection(request, source_id):
+    if request.method == "POST" and not request.user.is_staff:
+        return error("Esta ação é restrita a administradores.", 403)
     try:
         source = FonteEpidemiologica.objects.get(pk=source_id)
     except FonteEpidemiologica.DoesNotExist:
@@ -231,3 +302,65 @@ def scheduled_collection(request):
     else:
         runs = collect_pilot()
     return JsonResponse({"execucoes": [run_data(r) for r in runs]}, status=502 if any(r.status == "erro" for r in runs) else 200)
+
+
+@require_GET
+@authorized()
+def indicator_options(request):
+    from .indicators import options
+    return JsonResponse(options())
+
+
+@require_GET
+@authorized(admin=True)
+def source_catalog(request):
+    from .collection import MUNICIPIOS_SP
+    return JsonResponse({'municipios':[{'codigo':c,'nome':n} for c,n in sorted(MUNICIPIOS_SP.items(),key=lambda x:x[1])], 'ano_atual':timezone.localdate().year})
+
+
+@require_GET
+@authorized()
+def indicators(request):
+    from .indicators import query_indicators
+    try:
+        return JsonResponse(query_indicators(request.GET))
+    except ValueError as exc:
+        return error(str(exc), 400)
+
+
+@require_POST
+@authorized()
+def change_password(request):
+    try:
+        data = payload(request)
+    except ValueError as exc:
+        return error(str(exc))
+    old, new, confirm = (data.get(k) for k in ('old_password','new_password','confirmation'))
+    if any(not isinstance(v,str) or not v or len(v)>1024 for v in (old,new,confirm)):
+        return error('Informe a senha atual, a nova senha e a confirmação.')
+    key = hashlib.sha256(f'password-change:{request.user.pk}'.encode()).hexdigest()
+    with transaction.atomic():
+        attempt, _ = TentativaLogin.objects.get_or_create(chave=key, defaults={'inicio':timezone.now()})
+        attempt = TentativaLogin.objects.select_for_update().get(pk=attempt.pk)
+        if timezone.now()-attempt.inicio >= timedelta(minutes=15):
+            attempt.falhas, attempt.inicio = 0, timezone.now()
+        if attempt.falhas >= 5:
+            return error('Muitas tentativas. Tente novamente em 15 minutos.', 429)
+        if not request.user.check_password(old):
+            attempt.falhas += 1
+            attempt.save()
+            return error('Senha atual inválida.', 400)
+        if new!=confirm or new==old:
+            return error('Confirme a nova senha e use uma senha diferente da atual.', 400)
+        try:
+            validate_password(new,request.user)
+        except ValidationError as exc:
+            return error(' '.join(exc.messages), 400)
+        request.user.set_password(new)
+        request.user.save(update_fields=['password'])
+        attempt.falhas=0
+        attempt.save()
+    update_session_auth_hash(request, request.user)
+    from .models import RegistroAuditoria
+    RegistroAuditoria.objects.create(usuario=request.user,acao='senha_alterada',entidade='Usuario',entidade_id=request.user.pk)
+    return JsonResponse({'ok':True,'csrfToken':get_token(request)})

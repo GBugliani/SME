@@ -59,7 +59,7 @@ class SprintOneTests(TestCase):
 
     def test_regular_user_cannot_manage_sources(self):
         self.client.force_login(self.user)
-        self.assertEqual(self.client.get('/api/fontes/').status_code, 403)
+        self.assertEqual(self.client.get('/api/fontes/').status_code, 200)
         self.assertEqual(self.post_json('/api/fontes/', self.source_payload()).status_code, 403)
         self.assertEqual(self.client.put('/api/fontes/1/', '{}', content_type='application/json').status_code, 403)
 
@@ -142,3 +142,31 @@ class SprintOneTests(TestCase):
         credentials = {'email': self.admin.email, 'password': 'Strong-test-pass-2026'}
         self.assertEqual(self.post_json('/api/auth/login/', credentials, browser, HTTP_X_CSRFTOKEN=token, HTTP_ORIGIN='https://untrusted.example.org').status_code, 403)
         self.assertEqual(self.post_json('/api/auth/login/', credentials, browser, HTTP_X_CSRFTOKEN=token, HTTP_ORIGIN='http://127.0.0.1:5173').status_code, 200)
+
+
+    def test_collection_summary_is_independent_of_pagination(self):
+        self.client.force_login(self.admin)
+        for i in range(21):
+            response = self.post_json('/api/fontes/', self.source_payload(nome=f'Fonte {i}', url=f'https://example.org/{i}.csv'))
+            self.assertEqual(response.status_code, 201)
+        oldest = FonteEpidemiologica.objects.order_by('pk').first()
+        FonteEpidemiologica.objects.filter(pk=oldest.pk).update(ultima_coleta_em=timezone.now())
+        for number in [1, 2]:
+            data = self.client.get(f'/api/fontes/?page={number}').json()
+            self.assertEqual(data['count'], 21)
+            self.assertTrue(data['coleta_realizada'])
+        FonteEpidemiologica.objects.update(ultima_coleta_em=None)
+        self.assertFalse(self.client.get('/api/fontes/').json()['coleta_realizada'])
+
+
+    def test_regular_user_sees_sources_counts_and_history_without_modifying(self):
+        self.client.force_login(self.admin)
+        source = self.post_json('/api/fontes/', self.source_payload()).json()['source']
+        self.client.force_login(self.user)
+        data = self.client.get('/api/fontes/').json()
+        self.assertEqual(data['count'], 1)
+        self.assertEqual(data['sources'][0]['nome'], source['nome'])
+        self.assertEqual(self.client.get(f"/api/fontes/{source['id']}/coletas/").status_code, 200)
+        self.assertEqual(self.client.post(f"/api/fontes/{source['id']}/coletas/").status_code, 403)
+        self.assertEqual(self.client.put(f"/api/fontes/{source['id']}/", '{}', content_type='application/json').status_code, 403)
+        self.assertEqual(FonteEpidemiologica.objects.get(pk=source['id']).nome, source['nome'])

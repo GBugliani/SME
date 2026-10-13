@@ -32,7 +32,7 @@ Requisitos funcionais
 
 Requisitos não funcionais
 
-    RNF01. A coleta periódica deve ser resiliente    indisponibilidade temporária da fonte pública, reexecutando automaticamente no próximo ciclo.
+    RNF01. A coleta periódica deve ser resiliente indisponibilidade temporária da fonte pública, reexecutando automaticamente no próximo ciclo.
     RNF02. A fonte e a data da última atualização dos dados devem ser exibidas de forma visível no painel.
     RNF03. O método de detecção de anomalia e seus parâmetros devem ser documentados e versionados para reprodutibilidade do artigo.
     RNF04. O painel deve carregar em até 3 segundos para uma série histórica de alguns anos de um único município.

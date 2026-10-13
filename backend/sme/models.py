@@ -105,3 +105,64 @@ class ExecucaoColeta(models.Model):
     class Meta:
         ordering = ["-iniciada_em", "-pk"]
         constraints = [models.UniqueConstraint(fields=["fonte"], condition=models.Q(status="executando"), name="uma_coleta_ativa_por_fonte")]
+
+
+class Agravo(models.Model):
+    codigo = models.SlugField(unique=True)
+    nome = models.CharField(max_length=100)
+
+
+class SerieEpidemiologica(models.Model):
+    fonte = models.ForeignKey(FonteEpidemiologica, on_delete=models.PROTECT)
+    recorte = models.ForeignKey(RecorteGeografico, on_delete=models.PROTECT)
+    agravo = models.ForeignKey(Agravo, on_delete=models.PROTECT)
+    atualizada_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['fonte', 'recorte', 'agravo'], name='serie_fonte_recorte_agravo')]
+
+
+class RegistroEpidemiologico(models.Model):
+    serie = models.ForeignKey(SerieEpidemiologica, on_delete=models.PROTECT, related_name='registros')
+    ano = models.PositiveSmallIntegerField()
+    semana = models.PositiveSmallIntegerField()
+    data_referencia = models.DateField(db_index=True)
+    casos = models.PositiveBigIntegerField(null=True)
+    casos_estimados = models.FloatField(null=True)
+    lote = models.ForeignKey(LoteColeta, on_delete=models.PROTECT)
+
+    class Meta:
+        ordering = ['data_referencia']
+        constraints = [models.UniqueConstraint(fields=['serie', 'ano', 'semana'], name='registro_serie_semana_unique')]
+
+
+class ProcessamentoLote(models.Model):
+    lote = models.OneToOneField(LoteColeta, on_delete=models.PROTECT, related_name='processamento')
+    status = models.CharField(max_length=15, choices=[('sucesso','Concluído'),('erro','Falha')])
+    mensagem = models.CharField(max_length=300)
+    quantidade_registros = models.PositiveIntegerField(default=0)
+    versao = models.CharField(max_length=30, default='infodengue_v1')
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+
+class ConfiguracaoDeteccao(models.Model):
+    metodo = models.CharField(max_length=50, default='media_movel')
+    versao = models.PositiveIntegerField(default=1)
+    parametros = models.JSONField(default=dict)
+    criada_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['metodo','versao'], name='config_metodo_versao_unique')]
+
+
+class Anomalia(models.Model):
+    registro = models.ForeignKey(RegistroEpidemiologico, on_delete=models.PROTECT, related_name='anomalias')
+    configuracao = models.ForeignKey(ConfiguracaoDeteccao, on_delete=models.PROTECT)
+    observado = models.PositiveBigIntegerField()
+    referencia = models.FloatField()
+    limiar = models.FloatField()
+    ativa = models.BooleanField(default=True)
+    detectada_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['registro','configuracao'], name='anomalia_registro_config_unique')]

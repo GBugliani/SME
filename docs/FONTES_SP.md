@@ -1,8 +1,10 @@
 # Fonte inicial para São Paulo
 
-## Proposta
+## Escopo atual
 
-Começar com **dengue em um município do estado de São Paulo**, usando **InfoDengue**. Depois de validar coleta e série histórica, ampliar para outros municípios paulistas. O piloto implementado usa São Paulo capital (IBGE 3550308); a expansão para outros municípios fica para uma etapa posterior.
+O piloto começou com **dengue em São Paulo capital**, usando **InfoDengue**, e já foi ampliado para os municípios paulistas do catálogo de 645 municípios do IBGE. Apenas fontes cadastradas, compatíveis e habilitadas são coletadas; isso não comprova que a API tenha dados completos para todos os municípios e períodos.
+
+Como administrador, escolha município e anos em **Fontes de dados → Cadastrar fonte**. A URL, o código IBGE e o nome são preenchidos pelo sistema. O campo **Pesquisar fontes** localiza cadastros por município, código IBGE, UF, nome ou termos da URL; o resultado é paginado. Usuários comuns também podem pesquisar e consultar, sem editar ou coletar manualmente.
 
 Não é necessário restringir o desenho do banco a SP. O custo está sobretudo em baixar/processar arquivos brutos volumosos e em repetir consultas, e não em guardar algumas centenas de observações semanais por município. Exemplo ilustrativo: 10 municípios × 52 semanas × 5 anos × 1 agravo = aproximadamente 2.600 registros. Isso não é benchmark nem garantia de tempo de resposta.
 
@@ -27,7 +29,3 @@ O [serviço público](https://info.dengue.mat.br/services/api) permite filtrar m
 O endpoint de amostra tem período fixo e serve para homologação. O coletor atual respeita o período cadastrado. Antes de operar o monitoramento atual, é necessário configurar um período recente; janelas móveis serão tratadas em uma etapa posterior.
 
 InfoGripe/SIVEP-Gripe continuam candidatos se a equipe optar por agravos respiratórios; esse caminho exige avaliação específica de formato, cobertura municipal e volume dos arquivos.
-
-## Ampliação da coleta — 06/10/2026
-
-O coletor de dengue do InfoDengue agora aceita os municípios de SP, validando nome e código IBGE no catálogo de 645 municípios. Apenas fontes cadastradas, compatíveis e habilitadas são consultadas. O Airflow executa uma tarefa por fonte, com até duas coletas simultâneas; a restrição anterior à capital e a cinco fontes foi removida. Outros agravos e provedores continuam exigindo integração própria. Consulte [o guia de coleta](COLETA_INFODENGUE.md).

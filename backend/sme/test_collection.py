@@ -7,7 +7,7 @@ from .collection import collect_source, CollectionError, InfoDengueAdapter, coll
 from .models import FonteEpidemiologica, RecorteGeografico, ExecucaoColeta, LoteColeta
 
 URL = "https://info.dengue.mat.br/api/alertcity?geocode=3550308&disease=dengue&format=json&ew_start=1&ew_end=52&ey_start=2024&ey_end=2024"
-ROWS = [{"SE": 202401, "casos": 12, "municipio_nome": "São Paulo", "id": 355030820240100001}]
+ROWS = [{"SE": 202401, "casos": 12, "data_iniSE": 1703980800000, "municipio_nome": "São Paulo", "id": 355030820240100001}]
 
 
 class CollectionTests(TestCase):

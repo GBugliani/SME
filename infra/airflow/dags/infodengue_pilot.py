@@ -2,16 +2,23 @@
 import json
 import os
 import urllib.request
+import urllib.error
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from airflow.sdk import dag, task
+from airflow.sdk.exceptions import AirflowFailException
 
 
 def request_collection(body):
     request = urllib.request.Request("http://backend:8000/api/internal/coleta/", data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json", "X-Coleta-Token": os.environ["COLETA_TOKEN"]}, method="POST")
-    with urllib.request.urlopen(request, timeout=115) as response:
-        return json.load(response)
+    try:
+        with urllib.request.urlopen(request, timeout=115) as response:
+            return json.load(response)
+    except urllib.error.HTTPError as exc:
+        if exc.code in (400, 403):
+            raise AirflowFailException("Configuração ou credencial interna de coleta inválida.") from exc
+        raise
 
 
 @dag(dag_id="sme_infodengue_piloto", schedule="0 6 * * *",
@@ -19,7 +26,7 @@ def request_collection(body):
      catchup=False, max_active_runs=1, is_paused_upon_creation=False,
      default_args={"retries": 0}, tags=["sme", "infodengue"])
 def infodengue_pilot():
-    @task(execution_timeout=timedelta(minutes=3))
+    @task(execution_timeout=timedelta(minutes=3), retries=5, retry_delay=timedelta(seconds=20))
     def sources():
         return request_collection({"action": "list"})["fontes"]
 

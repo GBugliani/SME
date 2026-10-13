@@ -23,7 +23,29 @@ O script gera `.env` com segredos aleatórios e preserva um arquivo já existent
 
 O primeiro build baixa imagens e dependências, por isso precisa de internet. As migrações são aplicadas automaticamente ao iniciar a API. No cadastro do administrador, use uma senha com pelo menos 12 caracteres. A digitação da senha não aparece no terminal.
 
-Abra [SME local](http://localhost:8080). Use sempre o mesmo endereço para preservar cookies e sessão. O banco não publica uma porta na rede e a interface escuta apenas em `127.0.0.1`.
+Abra [SME local](http://localhost:8080). Use sempre o mesmo endereço para preservar cookies e sessão. O banco não publica uma porta na rede. A interface escuta em `127.0.0.1` e no IPv4 local `192.168.10.67`.
+
+### Acessar pelo celular na mesma rede
+
+Conecte o celular ao Wi-Fi do mesmo roteador do computador e abra http://192.168.10.67:8080 . O computador e o Docker precisam estar ligados. `localhost` no celular aponta para o próprio celular. A sessão do celular é independente da sessão no PC.
+
+A configuração publica a interface somente no endereço local indicado, preservando também o acesso por `localhost`. Se o IPv4 do computador mudar, confira com `ipconfig`, atualize a segunda entrada de `frontend.ports` e o `DJANGO_ALLOWED_HOSTS` do backend no `compose.yaml`, e execute `docker compose up -d backend frontend`. Não use `*` em hosts permitidos nem encaminhe essa porta no roteador para a internet.
+
+Se o Firewall do Windows bloquear o acesso, permita TCP 8080 para a sub-rede local no perfil da sua rede doméstica. Não é necessário publicar portas do PostgreSQL, backend ou Airflow.
+
+## Criar usuário comum
+
+O ambiente Docker também permite criar uma conta pela tela de login em **Criar uma conta**. Informe nome, e-mail, senha (mínimo de 12 caracteres) e confirmação. A conta recebe somente o perfil de usuário comum e entra no sistema após o cadastro. Não há confirmação de e-mail nesta versão.
+
+Este cadastro público foi habilitado temporariamente a pedido da equipe, além do fluxo administrativo da documentação. Para removê-lo, altere `ALLOW_SELF_REGISTRATION` para `"false"` no backend do `compose.yaml` e execute `docker compose up -d backend`. O botão desaparece e a API bloqueia novos cadastros; as contas existentes continuam funcionando. O padrão do Django fora desse compose é desabilitado. Há proteção CSRF, validação de senha, unicidade de e-mail e limite de 10 tentativas de cadastro com dados válidos por 15 minutos por origem de conexão (compartilhado pelos usuários quando estão atrás do mesmo proxy).
+
+Com o Docker ligado, execute um único comando:
+
+```powershell
+docker compose exec backend python manage.py createuser
+```
+
+O comando pergunta e-mail, senha e confirmação. A senha fica oculta e precisa atender às validações do sistema, incluindo pelo menos 12 caracteres. E-mail inválido/duplicado ou senha inválida podem ser corrigidos no próprio terminal. A conta nasce ativa, sem permissões administrativas. Ctrl+C cancela sem criar a conta.
 
 ## Comandos do dia a dia
 
@@ -36,11 +58,15 @@ docker compose up --build -d
 docker compose logs --tail=100 backend frontend
 # Desligar sem apagar os dados
 docker compose down
-# Alterar a senha do administrador
+# Alterar a senha de uma conta pelo terminal
 docker compose exec backend python manage.py changepassword seu-email@exemplo.com
 ```
 
 Se a porta 8080 estiver ocupada, altere no compose o lado esquerdo de `127.0.0.1:8080:80`, por exemplo para `127.0.0.1:8081:80`, e use a nova porta no navegador. Se houver falha de conexão com o Docker, abra o aplicativo antes de repetir o comando. Não apague o volume para resolver falhas de inicialização.
+
+Na interface, o ícone de perfil no canto superior abre um menu com nome/e-mail, tipo de usuário, **Alterar senha** e **Sair**. Quando nome e e-mail forem iguais, o e-mail aparece uma única vez. A alteração pela interface exige a senha atual. Para visualizar alterações após recompilar o frontend, recarregue com **Ctrl + F5**.
+
+Para navegar no mapa, use os botões +/− ou **Ctrl + scroll**. O scroll sem Ctrl rola a página. No celular, um dedo rola a página e dois dedos ajustam o zoom do mapa. Em telas menores ou com zoom no navegador, ambos os grupos de painéis passam para baixo do mapa; a tabela de fontes vira cartões no celular.
 
 ## Ambiente para editar o código
 
@@ -68,8 +94,6 @@ pnpm dev
 
 O arquivo `config.test_settings` permite testes isolados com SQLite quando não há PostgreSQL. Ele usa hash simplificado para acelerar testes e nunca deve ser usado para publicar ou operar o sistema.
 
-## Diagnóstico nesta entrega
+## Permissões atuais
 
-Em 04/10/2026, Git foi encontrado. Docker, Python e npm próprios do usuário não estavam disponíveis no PATH verificado. Foram usados Python 3.12 e Node 24 internos do Codex para preparar dependências e testar; esses runtimes não substituem uma instalação de desenvolvimento independente. Nenhum instalador de sistema foi executado.
-
-Airflow já faz parte do Docker Compose e agenda a coleta do piloto diariamente às 06h, com o Docker em execução. Não é necessário instalar Airflow no Windows. Veja o [guia de coleta](COLETA_INFODENGUE.md). O processamento com pandas fica para a Sprint 2.
+Usuários autenticados podem consultar a quantidade, a lista, os endereços públicos, os territórios, a situação e o histórico de coleta das fontes. Cadastro, edição/desabilitação e coleta manual são exclusivos do administrador. A API verifica as permissões, além de a interface ocultar os controles administrativos.

@@ -17,3 +17,6 @@ backups/
 *.key
 desktop.ini
 *.bkp
+Registro_Documental_DreamShaper/
+tmp/
+Diagramas/

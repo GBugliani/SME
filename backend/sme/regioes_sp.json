@@ -1,0 +1,3227 @@
+{
+  "3500105": {
+    "nome": "Adamantina",
+    "regiao_codigo": "350019",
+    "regiao_nome": "Adamantina - Lucélia"
+  },
+  "3500204": {
+    "nome": "Adolfo",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3500303": {
+    "nome": "Aguaí",
+    "regiao_codigo": "350044",
+    "regiao_nome": "São João da Boa Vista"
+  },
+  "3500402": {
+    "nome": "Águas da Prata",
+    "regiao_codigo": "350044",
+    "regiao_nome": "São João da Boa Vista"
+  },
+  "3500501": {
+    "nome": "Águas de Lindóia",
+    "regiao_codigo": "350048",
+    "regiao_nome": "Amparo"
+  },
+  "3500550": {
+    "nome": "Águas de Santa Bárbara",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3500600": {
+    "nome": "Águas de São Pedro",
+    "regiao_codigo": "350040",
+    "regiao_nome": "Piracicaba"
+  },
+  "3500709": {
+    "nome": "Agudos",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3500758": {
+    "nome": "Alambari",
+    "regiao_codigo": "350006",
+    "regiao_nome": "Itapetininga"
+  },
+  "3500808": {
+    "nome": "Alfredo Marcondes",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3500907": {
+    "nome": "Altair",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3501004": {
+    "nome": "Altinópolis",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3501103": {
+    "nome": "Alto Alegre",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3501152": {
+    "nome": "Alumínio",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3501202": {
+    "nome": "Álvares Florence",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3501301": {
+    "nome": "Álvares Machado",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3501400": {
+    "nome": "Álvaro de Carvalho",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3501509": {
+    "nome": "Alvinlândia",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3501608": {
+    "nome": "Americana",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3501707": {
+    "nome": "Américo Brasiliense",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3501806": {
+    "nome": "Américo de Campos",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3501905": {
+    "nome": "Amparo",
+    "regiao_codigo": "350048",
+    "regiao_nome": "Amparo"
+  },
+  "3502002": {
+    "nome": "Analândia",
+    "regiao_codigo": "350046",
+    "regiao_nome": "Rio Claro"
+  },
+  "3502101": {
+    "nome": "Andradina",
+    "regiao_codigo": "350024",
+    "regiao_nome": "Andradina"
+  },
+  "3502200": {
+    "nome": "Angatuba",
+    "regiao_codigo": "350006",
+    "regiao_nome": "Itapetininga"
+  },
+  "3502309": {
+    "nome": "Anhembi",
+    "regiao_codigo": "350011",
+    "regiao_nome": "Botucatu"
+  },
+  "3502408": {
+    "nome": "Anhumas",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3502507": {
+    "nome": "Aparecida",
+    "regiao_codigo": "350052",
+    "regiao_nome": "Guaratinguetá"
+  },
+  "3502606": {
+    "nome": "Aparecida d'Oeste",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3502705": {
+    "nome": "Apiaí",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3502754": {
+    "nome": "Araçariguama",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3502804": {
+    "nome": "Araçatuba",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3502903": {
+    "nome": "Araçoiaba da Serra",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3503000": {
+    "nome": "Aramina",
+    "regiao_codigo": "350035",
+    "regiao_nome": "Ituverava"
+  },
+  "3503109": {
+    "nome": "Arandu",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3503158": {
+    "nome": "Arapeí",
+    "regiao_codigo": "350053",
+    "regiao_nome": "Cruzeiro"
+  },
+  "3503208": {
+    "nome": "Araraquara",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3503307": {
+    "nome": "Araras",
+    "regiao_codigo": "350045",
+    "regiao_nome": "Araras"
+  },
+  "3503356": {
+    "nome": "Arco-Íris",
+    "regiao_codigo": "350016",
+    "regiao_nome": "Tupã"
+  },
+  "3503406": {
+    "nome": "Arealva",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3503505": {
+    "nome": "Areias",
+    "regiao_codigo": "350053",
+    "regiao_nome": "Cruzeiro"
+  },
+  "3503604": {
+    "nome": "Areiópolis",
+    "regiao_codigo": "350011",
+    "regiao_nome": "Botucatu"
+  },
+  "3503703": {
+    "nome": "Ariranha",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3503802": {
+    "nome": "Artur Nogueira",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3503901": {
+    "nome": "Arujá",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3503950": {
+    "nome": "Aspásia",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3504008": {
+    "nome": "Assis",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3504107": {
+    "nome": "Atibaia",
+    "regiao_codigo": "350041",
+    "regiao_nome": "Bragança Paulista"
+  },
+  "3504206": {
+    "nome": "Auriflama",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3504305": {
+    "nome": "Avaí",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3504404": {
+    "nome": "Avanhandava",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3504503": {
+    "nome": "Avaré",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3504602": {
+    "nome": "Bady Bassitt",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3504701": {
+    "nome": "Balbinos",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3504800": {
+    "nome": "Bálsamo",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3504909": {
+    "nome": "Bananal",
+    "regiao_codigo": "350053",
+    "regiao_nome": "Cruzeiro"
+  },
+  "3505005": {
+    "nome": "Barão de Antonina",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3505104": {
+    "nome": "Barbosa",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3505203": {
+    "nome": "Bariri",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3505302": {
+    "nome": "Barra Bonita",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3505351": {
+    "nome": "Barra do Chapéu",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3505401": {
+    "nome": "Barra do Turvo",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3505500": {
+    "nome": "Barretos",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3505609": {
+    "nome": "Barrinha",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3505708": {
+    "nome": "Barueri",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3505807": {
+    "nome": "Bastos",
+    "regiao_codigo": "350016",
+    "regiao_nome": "Tupã"
+  },
+  "3505906": {
+    "nome": "Batatais",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3506003": {
+    "nome": "Bauru",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3506102": {
+    "nome": "Bebedouro",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3506201": {
+    "nome": "Bento de Abreu",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3506300": {
+    "nome": "Bernardino de Campos",
+    "regiao_codigo": "350015",
+    "regiao_nome": "Ourinhos"
+  },
+  "3506359": {
+    "nome": "Bertioga",
+    "regiao_codigo": "350002",
+    "regiao_nome": "Santos"
+  },
+  "3506409": {
+    "nome": "Bilac",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3506508": {
+    "nome": "Birigui",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3506607": {
+    "nome": "Biritiba Mirim",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3506706": {
+    "nome": "Boa Esperança do Sul",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3506805": {
+    "nome": "Bocaina",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3506904": {
+    "nome": "Bofete",
+    "regiao_codigo": "350011",
+    "regiao_nome": "Botucatu"
+  },
+  "3507001": {
+    "nome": "Boituva",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3507100": {
+    "nome": "Bom Jesus dos Perdões",
+    "regiao_codigo": "350041",
+    "regiao_nome": "Bragança Paulista"
+  },
+  "3507159": {
+    "nome": "Bom Sucesso de Itararé",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3507209": {
+    "nome": "Borá",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3507308": {
+    "nome": "Boracéia",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3507407": {
+    "nome": "Borborema",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3507456": {
+    "nome": "Borebi",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3507506": {
+    "nome": "Botucatu",
+    "regiao_codigo": "350011",
+    "regiao_nome": "Botucatu"
+  },
+  "3507605": {
+    "nome": "Bragança Paulista",
+    "regiao_codigo": "350041",
+    "regiao_nome": "Bragança Paulista"
+  },
+  "3507704": {
+    "nome": "Braúna",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3507753": {
+    "nome": "Brejo Alegre",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3507803": {
+    "nome": "Brodowski",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3507902": {
+    "nome": "Brotas",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3508009": {
+    "nome": "Buri",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3508108": {
+    "nome": "Buritama",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3508207": {
+    "nome": "Buritizal",
+    "regiao_codigo": "350035",
+    "regiao_nome": "Ituverava"
+  },
+  "3508306": {
+    "nome": "Cabrália Paulista",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3508405": {
+    "nome": "Cabreúva",
+    "regiao_codigo": "350039",
+    "regiao_nome": "Jundiaí"
+  },
+  "3508504": {
+    "nome": "Caçapava",
+    "regiao_codigo": "350049",
+    "regiao_nome": "São José dos Campos"
+  },
+  "3508603": {
+    "nome": "Cachoeira Paulista",
+    "regiao_codigo": "350053",
+    "regiao_nome": "Cruzeiro"
+  },
+  "3508702": {
+    "nome": "Caconde",
+    "regiao_codigo": "350047",
+    "regiao_nome": "São José do Rio Pardo - Mococa"
+  },
+  "3508801": {
+    "nome": "Cafelândia",
+    "regiao_codigo": "350012",
+    "regiao_nome": "Lins"
+  },
+  "3508900": {
+    "nome": "Caiabu",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3509007": {
+    "nome": "Caieiras",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3509106": {
+    "nome": "Caiuá",
+    "regiao_codigo": "350021",
+    "regiao_nome": "Presidente Epitácio-Presidente Venceslau"
+  },
+  "3509205": {
+    "nome": "Cajamar",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3509254": {
+    "nome": "Cajati",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3509304": {
+    "nome": "Cajobi",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3509403": {
+    "nome": "Cajuru",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3509452": {
+    "nome": "Campina do Monte Alegre",
+    "regiao_codigo": "350006",
+    "regiao_nome": "Itapetininga"
+  },
+  "3509502": {
+    "nome": "Campinas",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3509601": {
+    "nome": "Campo Limpo Paulista",
+    "regiao_codigo": "350039",
+    "regiao_nome": "Jundiaí"
+  },
+  "3509700": {
+    "nome": "Campos do Jordão",
+    "regiao_codigo": "350050",
+    "regiao_nome": "Taubaté - Pindamonhangaba"
+  },
+  "3509809": {
+    "nome": "Campos Novos Paulista",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3509908": {
+    "nome": "Cananéia",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3509957": {
+    "nome": "Canas",
+    "regiao_codigo": "350052",
+    "regiao_nome": "Guaratinguetá"
+  },
+  "3510005": {
+    "nome": "Cândido Mota",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3510104": {
+    "nome": "Cândido Rodrigues",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3510153": {
+    "nome": "Canitar",
+    "regiao_codigo": "350015",
+    "regiao_nome": "Ourinhos"
+  },
+  "3510203": {
+    "nome": "Capão Bonito",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3510302": {
+    "nome": "Capela do Alto",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3510401": {
+    "nome": "Capivari",
+    "regiao_codigo": "350040",
+    "regiao_nome": "Piracicaba"
+  },
+  "3510500": {
+    "nome": "Caraguatatuba",
+    "regiao_codigo": "350051",
+    "regiao_nome": "Caraguatatuba - Ubatuba - São Sebastião"
+  },
+  "3510609": {
+    "nome": "Carapicuíba",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3510708": {
+    "nome": "Cardoso",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3510807": {
+    "nome": "Casa Branca",
+    "regiao_codigo": "350044",
+    "regiao_nome": "São João da Boa Vista"
+  },
+  "3510906": {
+    "nome": "Cássia dos Coqueiros",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3511003": {
+    "nome": "Castilho",
+    "regiao_codigo": "350024",
+    "regiao_nome": "Andradina"
+  },
+  "3511102": {
+    "nome": "Catanduva",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3511201": {
+    "nome": "Catiguá",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3511300": {
+    "nome": "Cedral",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3511409": {
+    "nome": "Cerqueira César",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3511508": {
+    "nome": "Cerquilho",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3511607": {
+    "nome": "Cesário Lange",
+    "regiao_codigo": "350008",
+    "regiao_nome": "Tatuí"
+  },
+  "3511706": {
+    "nome": "Charqueada",
+    "regiao_codigo": "350040",
+    "regiao_nome": "Piracicaba"
+  },
+  "3511904": {
+    "nome": "Clementina",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3512001": {
+    "nome": "Colina",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3512100": {
+    "nome": "Colômbia",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3512209": {
+    "nome": "Conchal",
+    "regiao_codigo": "350045",
+    "regiao_nome": "Araras"
+  },
+  "3512308": {
+    "nome": "Conchas",
+    "regiao_codigo": "350011",
+    "regiao_nome": "Botucatu"
+  },
+  "3512407": {
+    "nome": "Cordeirópolis",
+    "regiao_codigo": "350042",
+    "regiao_nome": "Limeira"
+  },
+  "3512506": {
+    "nome": "Coroados",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3512605": {
+    "nome": "Coronel Macedo",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3512704": {
+    "nome": "Corumbataí",
+    "regiao_codigo": "350046",
+    "regiao_nome": "Rio Claro"
+  },
+  "3512803": {
+    "nome": "Cosmópolis",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3512902": {
+    "nome": "Cosmorama",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3513009": {
+    "nome": "Cotia",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3513108": {
+    "nome": "Cravinhos",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3513207": {
+    "nome": "Cristais Paulista",
+    "regiao_codigo": "350033",
+    "regiao_nome": "Franca"
+  },
+  "3513306": {
+    "nome": "Cruzália",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3513405": {
+    "nome": "Cruzeiro",
+    "regiao_codigo": "350053",
+    "regiao_nome": "Cruzeiro"
+  },
+  "3513504": {
+    "nome": "Cubatão",
+    "regiao_codigo": "350002",
+    "regiao_nome": "Santos"
+  },
+  "3513603": {
+    "nome": "Cunha",
+    "regiao_codigo": "350052",
+    "regiao_nome": "Guaratinguetá"
+  },
+  "3513702": {
+    "nome": "Descalvado",
+    "regiao_codigo": "350037",
+    "regiao_nome": "São Carlos"
+  },
+  "3513801": {
+    "nome": "Diadema",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3513850": {
+    "nome": "Dirce Reis",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3513900": {
+    "nome": "Divinolândia",
+    "regiao_codigo": "350047",
+    "regiao_nome": "São José do Rio Pardo - Mococa"
+  },
+  "3514007": {
+    "nome": "Dobrada",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3514106": {
+    "nome": "Dois Córregos",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3514205": {
+    "nome": "Dolcinópolis",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3514304": {
+    "nome": "Dourado",
+    "regiao_codigo": "350037",
+    "regiao_nome": "São Carlos"
+  },
+  "3514403": {
+    "nome": "Dracena",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3514502": {
+    "nome": "Duartina",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3514601": {
+    "nome": "Dumont",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3514700": {
+    "nome": "Echaporã",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3514809": {
+    "nome": "Eldorado",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3514908": {
+    "nome": "Elias Fausto",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3514924": {
+    "nome": "Elisiário",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3514957": {
+    "nome": "Embaúba",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3515004": {
+    "nome": "Embu das Artes",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3515103": {
+    "nome": "Embu-Guaçu",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3515129": {
+    "nome": "Emilianópolis",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3515152": {
+    "nome": "Engenheiro Coelho",
+    "regiao_codigo": "350042",
+    "regiao_nome": "Limeira"
+  },
+  "3515186": {
+    "nome": "Espírito Santo do Pinhal",
+    "regiao_codigo": "350044",
+    "regiao_nome": "São João da Boa Vista"
+  },
+  "3515194": {
+    "nome": "Espírito Santo do Turvo",
+    "regiao_codigo": "350015",
+    "regiao_nome": "Ourinhos"
+  },
+  "3515202": {
+    "nome": "Estrela d'Oeste",
+    "regiao_codigo": "350029",
+    "regiao_nome": "Fernandópolis"
+  },
+  "3515301": {
+    "nome": "Estrela do Norte",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3515350": {
+    "nome": "Euclides da Cunha Paulista",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3515400": {
+    "nome": "Fartura",
+    "regiao_codigo": "350017",
+    "regiao_nome": "Piraju"
+  },
+  "3515509": {
+    "nome": "Fernandópolis",
+    "regiao_codigo": "350029",
+    "regiao_nome": "Fernandópolis"
+  },
+  "3515608": {
+    "nome": "Fernando Prestes",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3515657": {
+    "nome": "Fernão",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3515707": {
+    "nome": "Ferraz de Vasconcelos",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3515806": {
+    "nome": "Flora Rica",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3515905": {
+    "nome": "Floreal",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3516002": {
+    "nome": "Flórida Paulista",
+    "regiao_codigo": "350019",
+    "regiao_nome": "Adamantina - Lucélia"
+  },
+  "3516101": {
+    "nome": "Florínea",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3516200": {
+    "nome": "Franca",
+    "regiao_codigo": "350033",
+    "regiao_nome": "Franca"
+  },
+  "3516309": {
+    "nome": "Francisco Morato",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3516408": {
+    "nome": "Franco da Rocha",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3516507": {
+    "nome": "Gabriel Monteiro",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3516606": {
+    "nome": "Gália",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3516705": {
+    "nome": "Garça",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3516804": {
+    "nome": "Gastão Vidigal",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3516853": {
+    "nome": "Gavião Peixoto",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3516903": {
+    "nome": "General Salgado",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3517000": {
+    "nome": "Getulina",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3517109": {
+    "nome": "Glicério",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3517208": {
+    "nome": "Guaiçara",
+    "regiao_codigo": "350012",
+    "regiao_nome": "Lins"
+  },
+  "3517307": {
+    "nome": "Guaimbê",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3517406": {
+    "nome": "Guaíra",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3517505": {
+    "nome": "Guapiaçu",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3517604": {
+    "nome": "Guapiara",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3517703": {
+    "nome": "Guará",
+    "regiao_codigo": "350035",
+    "regiao_nome": "Ituverava"
+  },
+  "3517802": {
+    "nome": "Guaraçaí",
+    "regiao_codigo": "350024",
+    "regiao_nome": "Andradina"
+  },
+  "3517901": {
+    "nome": "Guaraci",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3518008": {
+    "nome": "Guarani d'Oeste",
+    "regiao_codigo": "350029",
+    "regiao_nome": "Fernandópolis"
+  },
+  "3518107": {
+    "nome": "Guarantã",
+    "regiao_codigo": "350012",
+    "regiao_nome": "Lins"
+  },
+  "3518206": {
+    "nome": "Guararapes",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3518305": {
+    "nome": "Guararema",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3518404": {
+    "nome": "Guaratinguetá",
+    "regiao_codigo": "350052",
+    "regiao_nome": "Guaratinguetá"
+  },
+  "3518503": {
+    "nome": "Guareí",
+    "regiao_codigo": "350006",
+    "regiao_nome": "Itapetininga"
+  },
+  "3518602": {
+    "nome": "Guariba",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3518701": {
+    "nome": "Guarujá",
+    "regiao_codigo": "350002",
+    "regiao_nome": "Santos"
+  },
+  "3518800": {
+    "nome": "Guarulhos",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3518859": {
+    "nome": "Guatapará",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3518909": {
+    "nome": "Guzolândia",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3519006": {
+    "nome": "Herculândia",
+    "regiao_codigo": "350016",
+    "regiao_nome": "Tupã"
+  },
+  "3519055": {
+    "nome": "Holambra",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3519071": {
+    "nome": "Hortolândia",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3519105": {
+    "nome": "Iacanga",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3519204": {
+    "nome": "Iacri",
+    "regiao_codigo": "350016",
+    "regiao_nome": "Tupã"
+  },
+  "3519253": {
+    "nome": "Iaras",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3519303": {
+    "nome": "Ibaté",
+    "regiao_codigo": "350037",
+    "regiao_nome": "São Carlos"
+  },
+  "3519402": {
+    "nome": "Ibirá",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3519501": {
+    "nome": "Ibirarema",
+    "regiao_codigo": "350015",
+    "regiao_nome": "Ourinhos"
+  },
+  "3519600": {
+    "nome": "Ibitinga",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3519709": {
+    "nome": "Ibiúna",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3519808": {
+    "nome": "Icém",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3519907": {
+    "nome": "Iepê",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3520004": {
+    "nome": "Igaraçu do Tietê",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3520103": {
+    "nome": "Igarapava",
+    "regiao_codigo": "350035",
+    "regiao_nome": "Ituverava"
+  },
+  "3520202": {
+    "nome": "Igaratá",
+    "regiao_codigo": "350049",
+    "regiao_nome": "São José dos Campos"
+  },
+  "3520301": {
+    "nome": "Iguape",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3520400": {
+    "nome": "Ilhabela",
+    "regiao_codigo": "350051",
+    "regiao_nome": "Caraguatatuba - Ubatuba - São Sebastião"
+  },
+  "3520426": {
+    "nome": "Ilha Comprida",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3520442": {
+    "nome": "Ilha Solteira",
+    "regiao_codigo": "350024",
+    "regiao_nome": "Andradina"
+  },
+  "3520509": {
+    "nome": "Indaiatuba",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3520608": {
+    "nome": "Indiana",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3520707": {
+    "nome": "Indiaporã",
+    "regiao_codigo": "350029",
+    "regiao_nome": "Fernandópolis"
+  },
+  "3520806": {
+    "nome": "Inúbia Paulista",
+    "regiao_codigo": "350019",
+    "regiao_nome": "Adamantina - Lucélia"
+  },
+  "3520905": {
+    "nome": "Ipaussu",
+    "regiao_codigo": "350015",
+    "regiao_nome": "Ourinhos"
+  },
+  "3521002": {
+    "nome": "Iperó",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3521101": {
+    "nome": "Ipeúna",
+    "regiao_codigo": "350046",
+    "regiao_nome": "Rio Claro"
+  },
+  "3521150": {
+    "nome": "Ipiguá",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3521200": {
+    "nome": "Iporanga",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3521309": {
+    "nome": "Ipuã",
+    "regiao_codigo": "350034",
+    "regiao_nome": "São Joaquim da Barra ¿ Orlândia"
+  },
+  "3521408": {
+    "nome": "Iracemápolis",
+    "regiao_codigo": "350042",
+    "regiao_nome": "Limeira"
+  },
+  "3521507": {
+    "nome": "Irapuã",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3521606": {
+    "nome": "Irapuru",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3521705": {
+    "nome": "Itaberá",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3521804": {
+    "nome": "Itaí",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3521903": {
+    "nome": "Itajobi",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3522000": {
+    "nome": "Itaju",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3522109": {
+    "nome": "Itanhaém",
+    "regiao_codigo": "350002",
+    "regiao_nome": "Santos"
+  },
+  "3522158": {
+    "nome": "Itaoca",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3522208": {
+    "nome": "Itapecerica da Serra",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3522307": {
+    "nome": "Itapetininga",
+    "regiao_codigo": "350006",
+    "regiao_nome": "Itapetininga"
+  },
+  "3522406": {
+    "nome": "Itapeva",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3522505": {
+    "nome": "Itapevi",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3522604": {
+    "nome": "Itapira",
+    "regiao_codigo": "350043",
+    "regiao_nome": "Mogi Guaçu"
+  },
+  "3522653": {
+    "nome": "Itapirapuã Paulista",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3522703": {
+    "nome": "Itápolis",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3522802": {
+    "nome": "Itaporanga",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3522901": {
+    "nome": "Itapuí",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3523008": {
+    "nome": "Itapura",
+    "regiao_codigo": "350024",
+    "regiao_nome": "Andradina"
+  },
+  "3523107": {
+    "nome": "Itaquaquecetuba",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3523206": {
+    "nome": "Itararé",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3523305": {
+    "nome": "Itariri",
+    "regiao_codigo": "350002",
+    "regiao_nome": "Santos"
+  },
+  "3523404": {
+    "nome": "Itatiba",
+    "regiao_codigo": "350039",
+    "regiao_nome": "Jundiaí"
+  },
+  "3523503": {
+    "nome": "Itatinga",
+    "regiao_codigo": "350011",
+    "regiao_nome": "Botucatu"
+  },
+  "3523602": {
+    "nome": "Itirapina",
+    "regiao_codigo": "350037",
+    "regiao_nome": "São Carlos"
+  },
+  "3523701": {
+    "nome": "Itirapuã",
+    "regiao_codigo": "350033",
+    "regiao_nome": "Franca"
+  },
+  "3523800": {
+    "nome": "Itobi",
+    "regiao_codigo": "350047",
+    "regiao_nome": "São José do Rio Pardo - Mococa"
+  },
+  "3523909": {
+    "nome": "Itu",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3524006": {
+    "nome": "Itupeva",
+    "regiao_codigo": "350039",
+    "regiao_nome": "Jundiaí"
+  },
+  "3524105": {
+    "nome": "Ituverava",
+    "regiao_codigo": "350035",
+    "regiao_nome": "Ituverava"
+  },
+  "3524204": {
+    "nome": "Jaborandi",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3524303": {
+    "nome": "Jaboticabal",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3524402": {
+    "nome": "Jacareí",
+    "regiao_codigo": "350049",
+    "regiao_nome": "São José dos Campos"
+  },
+  "3524501": {
+    "nome": "Jaci",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3524600": {
+    "nome": "Jacupiranga",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3524709": {
+    "nome": "Jaguariúna",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3524808": {
+    "nome": "Jales",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3524907": {
+    "nome": "Jambeiro",
+    "regiao_codigo": "350049",
+    "regiao_nome": "São José dos Campos"
+  },
+  "3525003": {
+    "nome": "Jandira",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3525102": {
+    "nome": "Jardinópolis",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3525201": {
+    "nome": "Jarinu",
+    "regiao_codigo": "350039",
+    "regiao_nome": "Jundiaí"
+  },
+  "3525300": {
+    "nome": "Jaú",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3525409": {
+    "nome": "Jeriquara",
+    "regiao_codigo": "350033",
+    "regiao_nome": "Franca"
+  },
+  "3525508": {
+    "nome": "Joanópolis",
+    "regiao_codigo": "350041",
+    "regiao_nome": "Bragança Paulista"
+  },
+  "3525607": {
+    "nome": "João Ramalho",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3525706": {
+    "nome": "José Bonifácio",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3525805": {
+    "nome": "Júlio Mesquita",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3525854": {
+    "nome": "Jumirim",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3525904": {
+    "nome": "Jundiaí",
+    "regiao_codigo": "350039",
+    "regiao_nome": "Jundiaí"
+  },
+  "3526001": {
+    "nome": "Junqueirópolis",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3526100": {
+    "nome": "Juquiá",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3526209": {
+    "nome": "Juquitiba",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3526308": {
+    "nome": "Lagoinha",
+    "regiao_codigo": "350050",
+    "regiao_nome": "Taubaté - Pindamonhangaba"
+  },
+  "3526407": {
+    "nome": "Laranjal Paulista",
+    "regiao_codigo": "350040",
+    "regiao_nome": "Piracicaba"
+  },
+  "3526506": {
+    "nome": "Lavínia",
+    "regiao_codigo": "350024",
+    "regiao_nome": "Andradina"
+  },
+  "3526605": {
+    "nome": "Lavrinhas",
+    "regiao_codigo": "350053",
+    "regiao_nome": "Cruzeiro"
+  },
+  "3526704": {
+    "nome": "Leme",
+    "regiao_codigo": "350045",
+    "regiao_nome": "Araras"
+  },
+  "3526803": {
+    "nome": "Lençóis Paulista",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3526902": {
+    "nome": "Limeira",
+    "regiao_codigo": "350042",
+    "regiao_nome": "Limeira"
+  },
+  "3527009": {
+    "nome": "Lindóia",
+    "regiao_codigo": "350048",
+    "regiao_nome": "Amparo"
+  },
+  "3527108": {
+    "nome": "Lins",
+    "regiao_codigo": "350012",
+    "regiao_nome": "Lins"
+  },
+  "3527207": {
+    "nome": "Lorena",
+    "regiao_codigo": "350052",
+    "regiao_nome": "Guaratinguetá"
+  },
+  "3527256": {
+    "nome": "Lourdes",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3527306": {
+    "nome": "Louveira",
+    "regiao_codigo": "350039",
+    "regiao_nome": "Jundiaí"
+  },
+  "3527405": {
+    "nome": "Lucélia",
+    "regiao_codigo": "350019",
+    "regiao_nome": "Adamantina - Lucélia"
+  },
+  "3527504": {
+    "nome": "Lucianópolis",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3527603": {
+    "nome": "Luís Antônio",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3527702": {
+    "nome": "Luiziânia",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3527801": {
+    "nome": "Lupércio",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3527900": {
+    "nome": "Lutécia",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3528007": {
+    "nome": "Macatuba",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3528106": {
+    "nome": "Macaubal",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3528205": {
+    "nome": "Macedônia",
+    "regiao_codigo": "350029",
+    "regiao_nome": "Fernandópolis"
+  },
+  "3528304": {
+    "nome": "Magda",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3528403": {
+    "nome": "Mairinque",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3528502": {
+    "nome": "Mairiporã",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3528601": {
+    "nome": "Manduri",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3528700": {
+    "nome": "Marabá Paulista",
+    "regiao_codigo": "350021",
+    "regiao_nome": "Presidente Epitácio-Presidente Venceslau"
+  },
+  "3528809": {
+    "nome": "Maracaí",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3528858": {
+    "nome": "Marapoama",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3528908": {
+    "nome": "Mariápolis",
+    "regiao_codigo": "350019",
+    "regiao_nome": "Adamantina - Lucélia"
+  },
+  "3529005": {
+    "nome": "Marília",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3529104": {
+    "nome": "Marinópolis",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3529203": {
+    "nome": "Martinópolis",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3529302": {
+    "nome": "Matão",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3529401": {
+    "nome": "Mauá",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3529500": {
+    "nome": "Mendonça",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3529609": {
+    "nome": "Meridiano",
+    "regiao_codigo": "350029",
+    "regiao_nome": "Fernandópolis"
+  },
+  "3529658": {
+    "nome": "Mesópolis",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3529708": {
+    "nome": "Miguelópolis",
+    "regiao_codigo": "350035",
+    "regiao_nome": "Ituverava"
+  },
+  "3529807": {
+    "nome": "Mineiros do Tietê",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3529906": {
+    "nome": "Miracatu",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3530003": {
+    "nome": "Mira Estrela",
+    "regiao_codigo": "350029",
+    "regiao_nome": "Fernandópolis"
+  },
+  "3530102": {
+    "nome": "Mirandópolis",
+    "regiao_codigo": "350024",
+    "regiao_nome": "Andradina"
+  },
+  "3530201": {
+    "nome": "Mirante do Paranapanema",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3530300": {
+    "nome": "Mirassol",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3530409": {
+    "nome": "Mirassolândia",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3530508": {
+    "nome": "Mococa",
+    "regiao_codigo": "350047",
+    "regiao_nome": "São José do Rio Pardo - Mococa"
+  },
+  "3530607": {
+    "nome": "Mogi das Cruzes",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3530706": {
+    "nome": "Mogi Guaçu",
+    "regiao_codigo": "350043",
+    "regiao_nome": "Mogi Guaçu"
+  },
+  "3530805": {
+    "nome": "Mogi Mirim",
+    "regiao_codigo": "350043",
+    "regiao_nome": "Mogi Guaçu"
+  },
+  "3530904": {
+    "nome": "Mombuca",
+    "regiao_codigo": "350040",
+    "regiao_nome": "Piracicaba"
+  },
+  "3531001": {
+    "nome": "Monções",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3531100": {
+    "nome": "Mongaguá",
+    "regiao_codigo": "350002",
+    "regiao_nome": "Santos"
+  },
+  "3531209": {
+    "nome": "Monte Alegre do Sul",
+    "regiao_codigo": "350048",
+    "regiao_nome": "Amparo"
+  },
+  "3531308": {
+    "nome": "Monte Alto",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3531407": {
+    "nome": "Monte Aprazível",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3531506": {
+    "nome": "Monte Azul Paulista",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3531605": {
+    "nome": "Monte Castelo",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3531704": {
+    "nome": "Monteiro Lobato",
+    "regiao_codigo": "350049",
+    "regiao_nome": "São José dos Campos"
+  },
+  "3531803": {
+    "nome": "Monte Mor",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3531902": {
+    "nome": "Morro Agudo",
+    "regiao_codigo": "350034",
+    "regiao_nome": "São Joaquim da Barra ¿ Orlândia"
+  },
+  "3532009": {
+    "nome": "Morungaba",
+    "regiao_codigo": "350039",
+    "regiao_nome": "Jundiaí"
+  },
+  "3532058": {
+    "nome": "Motuca",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3532108": {
+    "nome": "Murutinga do Sul",
+    "regiao_codigo": "350024",
+    "regiao_nome": "Andradina"
+  },
+  "3532157": {
+    "nome": "Nantes",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3532207": {
+    "nome": "Narandiba",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3532306": {
+    "nome": "Natividade da Serra",
+    "regiao_codigo": "350050",
+    "regiao_nome": "Taubaté - Pindamonhangaba"
+  },
+  "3532405": {
+    "nome": "Nazaré Paulista",
+    "regiao_codigo": "350041",
+    "regiao_nome": "Bragança Paulista"
+  },
+  "3532504": {
+    "nome": "Neves Paulista",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3532603": {
+    "nome": "Nhandeara",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3532702": {
+    "nome": "Nipoã",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3532801": {
+    "nome": "Nova Aliança",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3532827": {
+    "nome": "Nova Campina",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3532843": {
+    "nome": "Nova Canaã Paulista",
+    "regiao_codigo": "350030",
+    "regiao_nome": "Santa Fé do Sul"
+  },
+  "3532868": {
+    "nome": "Nova Castilho",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3532900": {
+    "nome": "Nova Europa",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3533007": {
+    "nome": "Nova Granada",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3533106": {
+    "nome": "Nova Guataporanga",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3533205": {
+    "nome": "Nova Independência",
+    "regiao_codigo": "350024",
+    "regiao_nome": "Andradina"
+  },
+  "3533254": {
+    "nome": "Novais",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3533304": {
+    "nome": "Nova Luzitânia",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3533403": {
+    "nome": "Nova Odessa",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3533502": {
+    "nome": "Novo Horizonte",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3533601": {
+    "nome": "Nuporanga",
+    "regiao_codigo": "350034",
+    "regiao_nome": "São Joaquim da Barra ¿ Orlândia"
+  },
+  "3533700": {
+    "nome": "Ocauçu",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3533809": {
+    "nome": "Óleo",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3533908": {
+    "nome": "Olímpia",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3534005": {
+    "nome": "Onda Verde",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3534104": {
+    "nome": "Oriente",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3534203": {
+    "nome": "Orindiúva",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3534302": {
+    "nome": "Orlândia",
+    "regiao_codigo": "350034",
+    "regiao_nome": "São Joaquim da Barra ¿ Orlândia"
+  },
+  "3534401": {
+    "nome": "Osasco",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3534500": {
+    "nome": "Oscar Bressane",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3534609": {
+    "nome": "Osvaldo Cruz",
+    "regiao_codigo": "350019",
+    "regiao_nome": "Adamantina - Lucélia"
+  },
+  "3534708": {
+    "nome": "Ourinhos",
+    "regiao_codigo": "350015",
+    "regiao_nome": "Ourinhos"
+  },
+  "3534757": {
+    "nome": "Ouroeste",
+    "regiao_codigo": "350029",
+    "regiao_nome": "Fernandópolis"
+  },
+  "3534807": {
+    "nome": "Ouro Verde",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3534906": {
+    "nome": "Pacaembu",
+    "regiao_codigo": "350019",
+    "regiao_nome": "Adamantina - Lucélia"
+  },
+  "3535002": {
+    "nome": "Palestina",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3535101": {
+    "nome": "Palmares Paulista",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3535200": {
+    "nome": "Palmeira d'Oeste",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3535309": {
+    "nome": "Palmital",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3535408": {
+    "nome": "Panorama",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3535507": {
+    "nome": "Paraguaçu Paulista",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3535606": {
+    "nome": "Paraibuna",
+    "regiao_codigo": "350049",
+    "regiao_nome": "São José dos Campos"
+  },
+  "3535705": {
+    "nome": "Paraíso",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3535804": {
+    "nome": "Paranapanema",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3535903": {
+    "nome": "Paranapuã",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3536000": {
+    "nome": "Parapuã",
+    "regiao_codigo": "350016",
+    "regiao_nome": "Tupã"
+  },
+  "3536109": {
+    "nome": "Pardinho",
+    "regiao_codigo": "350011",
+    "regiao_nome": "Botucatu"
+  },
+  "3536208": {
+    "nome": "Pariquera-Açu",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3536257": {
+    "nome": "Parisi",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3536307": {
+    "nome": "Patrocínio Paulista",
+    "regiao_codigo": "350033",
+    "regiao_nome": "Franca"
+  },
+  "3536406": {
+    "nome": "Paulicéia",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3536505": {
+    "nome": "Paulínia",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3536570": {
+    "nome": "Paulistânia",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3536604": {
+    "nome": "Paulo de Faria",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3536703": {
+    "nome": "Pederneiras",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3536802": {
+    "nome": "Pedra Bela",
+    "regiao_codigo": "350041",
+    "regiao_nome": "Bragança Paulista"
+  },
+  "3536901": {
+    "nome": "Pedranópolis",
+    "regiao_codigo": "350029",
+    "regiao_nome": "Fernandópolis"
+  },
+  "3537008": {
+    "nome": "Pedregulho",
+    "regiao_codigo": "350033",
+    "regiao_nome": "Franca"
+  },
+  "3537107": {
+    "nome": "Pedreira",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3537156": {
+    "nome": "Pedrinhas Paulista",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3537206": {
+    "nome": "Pedro de Toledo",
+    "regiao_codigo": "350002",
+    "regiao_nome": "Santos"
+  },
+  "3537305": {
+    "nome": "Penápolis",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3537404": {
+    "nome": "Pereira Barreto",
+    "regiao_codigo": "350024",
+    "regiao_nome": "Andradina"
+  },
+  "3537503": {
+    "nome": "Pereiras",
+    "regiao_codigo": "350008",
+    "regiao_nome": "Tatuí"
+  },
+  "3537602": {
+    "nome": "Peruíbe",
+    "regiao_codigo": "350002",
+    "regiao_nome": "Santos"
+  },
+  "3537701": {
+    "nome": "Piacatu",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3537800": {
+    "nome": "Piedade",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3537909": {
+    "nome": "Pilar do Sul",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3538006": {
+    "nome": "Pindamonhangaba",
+    "regiao_codigo": "350050",
+    "regiao_nome": "Taubaté - Pindamonhangaba"
+  },
+  "3538105": {
+    "nome": "Pindorama",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3538204": {
+    "nome": "Pinhalzinho",
+    "regiao_codigo": "350041",
+    "regiao_nome": "Bragança Paulista"
+  },
+  "3538303": {
+    "nome": "Piquerobi",
+    "regiao_codigo": "350021",
+    "regiao_nome": "Presidente Epitácio-Presidente Venceslau"
+  },
+  "3538501": {
+    "nome": "Piquete",
+    "regiao_codigo": "350052",
+    "regiao_nome": "Guaratinguetá"
+  },
+  "3538600": {
+    "nome": "Piracaia",
+    "regiao_codigo": "350041",
+    "regiao_nome": "Bragança Paulista"
+  },
+  "3538709": {
+    "nome": "Piracicaba",
+    "regiao_codigo": "350040",
+    "regiao_nome": "Piracicaba"
+  },
+  "3538808": {
+    "nome": "Piraju",
+    "regiao_codigo": "350017",
+    "regiao_nome": "Piraju"
+  },
+  "3538907": {
+    "nome": "Pirajuí",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3539004": {
+    "nome": "Pirangi",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3539103": {
+    "nome": "Pirapora do Bom Jesus",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3539202": {
+    "nome": "Pirapozinho",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3539301": {
+    "nome": "Pirassununga",
+    "regiao_codigo": "350037",
+    "regiao_nome": "São Carlos"
+  },
+  "3539400": {
+    "nome": "Piratininga",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3539509": {
+    "nome": "Pitangueiras",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3539608": {
+    "nome": "Planalto",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3539707": {
+    "nome": "Platina",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3539806": {
+    "nome": "Poá",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3539905": {
+    "nome": "Poloni",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3540002": {
+    "nome": "Pompéia",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3540101": {
+    "nome": "Pongaí",
+    "regiao_codigo": "350012",
+    "regiao_nome": "Lins"
+  },
+  "3540200": {
+    "nome": "Pontal",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3540259": {
+    "nome": "Pontalinda",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3540309": {
+    "nome": "Pontes Gestal",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3540408": {
+    "nome": "Populina",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3540507": {
+    "nome": "Porangaba",
+    "regiao_codigo": "350008",
+    "regiao_nome": "Tatuí"
+  },
+  "3540606": {
+    "nome": "Porto Feliz",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3540705": {
+    "nome": "Porto Ferreira",
+    "regiao_codigo": "350037",
+    "regiao_nome": "São Carlos"
+  },
+  "3540754": {
+    "nome": "Potim",
+    "regiao_codigo": "350052",
+    "regiao_nome": "Guaratinguetá"
+  },
+  "3540804": {
+    "nome": "Potirendaba",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3540853": {
+    "nome": "Pracinha",
+    "regiao_codigo": "350019",
+    "regiao_nome": "Adamantina - Lucélia"
+  },
+  "3540903": {
+    "nome": "Pradópolis",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3541000": {
+    "nome": "Praia Grande",
+    "regiao_codigo": "350002",
+    "regiao_nome": "Santos"
+  },
+  "3541059": {
+    "nome": "Pratânia",
+    "regiao_codigo": "350011",
+    "regiao_nome": "Botucatu"
+  },
+  "3541109": {
+    "nome": "Presidente Alves",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3541208": {
+    "nome": "Presidente Bernardes",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3541307": {
+    "nome": "Presidente Epitácio",
+    "regiao_codigo": "350021",
+    "regiao_nome": "Presidente Epitácio-Presidente Venceslau"
+  },
+  "3541406": {
+    "nome": "Presidente Prudente",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3541505": {
+    "nome": "Presidente Venceslau",
+    "regiao_codigo": "350021",
+    "regiao_nome": "Presidente Epitácio-Presidente Venceslau"
+  },
+  "3541604": {
+    "nome": "Promissão",
+    "regiao_codigo": "350012",
+    "regiao_nome": "Lins"
+  },
+  "3541653": {
+    "nome": "Quadra",
+    "regiao_codigo": "350008",
+    "regiao_nome": "Tatuí"
+  },
+  "3541703": {
+    "nome": "Quatá",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3541802": {
+    "nome": "Queiroz",
+    "regiao_codigo": "350016",
+    "regiao_nome": "Tupã"
+  },
+  "3541901": {
+    "nome": "Queluz",
+    "regiao_codigo": "350053",
+    "regiao_nome": "Cruzeiro"
+  },
+  "3542008": {
+    "nome": "Quintana",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3542107": {
+    "nome": "Rafard",
+    "regiao_codigo": "350040",
+    "regiao_nome": "Piracicaba"
+  },
+  "3542206": {
+    "nome": "Rancharia",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3542305": {
+    "nome": "Redenção da Serra",
+    "regiao_codigo": "350050",
+    "regiao_nome": "Taubaté - Pindamonhangaba"
+  },
+  "3542404": {
+    "nome": "Regente Feijó",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3542503": {
+    "nome": "Reginópolis",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3542602": {
+    "nome": "Registro",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3542701": {
+    "nome": "Restinga",
+    "regiao_codigo": "350033",
+    "regiao_nome": "Franca"
+  },
+  "3542800": {
+    "nome": "Ribeira",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3542909": {
+    "nome": "Ribeirão Bonito",
+    "regiao_codigo": "350037",
+    "regiao_nome": "São Carlos"
+  },
+  "3543006": {
+    "nome": "Ribeirão Branco",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3543105": {
+    "nome": "Ribeirão Corrente",
+    "regiao_codigo": "350033",
+    "regiao_nome": "Franca"
+  },
+  "3543204": {
+    "nome": "Ribeirão do Sul",
+    "regiao_codigo": "350015",
+    "regiao_nome": "Ourinhos"
+  },
+  "3543238": {
+    "nome": "Ribeirão dos Índios",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3543253": {
+    "nome": "Ribeirão Grande",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3543303": {
+    "nome": "Ribeirão Pires",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3543402": {
+    "nome": "Ribeirão Preto",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3543501": {
+    "nome": "Riversul",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3543600": {
+    "nome": "Rifaina",
+    "regiao_codigo": "350033",
+    "regiao_nome": "Franca"
+  },
+  "3543709": {
+    "nome": "Rincão",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3543808": {
+    "nome": "Rinópolis",
+    "regiao_codigo": "350016",
+    "regiao_nome": "Tupã"
+  },
+  "3543907": {
+    "nome": "Rio Claro",
+    "regiao_codigo": "350046",
+    "regiao_nome": "Rio Claro"
+  },
+  "3544004": {
+    "nome": "Rio das Pedras",
+    "regiao_codigo": "350040",
+    "regiao_nome": "Piracicaba"
+  },
+  "3544103": {
+    "nome": "Rio Grande da Serra",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3544202": {
+    "nome": "Riolândia",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3544251": {
+    "nome": "Rosana",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3544301": {
+    "nome": "Roseira",
+    "regiao_codigo": "350052",
+    "regiao_nome": "Guaratinguetá"
+  },
+  "3544400": {
+    "nome": "Rubiácea",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3544509": {
+    "nome": "Rubinéia",
+    "regiao_codigo": "350030",
+    "regiao_nome": "Santa Fé do Sul"
+  },
+  "3544608": {
+    "nome": "Sabino",
+    "regiao_codigo": "350012",
+    "regiao_nome": "Lins"
+  },
+  "3544707": {
+    "nome": "Sagres",
+    "regiao_codigo": "350019",
+    "regiao_nome": "Adamantina - Lucélia"
+  },
+  "3544806": {
+    "nome": "Sales",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3544905": {
+    "nome": "Sales Oliveira",
+    "regiao_codigo": "350034",
+    "regiao_nome": "São Joaquim da Barra ¿ Orlândia"
+  },
+  "3545001": {
+    "nome": "Salesópolis",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3545100": {
+    "nome": "Salmourão",
+    "regiao_codigo": "350019",
+    "regiao_nome": "Adamantina - Lucélia"
+  },
+  "3545159": {
+    "nome": "Saltinho",
+    "regiao_codigo": "350040",
+    "regiao_nome": "Piracicaba"
+  },
+  "3545209": {
+    "nome": "Salto",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3545308": {
+    "nome": "Salto de Pirapora",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3545407": {
+    "nome": "Salto Grande",
+    "regiao_codigo": "350015",
+    "regiao_nome": "Ourinhos"
+  },
+  "3545506": {
+    "nome": "Sandovalina",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3545605": {
+    "nome": "Santa Adélia",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3545704": {
+    "nome": "Santa Albertina",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3545803": {
+    "nome": "Santa Bárbara d'Oeste",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3546009": {
+    "nome": "Santa Branca",
+    "regiao_codigo": "350049",
+    "regiao_nome": "São José dos Campos"
+  },
+  "3546108": {
+    "nome": "Santa Clara d'Oeste",
+    "regiao_codigo": "350030",
+    "regiao_nome": "Santa Fé do Sul"
+  },
+  "3546207": {
+    "nome": "Santa Cruz da Conceição",
+    "regiao_codigo": "350045",
+    "regiao_nome": "Araras"
+  },
+  "3546256": {
+    "nome": "Santa Cruz da Esperança",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3546306": {
+    "nome": "Santa Cruz das Palmeiras",
+    "regiao_codigo": "350044",
+    "regiao_nome": "São João da Boa Vista"
+  },
+  "3546405": {
+    "nome": "Santa Cruz do Rio Pardo",
+    "regiao_codigo": "350015",
+    "regiao_nome": "Ourinhos"
+  },
+  "3546504": {
+    "nome": "Santa Ernestina",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3546603": {
+    "nome": "Santa Fé do Sul",
+    "regiao_codigo": "350030",
+    "regiao_nome": "Santa Fé do Sul"
+  },
+  "3546702": {
+    "nome": "Santa Gertrudes",
+    "regiao_codigo": "350046",
+    "regiao_nome": "Rio Claro"
+  },
+  "3546801": {
+    "nome": "Santa Isabel",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3546900": {
+    "nome": "Santa Lúcia",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3547007": {
+    "nome": "Santa Maria da Serra",
+    "regiao_codigo": "350040",
+    "regiao_nome": "Piracicaba"
+  },
+  "3547106": {
+    "nome": "Santa Mercedes",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3547205": {
+    "nome": "Santana da Ponte Pensa",
+    "regiao_codigo": "350030",
+    "regiao_nome": "Santa Fé do Sul"
+  },
+  "3547304": {
+    "nome": "Santana de Parnaíba",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3547403": {
+    "nome": "Santa Rita d'Oeste",
+    "regiao_codigo": "350030",
+    "regiao_nome": "Santa Fé do Sul"
+  },
+  "3547502": {
+    "nome": "Santa Rita do Passa Quatro",
+    "regiao_codigo": "350037",
+    "regiao_nome": "São Carlos"
+  },
+  "3547601": {
+    "nome": "Santa Rosa de Viterbo",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3547650": {
+    "nome": "Santa Salete",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3547700": {
+    "nome": "Santo Anastácio",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3547809": {
+    "nome": "Santo André",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3547908": {
+    "nome": "Santo Antônio da Alegria",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3548005": {
+    "nome": "Santo Antônio de Posse",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3548054": {
+    "nome": "Santo Antônio do Aracanguá",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3548104": {
+    "nome": "Santo Antônio do Jardim",
+    "regiao_codigo": "350044",
+    "regiao_nome": "São João da Boa Vista"
+  },
+  "3548203": {
+    "nome": "Santo Antônio do Pinhal",
+    "regiao_codigo": "350050",
+    "regiao_nome": "Taubaté - Pindamonhangaba"
+  },
+  "3548302": {
+    "nome": "Santo Expedito",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3548401": {
+    "nome": "Santópolis do Aguapeí",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3548500": {
+    "nome": "Santos",
+    "regiao_codigo": "350002",
+    "regiao_nome": "Santos"
+  },
+  "3548609": {
+    "nome": "São Bento do Sapucaí",
+    "regiao_codigo": "350050",
+    "regiao_nome": "Taubaté - Pindamonhangaba"
+  },
+  "3548708": {
+    "nome": "São Bernardo do Campo",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3548807": {
+    "nome": "São Caetano do Sul",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3548906": {
+    "nome": "São Carlos",
+    "regiao_codigo": "350037",
+    "regiao_nome": "São Carlos"
+  },
+  "3549003": {
+    "nome": "São Francisco",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3549102": {
+    "nome": "São João da Boa Vista",
+    "regiao_codigo": "350044",
+    "regiao_nome": "São João da Boa Vista"
+  },
+  "3549201": {
+    "nome": "São João das Duas Pontes",
+    "regiao_codigo": "350029",
+    "regiao_nome": "Fernandópolis"
+  },
+  "3549250": {
+    "nome": "São João de Iracema",
+    "regiao_codigo": "350029",
+    "regiao_nome": "Fernandópolis"
+  },
+  "3549300": {
+    "nome": "São João do Pau d'Alho",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3549409": {
+    "nome": "São Joaquim da Barra",
+    "regiao_codigo": "350034",
+    "regiao_nome": "São Joaquim da Barra ¿ Orlândia"
+  },
+  "3549508": {
+    "nome": "São José da Bela Vista",
+    "regiao_codigo": "350033",
+    "regiao_nome": "Franca"
+  },
+  "3549607": {
+    "nome": "São José do Barreiro",
+    "regiao_codigo": "350053",
+    "regiao_nome": "Cruzeiro"
+  },
+  "3549706": {
+    "nome": "São José do Rio Pardo",
+    "regiao_codigo": "350047",
+    "regiao_nome": "São José do Rio Pardo - Mococa"
+  },
+  "3549805": {
+    "nome": "São José do Rio Preto",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3549904": {
+    "nome": "São José dos Campos",
+    "regiao_codigo": "350049",
+    "regiao_nome": "São José dos Campos"
+  },
+  "3549953": {
+    "nome": "São Lourenço da Serra",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3550001": {
+    "nome": "São Luiz do Paraitinga",
+    "regiao_codigo": "350050",
+    "regiao_nome": "Taubaté - Pindamonhangaba"
+  },
+  "3550100": {
+    "nome": "São Manuel",
+    "regiao_codigo": "350011",
+    "regiao_nome": "Botucatu"
+  },
+  "3550209": {
+    "nome": "São Miguel Arcanjo",
+    "regiao_codigo": "350006",
+    "regiao_nome": "Itapetininga"
+  },
+  "3550308": {
+    "nome": "São Paulo",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3550407": {
+    "nome": "São Pedro",
+    "regiao_codigo": "350040",
+    "regiao_nome": "Piracicaba"
+  },
+  "3550506": {
+    "nome": "São Pedro do Turvo",
+    "regiao_codigo": "350015",
+    "regiao_nome": "Ourinhos"
+  },
+  "3550605": {
+    "nome": "São Roque",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3550704": {
+    "nome": "São Sebastião",
+    "regiao_codigo": "350051",
+    "regiao_nome": "Caraguatatuba - Ubatuba - São Sebastião"
+  },
+  "3550803": {
+    "nome": "São Sebastião da Grama",
+    "regiao_codigo": "350047",
+    "regiao_nome": "São José do Rio Pardo - Mococa"
+  },
+  "3550902": {
+    "nome": "São Simão",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3551009": {
+    "nome": "São Vicente",
+    "regiao_codigo": "350002",
+    "regiao_nome": "Santos"
+  },
+  "3551108": {
+    "nome": "Sarapuí",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3551207": {
+    "nome": "Sarutaiá",
+    "regiao_codigo": "350017",
+    "regiao_nome": "Piraju"
+  },
+  "3551306": {
+    "nome": "Sebastianópolis do Sul",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3551405": {
+    "nome": "Serra Azul",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3551504": {
+    "nome": "Serrana",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3551603": {
+    "nome": "Serra Negra",
+    "regiao_codigo": "350048",
+    "regiao_nome": "Amparo"
+  },
+  "3551702": {
+    "nome": "Sertãozinho",
+    "regiao_codigo": "350031",
+    "regiao_nome": "Ribeirão Preto"
+  },
+  "3551801": {
+    "nome": "Sete Barras",
+    "regiao_codigo": "350005",
+    "regiao_nome": "Registro"
+  },
+  "3551900": {
+    "nome": "Severínia",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3552007": {
+    "nome": "Silveiras",
+    "regiao_codigo": "350053",
+    "regiao_nome": "Cruzeiro"
+  },
+  "3552106": {
+    "nome": "Socorro",
+    "regiao_codigo": "350041",
+    "regiao_nome": "Bragança Paulista"
+  },
+  "3552205": {
+    "nome": "Sorocaba",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3552304": {
+    "nome": "Sud Mennucci",
+    "regiao_codigo": "350024",
+    "regiao_nome": "Andradina"
+  },
+  "3552403": {
+    "nome": "Sumaré",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3552502": {
+    "nome": "Suzano",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3552551": {
+    "nome": "Suzanápolis",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3552601": {
+    "nome": "Tabapuã",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3552700": {
+    "nome": "Tabatinga",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3552809": {
+    "nome": "Taboão da Serra",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3552908": {
+    "nome": "Taciba",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3553005": {
+    "nome": "Taguaí",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3553104": {
+    "nome": "Taiaçu",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3553203": {
+    "nome": "Taiúva",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3553302": {
+    "nome": "Tambaú",
+    "regiao_codigo": "350044",
+    "regiao_nome": "São João da Boa Vista"
+  },
+  "3553401": {
+    "nome": "Tanabi",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3553500": {
+    "nome": "Tapiraí",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3553609": {
+    "nome": "Tapiratiba",
+    "regiao_codigo": "350047",
+    "regiao_nome": "São José do Rio Pardo - Mococa"
+  },
+  "3553658": {
+    "nome": "Taquaral",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3553708": {
+    "nome": "Taquaritinga",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3553807": {
+    "nome": "Taquarituba",
+    "regiao_codigo": "350007",
+    "regiao_nome": "Avaré"
+  },
+  "3553856": {
+    "nome": "Taquarivaí",
+    "regiao_codigo": "350004",
+    "regiao_nome": "Itapeva"
+  },
+  "3553906": {
+    "nome": "Tarabai",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3553955": {
+    "nome": "Tarumã",
+    "regiao_codigo": "350014",
+    "regiao_nome": "Assis"
+  },
+  "3554003": {
+    "nome": "Tatuí",
+    "regiao_codigo": "350008",
+    "regiao_nome": "Tatuí"
+  },
+  "3554102": {
+    "nome": "Taubaté",
+    "regiao_codigo": "350050",
+    "regiao_nome": "Taubaté - Pindamonhangaba"
+  },
+  "3554201": {
+    "nome": "Tejupá",
+    "regiao_codigo": "350017",
+    "regiao_nome": "Piraju"
+  },
+  "3554300": {
+    "nome": "Teodoro Sampaio",
+    "regiao_codigo": "350018",
+    "regiao_nome": "Presidente Prudente"
+  },
+  "3554409": {
+    "nome": "Terra Roxa",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3554508": {
+    "nome": "Tietê",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3554607": {
+    "nome": "Timburi",
+    "regiao_codigo": "350017",
+    "regiao_nome": "Piraju"
+  },
+  "3554656": {
+    "nome": "Torre de Pedra",
+    "regiao_codigo": "350008",
+    "regiao_nome": "Tatuí"
+  },
+  "3554706": {
+    "nome": "Torrinha",
+    "regiao_codigo": "350010",
+    "regiao_nome": "Jaú"
+  },
+  "3554755": {
+    "nome": "Trabiju",
+    "regiao_codigo": "350036",
+    "regiao_nome": "Araraquara"
+  },
+  "3554805": {
+    "nome": "Tremembé",
+    "regiao_codigo": "350050",
+    "regiao_nome": "Taubaté - Pindamonhangaba"
+  },
+  "3554904": {
+    "nome": "Três Fronteiras",
+    "regiao_codigo": "350030",
+    "regiao_nome": "Santa Fé do Sul"
+  },
+  "3554953": {
+    "nome": "Tuiuti",
+    "regiao_codigo": "350041",
+    "regiao_nome": "Bragança Paulista"
+  },
+  "3555000": {
+    "nome": "Tupã",
+    "regiao_codigo": "350016",
+    "regiao_nome": "Tupã"
+  },
+  "3555109": {
+    "nome": "Tupi Paulista",
+    "regiao_codigo": "350020",
+    "regiao_nome": "Dracena"
+  },
+  "3555208": {
+    "nome": "Turiúba",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3555307": {
+    "nome": "Turmalina",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3555356": {
+    "nome": "Ubarana",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3555406": {
+    "nome": "Ubatuba",
+    "regiao_codigo": "350051",
+    "regiao_nome": "Caraguatatuba - Ubatuba - São Sebastião"
+  },
+  "3555505": {
+    "nome": "Ubirajara",
+    "regiao_codigo": "350009",
+    "regiao_nome": "Bauru"
+  },
+  "3555604": {
+    "nome": "Uchoa",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3555703": {
+    "nome": "União Paulista",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3555802": {
+    "nome": "Urânia",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3555901": {
+    "nome": "Uru",
+    "regiao_codigo": "350012",
+    "regiao_nome": "Lins"
+  },
+  "3556008": {
+    "nome": "Urupês",
+    "regiao_codigo": "350025",
+    "regiao_nome": "São José do Rio Preto"
+  },
+  "3556107": {
+    "nome": "Valentim Gentil",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3556206": {
+    "nome": "Valinhos",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3556305": {
+    "nome": "Valparaíso",
+    "regiao_codigo": "350022",
+    "regiao_nome": "Araçatuba"
+  },
+  "3556354": {
+    "nome": "Vargem",
+    "regiao_codigo": "350041",
+    "regiao_nome": "Bragança Paulista"
+  },
+  "3556404": {
+    "nome": "Vargem Grande do Sul",
+    "regiao_codigo": "350044",
+    "regiao_nome": "São João da Boa Vista"
+  },
+  "3556453": {
+    "nome": "Vargem Grande Paulista",
+    "regiao_codigo": "350001",
+    "regiao_nome": "São Paulo"
+  },
+  "3556503": {
+    "nome": "Várzea Paulista",
+    "regiao_codigo": "350039",
+    "regiao_nome": "Jundiaí"
+  },
+  "3556602": {
+    "nome": "Vera Cruz",
+    "regiao_codigo": "350013",
+    "regiao_nome": "Marília"
+  },
+  "3556701": {
+    "nome": "Vinhedo",
+    "regiao_codigo": "350038",
+    "regiao_nome": "Campinas"
+  },
+  "3556800": {
+    "nome": "Viradouro",
+    "regiao_codigo": "350032",
+    "regiao_nome": "Barretos"
+  },
+  "3556909": {
+    "nome": "Vista Alegre do Alto",
+    "regiao_codigo": "350026",
+    "regiao_nome": "Catanduva"
+  },
+  "3556958": {
+    "nome": "Vitória Brasil",
+    "regiao_codigo": "350028",
+    "regiao_nome": "Jales"
+  },
+  "3557006": {
+    "nome": "Votorantim",
+    "regiao_codigo": "350003",
+    "regiao_nome": "Sorocaba"
+  },
+  "3557105": {
+    "nome": "Votuporanga",
+    "regiao_codigo": "350027",
+    "regiao_nome": "Votuporanga"
+  },
+  "3557154": {
+    "nome": "Zacarias",
+    "regiao_codigo": "350023",
+    "regiao_nome": "Birigui - Penápolis"
+  },
+  "3557204": {
+    "nome": "Chavantes",
+    "regiao_codigo": "350015",
+    "regiao_nome": "Ourinhos"
+  },
+  "3557303": {
+    "nome": "Estiva Gerbi",
+    "regiao_codigo": "350043",
+    "regiao_nome": "Mogi Guaçu"
+  }
+}
