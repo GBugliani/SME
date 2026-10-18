@@ -1,4 +1,4 @@
-"""Coleta diária das fontes habilitadas de dengue nos municípios de SP."""
+"""Coleta diária de todas as integrações habilitadas; ID preservado para manter o histórico."""
 import json
 import os
 import urllib.request
@@ -24,7 +24,7 @@ def request_collection(body):
 @dag(dag_id="sme_infodengue_piloto", schedule="0 6 * * *",
      start_date=datetime(2026, 10, 3, tzinfo=ZoneInfo("America/Sao_Paulo")),
      catchup=False, max_active_runs=1, is_paused_upon_creation=False,
-     default_args={"retries": 0}, tags=["sme", "infodengue"])
+     default_args={"retries": 0}, tags=["sme", "multiplos-provedores"])
 def infodengue_pilot():
     @task(execution_timeout=timedelta(minutes=3), retries=5, retry_delay=timedelta(seconds=20))
     def sources():

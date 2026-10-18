@@ -1,10 +1,11 @@
-export type User = { id: number; email: string; nome: string; administrador: boolean };
+export type User = { id: number; email: string; nome: string; administrador: boolean; perfil: string; perfil_id: number | null; ativo: boolean; permissoes: string[] };
 export type SourceInput = {
-  nome: string; tipo: string; url: string; ativa: boolean;
+  nome: string; tipo: string; url: string; ativa: boolean; periodo_movel?:boolean; url_coleta?:string;
   recorte_tipo: string; recorte_nome: string; recorte_codigo: string; recorte_uf: string;
 };
 export type CollectionRun = { id: number; status: 'executando' | 'sucesso' | 'vazia' | 'erro'; iniciada_em: string; finalizada_em: string | null; mensagem: string; quantidade_registros: number; repetida: boolean; origem: string };
-export type Source = SourceInput & { id: number; ultima_coleta_em: string | null; processamento?: { status:string; mensagem:string; registros:number } | null; coleta_disponivel: boolean; ultima_execucao: CollectionRun | null };
+export type Integration = {codigo:string; provedor:string; publicador:string; base_original:string; agravo:string; agravo_nome:string; indicador_nome:string; definicao:string; base_temporal:string; base_territorial:string; unidade:string; frequencia:string; documentacao:string; municipios:'SP'|string[];codigos_com_dados?:string[]};
+export type Source = SourceInput & { indicador?:string; integracao?:Integration|null; id: number; ultima_coleta_em: string | null; processamento?: { status:string; mensagem:string; registros:number } | null; coleta_disponivel: boolean; ultima_execucao: CollectionRun | null };
 export type SourcePage = { sources: Source[]; count: number; page: number; pages: number; coleta_realizada: boolean; falhas_processamento?: number };
 
 export class ApiError extends Error {

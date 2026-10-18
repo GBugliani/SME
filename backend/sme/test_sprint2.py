@@ -154,26 +154,6 @@ class SprintTwoTests(TestCase):
         self.assertEqual(run.lote.processamento.status,'sucesso')
         self.assertEqual(RegistroEpidemiologico.objects.get().casos,5)
 
-    def test_password_change_preserves_current_session_and_invalidates_other(self):
-        other=Client();other.force_login(self.user)
-        old_session=self.client.session.session_key
-        response=self.client.post('/api/auth/password/',{'old_password':'Old-strong-password-2026!',
-            'new_password':'New-strong-password-2026!','confirmation':'New-strong-password-2026!'},content_type='application/json')
-        self.assertEqual(response.status_code,200)
-        self.assertNotEqual(self.client.session.session_key,old_session)
-        self.assertEqual(self.client.get('/api/auth/me/').status_code,200)
-        self.assertEqual(other.get('/api/auth/me/').status_code,401)
-        self.user.refresh_from_db();self.assertTrue(self.user.check_password('New-strong-password-2026!'))
-
-    def test_password_change_validation_throttle_and_csrf(self):
-        data={'old_password':'wrong','new_password':'New-strong-password-2026!','confirmation':'New-strong-password-2026!'}
-        for _ in range(5):self.assertEqual(self.client.post('/api/auth/password/',data,content_type='application/json').status_code,400)
-        self.assertEqual(self.client.post('/api/auth/password/',data,content_type='application/json').status_code,429)
-        guarded=Client(enforce_csrf_checks=True);guarded.force_login(self.user)
-        self.assertEqual(guarded.post('/api/auth/password/',data,content_type='application/json').status_code,403)
-        self.user.refresh_from_db();self.assertTrue(self.user.check_password('Old-strong-password-2026!'))
-
-
     def test_failed_reprocessing_rolls_back_existing_records(self):
         lote=self.make_lote([2,4]);process_lote(lote.pk)
         config=ConfiguracaoDeteccao.objects.get()
@@ -181,15 +161,6 @@ class SprintTwoTests(TestCase):
         newer=self.make_lote([20,40])
         self.assertEqual(process_lote(newer.pk).status,'erro')
         self.assertEqual(list(RegistroEpidemiologico.objects.values_list('casos',flat=True)),[2,4])
-
-    def test_weak_password_mismatch_and_anonymous_changes_are_rejected(self):
-        for password,confirmation in [('short','short'),('Secure-secret-2026!','different')]:
-            response=self.client.post('/api/auth/password/',{'old_password':'Old-strong-password-2026!',
-                'new_password':password,'confirmation':confirmation},content_type='application/json')
-            self.assertEqual(response.status_code,400)
-        self.user.refresh_from_db();self.assertTrue(self.user.check_password('Old-strong-password-2026!'))
-        self.client.logout()
-        self.assertEqual(self.client.post('/api/auth/password/',{},content_type='application/json').status_code,401)
 
     def test_data_origin_and_updated_timestamp_are_present(self):
         process_lote(self.make_lote([10]).pk)

@@ -1,15 +1,16 @@
-"""Normalização de lotes InfoDengue e detecção reprodutível; não emite alertas de surto."""
+"""Normalização por contrato de integração, detecção versionada e alertas no painel."""
 import logging
 import math
 from datetime import date, timedelta
 import pandas as pd
 from django.db import transaction
-from .collection import CollectionError, InfoDengueAdapter, normalized
+from .collection import CollectionError, get_adapter
+from .datasets import DATASETS, DISEASES, infer_dataset
 from .models import (LoteColeta, Agravo, SerieEpidemiologica, RegistroEpidemiologico,
                      ProcessamentoLote, ConfiguracaoDeteccao, Anomalia)
 
 logger = logging.getLogger(__name__)
-PARAMETERS = {'janela': 8, 'desvios': 3.0, 'razao_minima': 2.0, 'piso': 5.0}
+from .detectors import PARAMETERS, MovingBaseline
 
 
 def week_start(year, week):
@@ -22,30 +23,6 @@ def week_start(year, week):
     return result
 
 
-class MovingBaseline:
-    name = 'media_movel'
-    version = 1
-
-    def analyze(self, points):
-        if not points:
-            return []
-        frame = pd.DataFrame(points).set_index('data')
-        frame.index = pd.to_datetime(frame.index)
-        frame = frame.reindex(pd.date_range(frame.index.min(), frame.index.max(), freq='7D'))
-        values = pd.to_numeric(frame['casos'], errors='coerce')
-        past = values.shift(1).rolling(PARAMETERS['janela'], min_periods=PARAMETERS['janela'])
-        mean, deviation = past.mean(), past.std(ddof=0)
-        threshold = pd.concat([mean + PARAMETERS['desvios'] * deviation,
-                               mean * PARAMETERS['razao_minima'],
-                               pd.Series(PARAMETERS['piso'], index=frame.index)], axis=1).max(axis=1)
-        output = []
-        for day in frame.index:
-            if pd.notna(mean.loc[day]) and pd.notna(values.loc[day]) and values.loc[day] > threshold.loc[day]:
-                output.append({'data': day.date(), 'observado': int(values.loc[day]),
-                               'referencia': float(mean.loc[day]), 'limiar': float(threshold.loc[day])})
-        return output
-
-
 class SeriesRepository:
     def persist(self, lote, rows):
         # Fonte serializa revisões do mesmo território. Dados do lote permanecem imutáveis.
@@ -53,10 +30,17 @@ class SeriesRepository:
         from .models import FonteEpidemiologica, RecorteGeografico
         FonteEpidemiologica.objects.select_for_update().get(pk=source.pk)
         territory = RecorteGeografico.objects.get(tipo='municipio', codigo=lote.territorio_codigo)
-        disease, _ = Agravo.objects.get_or_create(codigo=lote.agravo, defaults={'nome':'Dengue'})
-        series, _ = SerieEpidemiologica.objects.get_or_create(fonte=source, recorte=territory, agravo=disease)
+        disease, _ = Agravo.objects.get_or_create(codigo=lote.agravo, defaults={'nome':DISEASES[lote.agravo]})
+        series, _ = SerieEpidemiologica.objects.get_or_create(fonte=source, recorte=territory, agravo=disease, indicador=lote.indicador or infer_dataset(lote.url_origem))
+        existing = {(r.ano,r.semana):r for r in series.registros.select_related('lote').only('ano','semana','lote_id','lote__criada_em')}
+        if lote.adaptador == 'sivep' and rows:
+            published = {(r['ano'], r['semana']) for r in rows}
+            year = rows[0]['ano']
+            for key, old in existing.items():
+                if key[0] == year and key not in published and (old.lote.criada_em, old.lote_id) <= (lote.criada_em, lote.pk):
+                    RegistroEpidemiologico.objects.filter(pk=old.pk).update(casos=None, casos_estimados=None, lote=lote)
         for row in rows:
-            old = series.registros.filter(ano=row['ano'], semana=row['semana']).select_related('lote').first()
+            old = existing.get((row['ano'],row['semana']))
             # Reprocessamento de lote antigo não sobrescreve uma revisão mais recente.
             if old and (old.lote.criada_em, old.lote_id) > (lote.criada_em, lote.pk):
                 continue
@@ -69,17 +53,20 @@ class SeriesRepository:
 def normalize_lote(lote):
     from types import SimpleNamespace
     from .collection import MUNICIPIOS_SP
-    from urllib.parse import parse_qs, urlsplit
     code = lote.territorio_codigo
-    if lote.adaptador != 'infodengue' or lote.agravo != 'dengue' or code not in MUNICIPIOS_SP:
+    key = lote.indicador or infer_dataset(lote.url_origem)
+    spec = DATASETS.get(key)
+    if not spec or spec['provedor'] != lote.adaptador or spec['agravo'] != lote.agravo or code not in MUNICIPIOS_SP:
         raise CollectionError('Não existe normalizador compatível com este lote.')
-    source = SimpleNamespace(url=lote.url_origem, tipo='json', recorte=SimpleNamespace(
+    source = SimpleNamespace(url=lote.url_origem, indicador=key, tipo=spec['formato'], recorte=SimpleNamespace(
         tipo='municipio', codigo=code, uf='SP', nome=MUNICIPIOS_SP[code]))
-    adapter = InfoDengueAdapter()
-    q = adapter.validate(source)
-    adapter.validate_payload(lote.dados_brutos, source, q)
+    adapter = get_adapter(source)
+    return adapter.normalize(lote.dados_brutos, source)
+
+
+def normalize_infodengue(data):
     rows = []
-    frame = pd.DataFrame(lote.dados_brutos)
+    frame = pd.DataFrame(data)
     if frame.empty:
         return rows
     if 'data_iniSE' not in frame:
@@ -116,22 +103,13 @@ def normalize_lote(lote):
 
 
 def detect_series(series):
-    configuration, _ = ConfiguracaoDeteccao.objects.get_or_create(metodo=MovingBaseline.name, versao=1,
-                                                               defaults={'parametros':PARAMETERS})
-    # Uma versão nunca muda silenciosamente seus parâmetros.
-    if configuration.parametros != PARAMETERS:
-        raise CollectionError('Parâmetros do detector diferem da versão registrada.')
-    records = list(series.registros.all())
-    by_date = {r.data_referencia:r for r in records}
-    points = [{'data':r.data_referencia, 'casos':r.casos} for r in records]
-    Anomalia.objects.filter(registro__serie=series, configuracao=configuration).update(ativa=False)
-    for item in MovingBaseline().analyze(points):
-        Anomalia.objects.update_or_create(registro=by_date[item['data']], configuracao=configuration,
-            defaults={k:v for k,v in item.items() if k!='data'} | {'ativa':True})
+    from .detection import analyze_territory
+    analyze_territory(series.recorte_id, series.indicador)
 
 
 def process_lote(lote_id):
-    lote = LoteColeta.objects.select_related('fonte').get(pk=lote_id)
+    lote = LoteColeta.objects.select_related('fonte').defer('conteudo_original').get(pk=lote_id)
+    version = DATASETS.get(lote.indicador or infer_dataset(lote.url_origem), {}).get('versao', 'desconhecido')
     try:
         rows = normalize_lote(lote)
         with transaction.atomic():
@@ -141,10 +119,10 @@ def process_lote(lote_id):
                 detect_series(series)
             result, _ = ProcessamentoLote.objects.update_or_create(lote=lote, defaults={
                 'status':'sucesso','mensagem':'Dados validados e padronizados.' if rows else 'Lote vazio; nenhuma semana preenchida com zero.',
-                'quantidade_registros':len(rows), 'versao':'infodengue_v1'})
+                'quantidade_registros':len(rows), 'versao':version})
     except Exception as exc:
         message = str(exc)[:300] if isinstance(exc, CollectionError) else 'Falha interna no processamento do lote.'
         logger.warning('Processamento do lote %s falhou: %s', lote.pk, message)
         result, _ = ProcessamentoLote.objects.update_or_create(lote=lote, defaults={
-            'status':'erro','mensagem':message,'quantidade_registros':0, 'versao':'infodengue_v1'})
+            'status':'erro','mensagem':message,'quantidade_registros':0, 'versao':version})
     return result

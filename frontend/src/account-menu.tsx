@@ -1,7 +1,7 @@
 import {useEffect, useId, useRef, useState} from 'react';
 import type {User} from './api';
 
-export function AccountMenu({user, onPassword, onLogout}: {user:User; onPassword:()=>void; onLogout:()=>void}) {
+export function AccountMenu({user, onLogout, onAdministration}: {user:User; onLogout:()=>void; onAdministration?:()=>void}) {
   const [open,setOpen]=useState(false);
   const container=useRef<HTMLDivElement>(null);
   const trigger=useRef<HTMLButtonElement>(null);
@@ -22,8 +22,8 @@ export function AccountMenu({user, onPassword, onLogout}: {user:User; onPassword
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
     </button>
     {open && <div id={id} className="profile-panel" aria-label="Opções da conta">
-      <div className="profile-identity"><strong>{name}</strong>{distinctName && <small>{user.email}</small>}<span>{user.administrador?'Administrador':'Usuário'}</span></div>
-      <button onClick={()=>select(onPassword)}>Alterar senha</button>
+      <div className="profile-identity"><strong>{name}</strong>{distinctName && <small>{user.email}</small>}<span>{user.perfil}</span></div>
+      {onAdministration&&<button onClick={()=>select(onAdministration)}>Administração</button>}
       <button onClick={()=>select(onLogout)}>Sair</button>
     </div>}
   </div>;

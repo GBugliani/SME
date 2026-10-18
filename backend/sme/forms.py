@@ -6,14 +6,16 @@ UFS = set("AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR 
 
 
 class FonteForm(forms.Form):
+    indicador = forms.CharField(max_length=80, required=False)
     nome = forms.CharField(max_length=150)
-    tipo = forms.ChoiceField(choices=[("csv", "CSV"), ("json", "JSON/API")])
+    tipo = forms.ChoiceField(choices=[("csv", "CSV"), ("json", "JSON/API"), ("xlsx", "Excel")])
     url = forms.URLField(max_length=2000, assume_scheme="https")
     recorte_tipo = forms.ChoiceField(choices=[("municipio", "Município"), ("regiao", "Região")])
     recorte_nome = forms.CharField(max_length=150)
     recorte_codigo = forms.CharField(max_length=50)
     recorte_uf = forms.CharField(max_length=2, required=False)
     ativa = forms.BooleanField(required=False)
+    periodo_movel = forms.BooleanField(required=False)
 
     def clean_url(self):
         url = self.cleaned_data["url"]

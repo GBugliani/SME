@@ -30,14 +30,16 @@ Não use `down -v` para desligar normalmente: essa opção apaga o volume do ban
 | `frontend/` | React, TypeScript e Vite |
 | `infra/` | Proxy Nginx e DAG de coleta no Airflow |
 | `scripts/` | Preparação e diagnóstico do ambiente |
-| `docs/` | Instalação, sprints, decisões, QA e publicação |
+| `docs/` | Instalação, decisões, QA e publicação |
 | `Diagramas/` | Diagramas originais fornecidos pela equipe |
 
-## Documentação de trabalho
+## Documentação
 
 - [Instalação e execução](docs/INSTALACAO.md)
 - [Arquitetura e decisões](docs/ARQUITETURA.md)
 - [Fontes de dados para São Paulo](docs/FONTES_SP.md)
+- [Múltiplos provedores e agravos: uso, limites e validação](docs/MULTIPLOS_PROVEDORES.md)
+- [Atualidade dos dados, acompanhamento contínuo e qualidade](docs/ACOMPANHAMENTO_CONTINUO.md)
 
 ## Testes
 

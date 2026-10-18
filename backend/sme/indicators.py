@@ -1,24 +1,30 @@
 import json
 from datetime import date, timedelta
 from pathlib import Path
-from django.db.models import Q
 from .models import RegistroEpidemiologico, Agravo
-from .processing import MovingBaseline, PARAMETERS, week_start
+from .datasets import DATASETS
+from .detectors import strategy
+from .detection import configuration_for, configuration_data
+from .series_data import current_records
 
 REGIONS = json.loads(Path(__file__).with_name('regioes_sp.json').read_text(encoding='utf-8'))
 
 
 def options():
-    codes = set(RegistroEpidemiologico.objects.values_list('serie__recorte__codigo', flat=True))
+    available = RegistroEpidemiologico.objects.filter(casos__isnull=False)
+    codes = set(available.values_list('serie__recorte__codigo', flat=True))
     municipalities = [{'codigo':c, 'nome':REGIONS[c]['nome'], 'regiao_codigo':REGIONS[c]['regiao_codigo']} for c in codes if c in REGIONS]
     municipalities.sort(key=lambda r:r['nome'])
     region_codes = {REGIONS[c]['regiao_codigo'] for c in codes if c in REGIONS}
     regions = {v['regiao_codigo']:v['regiao_nome'] for v in REGIONS.values() if v['regiao_codigo'] in region_codes}
-    return {'municipios':municipalities, 'regioes':[{'codigo':c,'nome':n} for c,n in sorted(regions.items(),key=lambda x:x[1])],
+    coverage = {}
+    for key, code in available.order_by().values_list('serie__indicador','serie__recorte__codigo').distinct():
+        coverage.setdefault(key, []).append(code)
+    return {'integracoes':[{**DATASETS[k], 'codigos_com_dados':sorted(coverage[k])} for k in DATASETS if k in coverage], 'municipios':municipalities, 'regioes':[{'codigo':c,'nome':n} for c,n in sorted(regions.items(),key=lambda x:x[1])],
             'agravos':list(Agravo.objects.filter(serieepidemiologica__registros__isnull=False).distinct().values('codigo','nome'))}
 
 
-def query_indicators(params):
+def query_indicators(params, configuration=None):
     kind, code = params.get('tipo','municipio'), params.get('codigo','')
     disease = params.get('agravo','dengue')
     if kind not in ('municipio','regiao'):
@@ -43,11 +49,18 @@ def query_indicators(params):
     if start and end and (start>end or (end-start).days>3660):
         raise ValueError('Selecione um intervalo ordenado de até dez anos.')
     records = RegistroEpidemiologico.objects.filter(serie__recorte__codigo__in=all_codes, serie__agravo__codigo=disease).select_related('serie__recorte','serie__fonte','lote').order_by('lote__criada_em','pk')
-    # Revisões e fontes sobrepostas não duplicam o município/semana.
-    current = {}
-    for r in records:
-        current[(r.serie.recorte.codigo,r.data_referencia)] = r
-    covered = {c for c,d in current}
+    indicator = params.get('indicador', '')
+    candidates = list(records.order_by().values_list('serie__indicador', flat=True).distinct())
+    if indicator:
+        if indicator not in DATASETS or DATASETS[indicator]['agravo'] != disease:
+            raise ValueError('O indicador e o agravo devem corresponder à mesma integração.')
+    else:
+        if len(candidates) > 1:
+            raise ValueError('Há mais de um provedor/indicador. Selecione a origem nos filtros.')
+        indicator = candidates[0] if candidates else next((k for k,v in DATASETS.items() if v['agravo']==disease), '')
+    current = current_records(all_codes, indicator, disease)
+    configuration = configuration or configuration_for(indicator)
+    covered = {c for (c,d),r in current.items() if r.casos is not None}
     weeks = {}
     for (c,day),r in current.items():
         weeks.setdefault(day,[]).append(r)
@@ -55,19 +68,41 @@ def query_indicators(params):
     if weeks:
         day, last = min(weeks), max(weeks)
         while day<=last:
-            rows = weeks.get(day,[])
-            complete = len(rows)==len(covered) and all(r.casos is not None for r in rows)
+            rows = [r for r in weeks.get(day,[]) if r.serie.recorte.codigo in covered]
+            complete = bool(covered) and len(rows)==len(covered) and all(r.casos is not None for r in rows)
             sample = rows[0] if rows else None
             history.append({'data':day, 'ano':sample.ano if sample else None, 'semana':sample.semana if sample else None,
                 'casos':sum(r.casos for r in rows) if complete else None,
-                'municipios_com_dados':sum(r.casos is not None for r in rows), 'anomalia':False, 'referencia':None, 'limiar':None})
+                'origens':[{'fonte_id':r.serie.fonte_id,'lote_id':r.lote_id} for r in rows], 'municipios_com_dados':sum(r.casos is not None for r in rows), 'anomalia':False, 'referencia':None, 'limiar':None})
             day+=timedelta(weeks=1)
-    flags = {r['data']:r for r in MovingBaseline().analyze(history)}
+    flags = {r['data']:r for r in strategy(configuration.metodo, configuration.parametros, configuration.versao_algoritmo).analyze(history)}
     for p in history:
         if p['data'] in flags:
             p.update({k:v for k,v in flags[p['data']].items() if k not in ('data','observado')})
             p['anomalia']=True
     selected = [p for p in history if (not start or p['data']>=start) and (not end or p['data']<=end)]
+    # Contabiliza também as lacunas nas bordas explicitamente solicitadas.
+    first = start or (history[0]['data'] if history else None)
+    last = end or (history[-1]['data'] if history else None)
+    if first and last and first <= last:
+        if (last-first).days > 3660 and (start or end):
+            raise ValueError('Selecione um intervalo ordenado de até dez anos.')
+        indexed = {p['data']:p for p in selected}
+        selected = []
+        offset = (6-first.weekday())%7
+        if offset > (last-first).days:
+            first = None
+        else:
+            first += timedelta(days=offset)
+        while first is not None and first <= last:
+            selected.append(indexed.get(first, {'data':first, 'ano':None, 'semana':None,
+                'casos':None, 'origens':[], 'municipios_com_dados':0, 'anomalia':False,
+                'referencia':None, 'limiar':None}))
+            if (last-first).days < 7:
+                break
+            first += timedelta(weeks=1)
+    from .data_quality import summarize
+    summary = summarize(history, selected, current, configuration, all_codes)
     recent = selected[-4:]
     previous = selected[-8:-4]
     def average(rows):
@@ -75,13 +110,20 @@ def query_indicators(params):
     a,b = average(recent),average(previous)
     change = (a/b-1)*100 if a is not None and b not in (None,0) else None
     relevant = [r for r in current.values() if (not start or r.data_referencia>=start) and (not end or r.data_referencia<=end)]
-    source_ids = {r.serie.fonte_id for r in relevant}
-    sources = {r.serie.fonte_id:{'id':r.serie.fonte_id,'nome':r.serie.fonte.nome,'url':r.lote.url_origem} for r in relevant}
-    return {'territorio':{'tipo':kind,'codigo':code,'nome':name}, 'agravo':disease,
+    sources = {}
+    for r in relevant:
+        entry = sources.setdefault(r.serie.fonte_id, {'id':r.serie.fonte_id, 'nome':r.serie.fonte.nome,
+            'url':r.lote.url_origem, 'lotes':{}})
+        entry['lotes'][r.lote_id] = {'id':r.lote_id, 'url':r.lote.url_origem, 'coletado_em':r.lote.criada_em,
+            'sha256':r.lote.sha256, 'sha256_original':r.lote.sha256_original,
+            'proveniencia':r.lote.proveniencia}
+    for entry in sources.values(): entry['lotes'] = list(entry['lotes'].values())
+    return {**summary, 'filtros':{'inicio':start.isoformat() if start else None, 'fim':end.isoformat() if end else None},
+        'territorio':{'tipo':kind,'codigo':code,'nome':name}, 'agravo':disease, 'agravo_nome':Agravo.objects.get(codigo=disease).nome, 'integracao':DATASETS.get(indicator),
         'serie':[{**p,'data':p['data'].isoformat()} for p in selected],
         'casos_total':sum(p['casos'] for p in selected if p['casos'] is not None),
         'semanas_com_dados':sum(p['casos'] is not None for p in selected), 'semanas_sem_dados':sum(p['casos'] is None for p in selected),
         'tendencia_percentual':change, 'anomalias':sum(p['anomalia'] for p in selected),
-        'municipios_cobertos':len(covered), 'municipios_regiao':len(all_codes), 'codigos_cobertos':sorted(covered),
-        'fontes':list(sources.values()), 'coletado_em':max((r.serie.fonte.ultima_coleta_em for r in relevant if r.serie.fonte.ultima_coleta_em),default=None), 'atualizado_em':max((r.serie.atualizada_em for r in relevant),default=None),
-        'detector':{'metodo':MovingBaseline.name,'versao':1,'parametros':PARAMETERS}}
+        'municipios_cobertos':len({r.serie.recorte.codigo for r in relevant if r.casos is not None}), 'municipios_regiao':len(all_codes), 'codigos_cobertos':sorted({r.serie.recorte.codigo for r in relevant if r.casos is not None}),
+        'fontes':list(sources.values()), 'coletado_em':max((r.lote.criada_em for r in relevant),default=None), 'atualizado_em':max((r.serie.atualizada_em for r in relevant),default=None),
+        'detector':configuration_data(configuration)}
