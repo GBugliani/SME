@@ -15,6 +15,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 15
+    restart: unless-stopped
   backend:
     build:
       context: .
@@ -45,6 +46,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
   detector:
     image: sme-backend
     environment:
@@ -103,6 +105,7 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    restart: unless-stopped
   airflow:
     image: apache/airflow:3.3.1
     command: standalone

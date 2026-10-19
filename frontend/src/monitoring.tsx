@@ -10,7 +10,8 @@ export type Indicators = { territorio: {tipo:string; codigo:string; nome:string}
   filtros?:{inicio:string|null;fim:string|null};
   qualidade:{semanas_esperadas:number;semanas_completas:number;semanas_sem_contagem_completa:number;completude_percentual:number|null;municipios_com_dados:number;municipios_previstos:number;cobertura_percentual:number;janela_deteccao:number;semanas_avaliaveis:number;semanas_com_dados_sem_base:number;inicio_historico:string|null;fim_historico:string|null};
 };
-type Options = { integracoes:Integration[]; municipios:{codigo:string; nome:string; regiao_codigo:string}[]; regioes:{codigo:string; nome:string}[]; agravos:{codigo:string; nome:string}[] };
+export type IndicatorOptions = { integracoes:Integration[]; municipios:{codigo:string; nome:string; regiao_codigo:string}[]; regioes:{codigo:string; nome:string}[]; agravos:{codigo:string; nome:string}[] };
+export type MapSelection = { cityCode:string; integrationCode:string; requestId:number };
 export const number = (value:number) => value.toLocaleString('pt-BR');
 export function trend(value:number|null|undefined) {
   if (value == null) return 'Base insuficiente';
@@ -18,8 +19,8 @@ export function trend(value:number|null|undefined) {
   return `${value>0?'Alta':'Queda'} de ${Math.abs(value).toLocaleString('pt-BR',{maximumFractionDigits:1})}%`;
 }
 
-export function IndicatorFilters({ onData, onExpired, refresh }: {onData:(data:Indicators|null)=>void; onExpired:()=>void; refresh:number}) {
-  const [options,setOptions]=useState<Options|null>(null);
+export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSelection }: {onData:(data:Indicators|null)=>void; onOptions:(data:IndicatorOptions|null)=>void; onExpired:()=>void; refresh:number; mapSelection:MapSelection|null}) {
+  const [options,setOptions]=useState<IndicatorOptions|null>(null);
   const [type,setType]=useState('municipio');
   const [code,setCode]=useState('');
   const [disease,setDisease]=useState('dengue');
@@ -31,7 +32,9 @@ export function IndicatorFilters({ onData, onExpired, refresh }: {onData:(data:I
   const filterDialog=useRef<HTMLDialogElement>(null);
   const [expanded,setExpanded]=useState(false);
   const requestVersion = useRef(0);
+  const lastMapSelectionId = useRef<number|null>(null);
   const callback = useRef(onData); callback.current=onData;
+  const optionsCallback = useRef(onOptions); optionsCallback.current=onOptions;
   async function query(t:string,c:string,a:string,s:string,e:string,i:string,closeOnSuccess=true) {
     // Mantém a consulta anterior visível até a nova estar pronta, sem desmontar o painel/mapa.
     const version=++requestVersion.current; setBusy(true); setError('');
@@ -45,8 +48,8 @@ export function IndicatorFilters({ onData, onExpired, refresh }: {onData:(data:I
   }
   useEffect(()=>{
     let active=true; setBusy(true);
-    api<Options>('/indicadores/opcoes/').then(data=>{
-      if(!active)return; setOptions(data); setStart(''); setEnd('');
+    api<IndicatorOptions>('/indicadores/opcoes/').then(data=>{
+      if(!active)return; setOptions(data); optionsCallback.current(data); setStart(''); setEnd('');
       const chosen=data.integracoes.find(i=>i.codigo==='infodengue_dengue')||data.integracoes[0];
       const agravo=chosen?.agravo||data.agravos[0]?.codigo||'dengue';
       setDisease(agravo);setIndicator(chosen?.codigo||'');
@@ -55,8 +58,16 @@ export function IndicatorFilters({ onData, onExpired, refresh }: {onData:(data:I
       if(first){setType('municipio');setCode(first.codigo);void query('municipio',first.codigo,agravo,'','',chosen?.codigo||'',false);}
       else {setBusy(false);callback.current(null);}
     }).catch(err=>{if(active){setBusy(false);if(err instanceof ApiError&&err.status===401)onExpired();else setError(err.message);}});
-    return()=>{active=false;requestVersion.current++;};
+    return()=>{active=false;requestVersion.current++;optionsCallback.current(null);};
   },[refresh]);
+  useEffect(()=>{
+    if(!mapSelection||!options||lastMapSelectionId.current===mapSelection.requestId)return;
+    const integration=options.integracoes.find(item=>item.codigo===mapSelection.integrationCode && item.codigos_com_dados?.includes(mapSelection.cityCode));
+    if(!integration)return;
+    lastMapSelectionId.current=mapSelection.requestId;
+    setType('municipio');setCode(mapSelection.cityCode);setDisease(integration.agravo);setIndicator(integration.codigo);
+    void query('municipio',mapSelection.cityCode,integration.agravo,start,end,integration.codigo,false);
+  },[mapSelection?.requestId,options]);
   const selectedIntegration=options?.integracoes.find(i=>i.codigo===indicator);
   const availableCities=options?.municipios.filter(m=>selectedIntegration?.codigos_com_dados?.includes(m.codigo))||[];
   const availableRegions=options?.regioes.filter(r=>availableCities.some(m=>m.regiao_codigo===r.codigo))||[];
