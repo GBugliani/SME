@@ -23,7 +23,7 @@ CVE-SP, TBWEB e Seade **não estão habilitados para coleta** nesta entrega. O s
 3. No InfoDengue, escolha período fixo (até dois anos e semanas) ou **Acompanhamento contínuo**, que consulta ano atual e anterior automaticamente. Cadastros existentes continuam fixos até serem editados.
 4. No InfoGripe, o coletor lê o histórico disponível no arquivo. A seleção temporal é feita no Monitoramento.
 5. No SIVEP-Gripe, escolha um ano fixo desde 2019 ou **Acompanhamento contínuo** para o ano atual. A pasta publicada mais recente do ano é descoberta automaticamente. Um ano ainda não publicado gera falha explícita e mantém o histórico. A disponibilidade é conferida na coleta.
-6. Salve e use **Coletar agora**, ou aguarde o ciclo diário do Airflow, às 06h de São Paulo.
+6. Salve a fonte habilitada. A primeira coleta entra na fila automaticamente; acompanhe o estado na lista de fontes. Para repeti-la manualmente, use **Coletar agora**. As atualizações seguintes seguem o Airflow, às 06h de São Paulo.
 7. Em **Monitoramento → Filtrar**, escolha agravo e **Origem / indicador**. Os municípios/regiões oferecidos correspondem às séries armazenadas dessa integração.
 
 O painel **Origem dos dados** identifica o publicador, a base original, a definição e o período. Não basta selecionar outro agravo para obter dados: ele precisa ter sido coletado e processado.

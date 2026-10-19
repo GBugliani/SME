@@ -16,6 +16,8 @@ Escolha o e-mail e a senha do administrador no terminal. Não existe senha padr�
 
 O canal opcional de alertas por e-mail usa SMTP e destinatários individuais ou grupos gerenciados em **Administração → E-mail**. Ele inicia desativado; consulte [Instalação](docs/INSTALACAO.md#alertas-por-e-mail-opcional) para preencher o `.env` e habilitá-lo.
 
+Ao cadastrar uma fonte habilitada e compatível, o serviço `collector` inicia sua primeira coleta em segundo plano. As atualizações posteriores seguem a rotina diária do Airflow.
+
 Para desligar preservando o banco:
 
 ```powershell

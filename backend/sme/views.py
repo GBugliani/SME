@@ -78,12 +78,15 @@ def source_data(source):
     from .datasets import DATASETS, source_dataset
     spec = DATASETS.get(source_dataset(source))
     latest = source.coletas.first()
+    initial_job = getattr(source, 'coleta_inicial', None)
     from .models import ProcessamentoLote
     processing = ProcessamentoLote.objects.filter(lote__fonte=source).order_by("-lote__criada_em", "-pk").first()
     return {"indicador": source_dataset(source), "integracao":spec, "id": source.pk, "nome": source.nome, "tipo": source.tipo, "url": source.url,
             "ativa": source.ativa, "arquivada_em": source.arquivada_em, "periodo_movel":source.periodo_movel, "url_coleta":effective_url, "ultima_coleta_em": source.ultima_coleta_em,
             "processamento": {"status":processing.status,"mensagem":processing.mensagem,"registros":processing.quantidade_registros} if processing else None,
             "coleta_disponivel": available, "ultima_execucao": run_data(latest),
+            "coleta_inicial_status": initial_job.status if initial_job else None,
+            "coleta_inicial_mensagem": initial_job.mensagem if initial_job else '',
             "recorte_tipo": source.recorte.tipo, "recorte_nome": source.recorte.nome,
             "recorte_codigo": source.recorte.codigo, "recorte_uf": source.recorte.uf}
 
@@ -193,7 +196,7 @@ def sources(request):
         return error("Esta ação requer permissão para gerenciar fontes.", 403)
     visible = FonteEpidemiologica.objects.filter(arquivada_em__isnull=True)
     processing_failures = visible.annotate(process_status=Subquery(latest_processing)).filter(process_status="erro").count()
-    queryset = FonteEpidemiologica.objects.select_related("recorte").filter(arquivada_em__isnull=not archived)
+    queryset = FonteEpidemiologica.objects.select_related("recorte", "coleta_inicial").filter(arquivada_em__isnull=not archived)
     for term in request.GET.get("q", "").strip()[:200].split():
         queryset = queryset.filter(Q(nome__icontains=term) | Q(recorte__nome__icontains=term)
                                    | Q(recorte__codigo__icontains=term) | Q(recorte__uf__icontains=term)

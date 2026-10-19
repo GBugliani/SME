@@ -58,6 +58,20 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
+  collector:
+    image: sme-backend
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Execute scripts/setup.ps1 antes de iniciar}
+      DJANGO_DEBUG: "true"
+      POSTGRES_DB: ${POSTGRES_DB:-sme}
+      POSTGRES_USER: ${POSTGRES_USER:-sme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+    command: ["python", "manage.py", "process_initial_collections", "--loop"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
   mailer:
     image: sme-backend
     environment:

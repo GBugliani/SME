@@ -143,6 +143,22 @@ class ExecucaoColeta(models.Model):
         constraints = [models.UniqueConstraint(fields=["fonte"], condition=models.Q(status="executando"), name="uma_coleta_ativa_por_fonte")]
 
 
+class ColetaInicial(models.Model):
+    """Pedido durável para a primeira coleta de uma fonte habilitada."""
+    fonte = models.OneToOneField(FonteEpidemiologica, on_delete=models.CASCADE, related_name="coleta_inicial")
+    status = models.CharField(max_length=15, default="pendente", choices=[
+        ("pendente", "Pendente"), ("executando", "Executando"),
+        ("concluida", "Concluída"), ("ignorada", "Ignorada"), ("erro", "Falha")])
+    tentativas = models.PositiveIntegerField(default=0)
+    mensagem = models.CharField(max_length=300, blank=True)
+    criada_em = models.DateTimeField(auto_now_add=True)
+    atualizada_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["criada_em", "pk"]
+        indexes = [models.Index(fields=["status", "criada_em"], name="coleta_inicial_fila_idx")]
+
+
 class Agravo(models.Model):
     codigo = models.SlugField(unique=True)
     nome = models.CharField(max_length=100)

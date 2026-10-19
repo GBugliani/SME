@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from .models import FonteEpidemiologica, RecorteGeografico, RegistroAuditoria
+from .models import ColetaInicial, FonteEpidemiologica, RecorteGeografico, RegistroAuditoria
 
 
 @transaction.atomic
@@ -39,5 +39,7 @@ def save_source(*, data, user, instance=None):
     source.recorte = recorte
     source.full_clean()
     source.save()
+    if source.ativa and indicator and not source.coletas.exists():
+        ColetaInicial.objects.get_or_create(fonte=source)
     RegistroAuditoria.objects.create(usuario=user, acao=action, entidade="FonteEpidemiologica", entidade_id=source.pk)
     return source

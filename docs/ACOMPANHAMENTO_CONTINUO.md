@@ -25,7 +25,7 @@ Em **Fontes de dados → Cadastrar fonte/Editar → Período de coleta**, escolh
 
 Exemplo: no InfoDengue uma coleta contínua em 2026 consulta 2025–2026; em 2027 passa a consultar 2026–2027. Semanas 52/53 seguem o calendário epidemiológico do ano. Isso não garante que a fonte já tenha publicado todas as semanas solicitadas ou dados de todos os agravos/municípios.
 
-O Airflow usa o mesmo resolvedor da coleta manual. Salvar o modo **não dispara coleta**: use **Coletar agora** ou aguarde a rotina diária. No SIVEP, se o ano atual ainda não foi publicado, a tentativa falha explicitamente e mantém o histórico, sem preencher zeros nem apresentar o ano anterior como atual. Para coletar/revisar anos anteriores, use um acompanhamento fixo.
+O Airflow usa o mesmo resolvedor da coleta manual. Cadastrar uma fonte habilitada agenda a primeira coleta no worker `collector`; a lista mostra quando ela está agendada ou em execução. Fontes habilitadas já cadastradas e ainda sem tentativa também entram na fila quando o worker inicia. As coletas seguintes continuam na rotina diária do Airflow, às 06h de São Paulo, ou podem ser iniciadas com **Coletar agora**. No SIVEP, se o ano atual ainda não foi publicado, a tentativa falha explicitamente e mantém o histórico, sem preencher zeros nem apresentar o ano anterior como atual. Para coletar/revisar anos anteriores, use um acompanhamento fixo.
 
 ### Preservação e migração
 
