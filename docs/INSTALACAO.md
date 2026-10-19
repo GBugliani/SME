@@ -23,6 +23,10 @@ O script gera `.env` com segredos aleatórios e preserva um arquivo já existent
 
 O primeiro build baixa imagens e dependências, por isso precisa de internet. As migrações são aplicadas automaticamente ao iniciar a API. No cadastro do administrador, use uma senha com pelo menos 12 caracteres. A digitação da senha não aparece no terminal.
 
+O rodapé e o menu de perfil mostram a versão, o identificador do código compilado e a data/hora da compilação. Compare o identificador entre ambientes para verificar se usam o mesmo código; ele considera frontend, backend, infraestrutura e `compose.yaml`. Para aparecer uma alteração no servidor, o frontend precisa ser reconstruído com `docker compose up -d --build frontend` (ou pelo processo automático de deploy).
+
+Em um servidor com domínio público, configure no `.env` `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,seu-dominio` e `CSRF_TRUSTED_ORIGINS=https://seu-dominio`. O Compose repassa essas variáveis ao backend; depois de alterá-las, recrie o serviço com `docker compose up -d --force-recreate backend`. Um domínio ausente de `DJANGO_ALLOWED_HOSTS` causa HTTP 400 nas chamadas da API.
+
 Abra [SME local](http://localhost:8080). Use sempre o mesmo endereço para preservar cookies e sessão. O banco não publica uma porta na rede. Por padrão, a interface escuta somente em `127.0.0.1`, inclusive no servidor.
 
 ### Acessar pelo celular na mesma rede

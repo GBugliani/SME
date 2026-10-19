@@ -1,6 +1,7 @@
 import {ActionIcon} from './action-icon';
 import {useEffect, useId, useRef, useState} from 'react';
 import type {User} from './api';
+import {BuildVersion} from './build-version';
 
 export function AccountMenu({user, onLogout, onAdministration}: {user:User; onLogout:()=>void; onAdministration?:()=>void}) {
   const [open,setOpen]=useState(false);
@@ -26,6 +27,7 @@ export function AccountMenu({user, onLogout, onAdministration}: {user:User; onLo
       <div className="profile-identity"><strong>{name}</strong>{distinctName && <small>{user.email}</small>}<span>{user.perfil}</span></div>
       {onAdministration&&<button onClick={()=>select(onAdministration)} data-icon="settings"><ActionIcon name="settings"/>Administração</button>}
       <button onClick={()=>select(onLogout)} data-icon="logout"><ActionIcon name="logout"/>Sair</button>
+      <div className="profile-build-version"><BuildVersion/></div>
     </div>}
   </div>;
 }
