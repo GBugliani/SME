@@ -1,6 +1,6 @@
 """Permissões verificadas no servidor, sem confiar no perfil enviado pelo navegador."""
 PERMISSIONS = {
-    'gerenciar_fontes': 'Cadastrar e editar fontes',
+    'gerenciar_fontes': 'Cadastrar, editar e arquivar fontes',
     'coletar_dados': 'Executar coletas manuais',
     'exportar_dados': 'Exportar dados',
 }

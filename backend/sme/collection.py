@@ -145,6 +145,8 @@ ADAPTERS = {"infodengue": InfoDengueAdapter()}
 def collect_source(source_id, *, origin="manual", user=None):
     with transaction.atomic():
         source = FonteEpidemiologica.objects.select_for_update().select_related("recorte").get(pk=source_id)
+        if source.arquivada_em is not None:
+            raise CollectionError("A fonte está arquivada.")
         if not source.ativa:
             raise CollectionError("A fonte está desabilitada.")
         # Libera execuções interrompidas pelo desligamento do container.
@@ -164,7 +166,7 @@ def collect_source(source_id, *, origin="manual", user=None):
         with transaction.atomic():
             # Não persiste resultado de uma configuração modificada durante a coleta.
             current = FonteEpidemiologica.objects.select_for_update().get(pk=source.pk)
-            if not current.ativa or current.atualizada_em != source.atualizada_em:
+            if current.arquivada_em is not None or not current.ativa or current.atualizada_em != source.atualizada_em:
                 raise CollectionError("A configuração da fonte mudou durante a coleta; resultado descartado.")
             if adapter.name == 'sivep':
                 # Uma versão A pode reaparecer após B. Ela é uma revisão nova,
@@ -210,7 +212,7 @@ def collect_source(source_id, *, origin="manual", user=None):
 
 def eligible_source_ids():
     ids = []
-    for source in FonteEpidemiologica.objects.filter(ativa=True).select_related("recorte").order_by("pk"):
+    for source in FonteEpidemiologica.objects.filter(ativa=True, arquivada_em__isnull=True).select_related("recorte").order_by("pk"):
         try:
             from .collection_period import collection_source
             effective = collection_source(source)

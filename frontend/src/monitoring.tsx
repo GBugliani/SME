@@ -1,3 +1,4 @@
+import {ActionIcon} from './action-icon';
 import {Notice,useTimedMessage} from './notifications';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import { api, ApiError, type Integration } from './api';
@@ -72,7 +73,7 @@ export function IndicatorFilters({ onData, onExpired, refresh }: {onData:(data:I
     <label>De<input aria-label="De" type="date" value={start} onChange={e=>setStart(e.target.value)}/></label><label>Até<input aria-label="Até" type="date" value={end} onChange={e=>setEnd(e.target.value)}/></label>
     <small className="filter-period-note">Datas de início das semanas epidemiológicas.</small>
     <div className="filter-message"><Notice message={error}/></div>{options&&!options.municipios.length&&<p className="muted filter-message">Nenhuma série processada disponível. Cadastre uma fonte compatível e execute a coleta.</p>}
-    <div className="filter-actions"><button type="button" className="secondary" onClick={()=>filterDialog.current?.close()}>Fechar</button><button disabled={busy||!code||!indicator} type="submit">{busy?'Consultando…':'Aplicar filtros'}</button></div>
+    <div className="filter-actions"><button type="button" className="secondary" onClick={()=>filterDialog.current?.close()} data-icon="close"><ActionIcon name="close"/>Fechar</button><button disabled={busy||!code||!indicator} type="submit" data-icon="filter"><ActionIcon name="filter"/>{busy?'Consultando…':'Aplicar filtros'}</button></div>
   </form></dialog></div>;
 }
 
@@ -124,7 +125,7 @@ export function SeriesChart({ data }: {data:Indicators|null}) {
     <p><strong>{trend(data.tendencia_percentual)}</strong><br/><small>Média das últimas 4 semanas comparada às 4 anteriores do período.</small></p>
     {data.semanas_sem_dados>0&&<p className="muted">{data.semanas_sem_dados} semanas sem dados completos; lacunas não representam zero casos.</p>}
     <div className="detector-note"><strong>{data.anomalias} {data.anomalias===1?'semana sinalizada':'semanas sinalizadas'}</strong><small>Sinalização estatística; não confirma surto.</small><details><summary>Critério da sinalização</summary><p>{data.detector.nome} · versão {data.detector.versao}. Usa as {data.detector.parametros.janela} semanas anteriores completas. Limiar: maior valor entre referência + {data.detector.parametros.desvios??data.detector.parametros.fator_mad} × {data.detector.metodo==='media_movel'?'desvio padrão':'1,4826 × MAD'}, {data.detector.parametros.razao_minima} × referência e {data.detector.parametros.piso} casos. Sem base completa, não há classificação. O histórico anterior ao crescimento é importante: uma referência móvel pode acompanhar uma alta gradual e deixar de sinalizá-la.</p></details></div>
-    <button className="text-button" onClick={()=>setDetails(v=>!v)} aria-expanded={details}>{details?'Ocultar registros':'Ver registros semanais'}</button>
+    <button className="text-button" onClick={()=>setDetails(v=>!v)} aria-expanded={details} data-icon="list"><ActionIcon name="list"/>{details?'Ocultar registros':'Ver registros semanais'}</button>
     {details&&<div className="table-scroll series-records"><table><thead><tr><th>Semana</th><th>Casos</th><th>Sinalização</th></tr></thead><tbody>{points.map(p=><tr key={p.data}><td>{p.ano&&p.semana?`${p.ano} · SE ${p.semana}`:p.data}</td><td>{p.casos==null?'Sem dados':number(p.casos)}</td><td>{p.anomalia?'Acima do limiar':'—'}</td></tr>)}</tbody></table></div>}
   </section>;
 }

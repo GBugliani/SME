@@ -205,6 +205,23 @@ def alerts(request):
 
 @require_POST
 @authorized()
+def mark_all_read(request):
+    """Marca as revisões vigentes como lidas para esta conta, em todas as páginas."""
+    with transaction.atomic():
+        active = list(AlertaSurto.objects.filter(ativa=True).order_by('pk').select_for_update().values_list('pk', 'revisao'))
+        read = dict(LeituraAlerta.objects.filter(usuario=request.user, alerta_id__in=[pk for pk, _ in active])
+            .values_list('alerta_id', 'revisao'))
+        now = timezone.now()
+        pending = [LeituraAlerta(usuario=request.user, alerta_id=pk, revisao=revision, lida_em=now)
+            for pk, revision in active if read.get(pk) != revision]
+        if pending:
+            LeituraAlerta.objects.bulk_create(pending, batch_size=500, update_conflicts=True,
+                update_fields=['revisao', 'lida_em'], unique_fields=['usuario', 'alerta'])
+    return JsonResponse({'ok': True, 'marcadas': len(pending)})
+
+
+@require_POST
+@authorized()
 def mark_read(request, alert_id):
     try:
         data = payload(request)

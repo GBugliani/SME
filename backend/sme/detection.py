@@ -44,7 +44,7 @@ def configuration_data(config):
 
 
 @transaction.atomic
-def analyze_territory(territory_id, indicator, expected_config=None):
+def analyze_territory(territory_id, indicator, expected_config=None, notify_email=False):
     lock_detection()
     config = ensure_configuration(indicator)
     if expected_config is not None and config.pk != expected_config:
@@ -72,10 +72,14 @@ def analyze_territory(territory_id, indicator, expected_config=None):
             'ativa':True, 'motivo_encerramento':''}
         alert, created = AlertaSurto.objects.get_or_create(recorte_id=territory_id, indicador=indicator,
             data_referencia=day, configuracao=config, defaults=values)
-        if not created and any(getattr(alert, key)!=value for key,value in values.items()):
+        revised = not created and any(getattr(alert, key)!=value for key,value in values.items())
+        if revised:
             for key,value in values.items(): setattr(alert, key, value)
             alert.revisao += 1
             alert.save()
+        if notify_email and (created or revised):
+            from .email_alerts import enqueue_alert_email
+            enqueue_alert_email(alert)
     alerts.filter(configuracao=config, ativa=True).exclude(data_referencia__in=days).update(
         ativa=False, motivo_encerramento='Dados revisados: semana fora do critério', atualizada_em=timezone.now())
     return True

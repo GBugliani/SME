@@ -1,3 +1,4 @@
+import {ActionIcon} from './action-icon';
 import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {api,ApiError,type Integration} from './api';
 import {Notice,useTimedMessage} from './notifications';
@@ -47,16 +48,16 @@ export function TerritoryComparison({context,onExpired}:{context:Indicators|null
     }catch(e){if(version===requestVersion.current&&key===activeContext.current){if(e instanceof ApiError&&e.status===401)onExpired();else setError(e instanceof Error?e.message:'Falha ao comparar.');}}
     finally{if(version===requestVersion.current)setBusy(false);}
   }
-  return <section ref={container} className="card comparison-panel"><div className="section-heading"><div><span className="eyebrow">COMPARAÇÃO TERRITORIAL</span><h2>Comparar municípios ou regiões</h2></div><button className="secondary" disabled={!context||cities.length<2} onClick={open}>Escolher territórios</button></div>
+  return <section ref={container} className="card comparison-panel"><div className="section-heading"><div><span className="eyebrow">COMPARAÇÃO TERRITORIAL</span><h2>Comparar municípios ou regiões</h2></div><button className="secondary" disabled={!context||cities.length<2} onClick={open} data-icon="filter"><ActionIcon name="filter"/>Escolher territórios</button></div>
     <p className="muted">Compare de dois a quatro territórios com o mesmo agravo, origem e período do monitoramento.</p>
     {context&&<p className="comparison-period"><strong>Período:</strong> {period}. {!context.filtros?.inicio&&!context.filtros?.fim&&'Cada território pode ter anos diferentes armazenados.'}</p>}
     <Notice message={dialogOpen?'':error}/>
     {result?<ComparisonChart data={result}/>:<p className="muted">{context&&options&&cities.length<2?'Esta origem precisa ter dados de pelo menos dois municípios para permitir comparação.':'Escolha os territórios para visualizar as séries no mesmo gráfico.'}</p>}
-    <dialog ref={dialog} className="filter-dialog comparison-dialog" aria-labelledby="comparison-title" onClose={()=>{requestVersion.current++;setBusy(false);setDialogOpen(false);}}><div className="filter-dialog-heading"><h2 id="comparison-title">Comparar territórios</h2><button className="secondary" disabled={busy} onClick={()=>dialog.current?.close()}>Fechar</button></div>
+    <dialog ref={dialog} className="filter-dialog comparison-dialog" aria-labelledby="comparison-title" onClose={()=>{requestVersion.current++;setBusy(false);setDialogOpen(false);}}><div className="filter-dialog-heading"><h2 id="comparison-title">Comparar territórios</h2><button className="secondary" disabled={busy} onClick={()=>dialog.current?.close()} data-icon="close"><ActionIcon name="close"/>Fechar</button></div>
       <form onSubmit={submit}><p className="filter-message">{context?.agravo_nome} · {context?.integracao?.publicador}<br/>Período: {period}. Para ajustar, use os filtros do Monitoramento.</p><label className="filter-territory">Tipo de território<select aria-label="Tipo de território para comparar" disabled={busy} value={kind} onChange={e=>{setKind(e.target.value);setCodes([]);setSearch('');}}><option value="municipio">Municípios</option><option value="regiao">Regiões imediatas</option></select></label>
         <label className="filter-territory">Pesquisar territórios<input type="search" maxLength={150} value={search} onChange={e=>setSearch(e.target.value)}/></label>
         <fieldset className="comparison-options filter-message"><legend>Selecionados: {codes.length} de 4</legend>{visible.map(t=><label className="checkbox" key={t.codigo}><input type="checkbox" checked={codes.includes(t.codigo)} disabled={busy||(!codes.includes(t.codigo)&&codes.length>=4)} onChange={e=>setCodes(v=>e.target.checked?[...v,t.codigo]:v.filter(c=>c!==t.codigo))}/>{t.nome}</label>)}{!visible.length&&<p>Nenhum território com dados para esta origem.</p>}</fieldset>
-        <div className="filter-message"><Notice message={error}/></div><div className="filter-actions"><button type="submit" disabled={busy||codes.length<2}>{busy?'Comparando…':'Comparar séries'}</button></div>
+        <div className="filter-message"><Notice message={error}/></div><div className="filter-actions"><button type="submit" disabled={busy||codes.length<2} data-icon="activity"><ActionIcon name="activity"/>{busy?'Comparando…':'Comparar séries'}</button></div>
       </form>
     </dialog>
   </section>;

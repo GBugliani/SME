@@ -86,6 +86,36 @@ class SprintFourTests(TestCase):
         self.assertEqual(self.client.get('/api/alertas/').json()['nao_lidas'],1)
         self.assertEqual(self.client.post(f'/api/alertas/{alert.pk}/ler/',{'revisao':1},content_type='application/json').status_code,409)
 
+    def test_mark_all_read_includes_other_pages_but_not_closed_alerts(self):
+        original = AlertaSurto.objects.get()
+        common = dict(recorte=original.recorte, indicador=original.indicador,
+            configuracao=original.configuracao, anomalia=original.anomalia, lote=original.lote,
+            titulo=original.titulo, mensagem=original.mensagem, observado=original.observado,
+            referencia=original.referencia, limiar=original.limiar)
+        for week in range(1, 12):
+            AlertaSurto.objects.create(**common, data_referencia=original.data_referencia-timedelta(weeks=week))
+        closed = AlertaSurto.objects.create(**common, data_referencia=original.data_referencia-timedelta(weeks=12), ativa=False)
+        self.assertEqual(self.client.get('/api/alertas/').json()['pages'], 2)
+        other = Client();other.force_login(self.user)
+        response = self.client.post('/api/alertas/ler-todas/', {}, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['marcadas'], 12)
+        self.assertEqual(self.client.get('/api/alertas/').json()['nao_lidas_total'], 0)
+        self.assertEqual(other.get('/api/alertas/').json()['nao_lidas_total'], 12)
+        self.assertFalse(LeituraAlerta.objects.filter(usuario=self.admin, alerta=closed).exists())
+        self.assertEqual(self.client.post('/api/alertas/ler-todas/', {}, content_type='application/json').json()['marcadas'], 0)
+        original.revisao += 1;original.save(update_fields=['revisao'])
+        self.assertEqual(self.client.get('/api/alertas/').json()['nao_lidas_total'], 1)
+        self.assertEqual(self.client.post('/api/alertas/ler-todas/', {}, content_type='application/json').json()['marcadas'], 1)
+        self.assertEqual(self.client.get('/api/alertas/').json()['nao_lidas_total'], 0)
+
+    def test_mark_all_read_requires_authentication_and_csrf(self):
+        self.assertEqual(self.client.get('/api/alertas/ler-todas/').status_code, 405)
+        csrf = Client(enforce_csrf_checks=True);csrf.force_login(self.user)
+        self.assertEqual(csrf.post('/api/alertas/ler-todas/', {}, content_type='application/json').status_code, 403)
+        self.client.logout()
+        self.assertEqual(self.client.post('/api/alertas/ler-todas/', {}, content_type='application/json').status_code, 401)
+
     def test_alert_permissions_pagination_scope_and_csrf(self):
         alert=AlertaSurto.objects.get()
         self.assertEqual(self.client.get('/api/alertas/',{'codigo':'3510500'}).json()['count'],0)

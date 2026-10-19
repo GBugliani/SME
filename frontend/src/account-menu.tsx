@@ -1,3 +1,4 @@
+import {ActionIcon} from './action-icon';
 import {useEffect, useId, useRef, useState} from 'react';
 import type {User} from './api';
 
@@ -23,8 +24,8 @@ export function AccountMenu({user, onLogout, onAdministration}: {user:User; onLo
     </button>
     {open && <div id={id} className="profile-panel" aria-label="Opções da conta">
       <div className="profile-identity"><strong>{name}</strong>{distinctName && <small>{user.email}</small>}<span>{user.perfil}</span></div>
-      {onAdministration&&<button onClick={()=>select(onAdministration)}>Administração</button>}
-      <button onClick={()=>select(onLogout)}>Sair</button>
+      {onAdministration&&<button onClick={()=>select(onAdministration)} data-icon="settings"><ActionIcon name="settings"/>Administração</button>}
+      <button onClick={()=>select(onLogout)} data-icon="logout"><ActionIcon name="logout"/>Sair</button>
     </div>}
   </div>;
 }

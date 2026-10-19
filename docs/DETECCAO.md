@@ -29,7 +29,7 @@ Limites administrativos: janela inteira de 4–52 semanas; multiplicador de 0,1�
 
 ### Fila de reanálise
 
-O novo serviço Docker `detector` executa `python manage.py process_detection_jobs --loop`, usando a mesma imagem do backend. As alterações são gravadas no PostgreSQL como `ReanaliseDeteccao`; a API retorna 202 e o painel acompanha o progresso. Reanálises não dependem de manter o navegador aberto.
+O serviço Docker `detector` executa `python manage.py process_detection_jobs --loop`, usando a mesma imagem do backend. As alterações são gravadas no PostgreSQL como `ReanaliseDeteccao`; a API retorna 202 e o painel acompanha o progresso. Reanálises não dependem de manter o navegador aberto.
 
 - Há no máximo uma execução pendente/em andamento por configuração.
 - Dois workers não podem reivindicar a mesma tarefa pendente. A análise é idempotente e atualiza o progresso por município/indicador.
@@ -49,13 +49,21 @@ docker compose exec backend python manage.py process_detection_jobs
 
 ### Alertas
 
-O sino no cabeçalho abre os alertas. Toda conta autenticada pode consultar e marcar sua própria leitura. O painel distingue sinalizações vigentes nos dados e encerradas por revisão ou configuração. “Vigente” descreve o resultado estatístico para a semana armazenada, não a existência de um surto em andamento hoje.
+O sino no cabeçalho abre os alertas. Toda conta autenticada pode consultar e marcar sua própria leitura. O botão **Marcar todas como lidas** atualiza, para a conta atual, as revisões de todas as sinalizações vigentes, inclusive as de outras páginas; alertas encerrados permanecem no histórico. O painel distingue sinalizações vigentes nos dados e encerradas por revisão ou configuração. “Vigente” descreve o resultado estatístico para a semana armazenada, não a existência de um surto em andamento hoje.
 
 O alerta guarda município, agravo/indicador, semana, observado, referência, limiar, configuração, lote, título, mensagem e canal `painel`. A interface mostra a semana de referência, a origem e os detalhes do cálculo. Dados de 2024 continuam identificados como 2024 mesmo se coletados em 2026.
 
 Reprocessar o mesmo lote não duplica alertas. Cadastros sobrepostos do mesmo indicador usam a mesma revisão canônica do painel: a mais recente por município/semana, sem misturar provedores. Uma alteração relevante do alerta incrementa sua revisão e exige nova leitura. A leitura é individual, não compartilhada entre os usuários.
 
-Quando uma revisão retira a sinalização, o alerta anterior é encerrado e mantém os valores e o lote que fundamentaram aquele sinal. Uma nova configuração preserva alertas antigos no histórico e produz os novos resultados pela fila. Nenhuma anomalia implica nenhum novo alerta. E-mail não foi habilitado; ele é um canal opcional na especificação.
+Quando uma revisão retira a sinalização, o alerta anterior é encerrado e mantém os valores e o lote que fundamentaram aquele sinal. Uma nova configuração preserva alertas antigos no histórico e produz os novos resultados pela fila. Nenhuma anomalia implica nenhum novo alerta.
+
+### Envio opcional por e-mail
+
+Em **Administração → E-mail**, o administrador cadastra grupos com seus endereços, seleciona quais grupos receberão alertas e pode incluir e-mails avulsos. Um endereço que aparece em mais de um grupo ou como avulso recebe uma única mensagem por revisão. Há limite de 100 endereços por grupo e 200 destinatários únicos. A tela mostra os últimos 30 envios, falhas e a ação de tentar novamente. Essas listas e os registros de entrega só são visíveis a administradores.
+
+As credenciais SMTP são variáveis de ambiente no servidor; a API nunca devolve a senha. O canal começa **desativado** e só pode ser habilitado quando houver SMTP e ao menos um destinatário. Acrescentar destinatários afeta alertas futuros; remover um endereço cancela suas mensagens ainda pendentes. Habilitar o canal não envia todo o histórico já armazenado. A coleta enfileira apenas sinalizações novas ou revistas de uma semana epidemiológica encerrada há no máximo 14 dias. Reanálises administrativas não enfileiram mensagens. O texto informa município, agravo, semana, contagem, referência, limiar e origem, e deixa explícito que a sinalização não confirma um surto.
+
+O serviço Docker `mailer` processa a fila PostgreSQL fora da transação de coleta. Cada mensagem tem destinatário individual e chave única por alerta, revisão e endereço. Falhas recebem até cinco tentativas com intervalo crescente; erros terminais podem ser recolocados na fila pelo administrador. Mensagens de alerta encerrado ou substituído são canceladas antes da entrega. Desativar o canal pausa a fila. Se o processo terminar entre a aceitação pelo servidor SMTP e a gravação do sucesso, o reenvio pode produzir uma duplicata: SMTP não oferece confirmação transacional com o banco.
 
 ### Comparação de territórios
 

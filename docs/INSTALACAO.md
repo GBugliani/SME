@@ -94,7 +94,7 @@ O arquivo `config.test_settings` permite testes isolados com SQLite quando não 
 
 ## Permissões atuais
 
-Usuários autenticados podem consultar a quantidade, a lista, os endereços públicos, os territórios, a situação e o histórico de coleta das fontes. O perfil padrão Usuário também pode exportar. Administradores podem cadastrar perfis personalizados com permissões independentes de cadastro/edição de fontes, coleta manual e exportação. Somente administradores gerenciam contas e perfis. A API verifica as permissões em cada solicitação, além de a interface ocultar ações indisponíveis.
+Usuários autenticados podem consultar a quantidade, a lista, os endereços públicos, os territórios, a situação e o histórico de coleta das fontes visíveis. O perfil padrão Usuário também pode exportar. Administradores podem cadastrar perfis personalizados com permissões independentes de cadastro/edição/arquivamento de fontes, coleta manual e exportação. Somente administradores gerenciam contas e perfis. A API verifica as permissões em cada solicitação, além de a interface ocultar ações indisponíveis.
 
 ## Administração de usuários e exportação
 
@@ -110,6 +110,8 @@ Antes de atualizar, faça backup. Rode `docker compose up --build -d`; as migra�
 
 Após atualizar o código, execute `docker compose up --build -d`; a API aplica a migração de identificação das fontes existentes. Faça backup do banco antes de atualizar. O cadastro assistido oferece InfoDengue (dengue, chikungunya, zika), InfoGripe (SRAG, São Paulo capital) e SIVEP-Gripe / Ministério da Saúde (SRAG total, municípios de SP, um ano por acompanhamento desde 2019). A atualização instala também o leitor XLSX e aplica a migração 0005 para compartilhar arquivos originais. Consulte [Múltiplos provedores](MULTIPLOS_PROVEDORES.md) para coleta, filtros e limites.
 
+Em **Fontes de dados**, quem tem permissão **Gerenciar fontes** pode clicar **Arquivar** após confirmar a ação. A fonte deixa de aparecer na lista principal e no resumo, para de ser coletada e permanece com lotes, indicadores e histórico consultáveis. Use **Arquivadas → Histórico** para consultar as coletas e **Restaurar** para recolocá-la na lista. A restauração mantém a coleta desabilitada; use **Editar → Habilitada para coleta** se desejar retomá-la. A migração 0014 adiciona esse estado sem apagar registros existentes. Fontes arquivadas só aparecem na lista Arquivadas para perfis com permissão de gestão.
+
 ## Detector, alertas e comparação
 
 Os ajustes posteriores estão em [Atualidade, acompanhamento contínuo e qualidade](ACOMPANHAMENTO_CONTINUO.md). A migração 0012 mantém as fontes existentes no modo fixo. Ao editar/cadastrar, é possível escolher o acompanhamento contínuo. O Monitoramento informa última semana, defasagem e qualidade; o sino oferece filtros por município, agravo, origem e semana.
@@ -117,5 +119,13 @@ Os ajustes posteriores estão em [Atualidade, acompanhamento contínuo e qualida
 Atualize com `docker compose up --build -d`. O serviço `detector` usa a imagem do backend e executa a fila de reanálise. A API aplica as migrações 0009–0011 antes de o worker iniciar. Sem esse serviço, novas coletas continuam analisadas, mas reanálises administrativas ficam pendentes.
 
 Em **Administração → Detecção**, escolha método, parâmetros e se a regra será padrão ou específica para uma origem. Salvar cria uma versão e agenda a reanálise; acompanhe o resultado nessa tela. `docker compose logs --tail=100 detector` mostra o processamento. O sino no cabeçalho abre alertas e permite marcar a leitura individual. Em Monitoramento, o painel **Comparar municípios ou regiões** permite escolher de dois a quatro territórios.
+
+## Alertas por e-mail (opcional)
+
+Na conta de e-mail da Hostinger, em **Conecte apps e dispositivos → Outros → Configurações avançadas**, confira servidor de saída, porta e SSL/TLS. Para a caixa configurada neste ambiente: `smtp.hostinger.com`, porta `465`, segurança `ssl`, usuário e remetente `system@synaptik.cloud`. Confira esses dados no painel antes de habilitar. [Instruções da Hostinger](https://support.hostinger.com/pt/articles/1575756-como-encontrar-os-detalhes-de-configuracao-de-e-mail-no-hpanel).
+
+No arquivo `.env` local, defina `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURITY` (`ssl` para 465 ou `starttls` para 587), `SMTP_USER`, `SMTP_PASSWORD` e `SMTP_FROM_EMAIL`. Coloque a senha **somente no `.env` do servidor**, nunca no Git ou no chat. Se ela contiver caracteres como `$` ou `#`, use aspas simples no valor do `.env` do Compose. `APP_PUBLIC_URL` é opcional e adiciona ao texto do e-mail o endereço público HTTPS do sistema.
+
+Depois de salvar o `.env`, execute `docker compose up --build -d` para aplicar a migração 0013 e iniciar `mailer`. Entre como administrador, abra **Administração → E-mail** e clique **Enviar teste para meu e-mail**; o teste vai apenas para a conta administrativa e tem limite de três solicitações por 15 minutos. Depois cadastre os grupos, escolha os grupos e/ou informe e-mails individuais em **Destinatários**, salve e clique **Ativar envio**. O envio começa desativado; registros antigos e reanálises não disparam mensagens. Use **Últimos envios** e `docker compose logs --tail=100 mailer` para acompanhar o resultado. Se alterar o `.env` depois, execute `docker compose up -d --force-recreate backend mailer`.
 
 Alertas podem se referir a anos anteriores; confira a semana informada. Para analisar o início de um crescimento, colete também histórico anterior, de preferência incluindo o ano anterior.

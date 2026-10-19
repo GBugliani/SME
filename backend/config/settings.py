@@ -56,3 +56,15 @@ if os.environ.get("TRUST_PROXY", "false").lower() == "true":
 DATA_UPLOAD_MAX_MEMORY_SIZE = 64 * 1024
 
 COLLECTION_TOKEN = os.environ.get("COLETA_TOKEN", "")
+
+# Credenciais SMTP ficam apenas no ambiente do servidor, nunca no PostgreSQL.
+SMTP_SECURITY = os.environ.get("SMTP_SECURITY", "ssl").lower()
+EMAIL_HOST = os.environ.get("SMTP_HOST", "")
+EMAIL_PORT = int(os.environ.get("SMTP_PORT", "465"))
+EMAIL_HOST_USER = os.environ.get("SMTP_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+EMAIL_USE_SSL = SMTP_SECURITY == "ssl"
+EMAIL_USE_TLS = SMTP_SECURITY == "starttls"
+EMAIL_TIMEOUT = 15
+DEFAULT_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "")
+APP_PUBLIC_URL = os.environ.get("APP_PUBLIC_URL", "")

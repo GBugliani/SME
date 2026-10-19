@@ -11,6 +11,8 @@ def save_source(*, data, user, instance=None):
     indicator = data.get('indicador') or infer_dataset(data['url'])
     if instance:
         instance = FonteEpidemiologica.objects.select_for_update().get(pk=instance.pk)
+        if instance.arquivada_em is not None:
+            raise ValidationError({'__all__':'Restaure a fonte antes de editá-la.'})
         if instance.lotes.exists() and (source_dataset(instance) != indicator or instance.recorte.codigo != data['recorte_codigo'] or instance.recorte.tipo != data['recorte_tipo']):
             raise ValidationError({'indicador':'Uma fonte com histórico não pode mudar de provedor, agravo ou território. Cadastre outra fonte.'})
     if indicator:

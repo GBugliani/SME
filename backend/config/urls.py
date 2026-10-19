@@ -1,15 +1,23 @@
 from django.urls import path
 from sme import views
-from sme import administration, exports
+from sme import administration, exports, email_views
 from sme import sprint4_views
 
 urlpatterns = [
+    path('api/administracao/email/', email_views.email_settings),
+    path('api/administracao/email/teste/', email_views.test_email),
+    path('api/administracao/email/destinatarios/', email_views.email_recipients),
+    path('api/administracao/email/grupos/', email_views.email_groups),
+    path('api/administracao/email/grupos/<int:group_id>/', email_views.email_group_detail),
+    path('api/administracao/email/envios/', email_views.email_deliveries),
+    path('api/administracao/email/envios/<int:delivery_id>/tentar/', email_views.retry_email),
     path('api/deteccao/configuracoes/', sprint4_views.configurations),
     path('api/deteccao/configuracoes/<int:config_id>/reanalisar/', sprint4_views.reanalyze),
     path('api/deteccao/origens/<slug:indicator>/padrao/', sprint4_views.inherit_configuration),
     path('api/indicadores/comparar/', sprint4_views.compare),
     path('api/alertas/', sprint4_views.alerts),
     path('api/alertas/opcoes/', sprint4_views.alert_options),
+    path('api/alertas/ler-todas/', sprint4_views.mark_all_read),
     path('api/alertas/<int:alert_id>/ler/', sprint4_views.mark_read),
     path('api/administracao/usuarios/', administration.users),
     path('api/administracao/usuarios/<int:user_id>/', administration.user_detail),
@@ -30,4 +38,5 @@ urlpatterns = [
     path("api/auth/me/", views.me),
     path("api/fontes/", views.sources),
     path("api/fontes/<int:source_id>/", views.source_detail),
+    path("api/fontes/<int:source_id>/arquivamento/", views.source_archive),
 ]

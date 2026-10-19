@@ -1,3 +1,4 @@
+import {ActionIcon} from './action-icon';
 import {useEffect,useState,type FormEvent} from 'react';
 import {api,ApiError,type Integration} from './api';
 import {Notice,useTimedMessage} from './notifications';
@@ -45,17 +46,17 @@ export function DetectionSettings({onExpired}:{onExpired:()=>void}){
   }
   if(!data)return <section className="card"><Notice message={error}/><p role="status">Carregando detecção…</p></section>;
   return <div className="detection-settings"><Notice message={error}/><Notice message={success} kind="success"/>
-    <section className="card form-card"><div className="section-heading"><h2>Detecção de anomalias</h2><button className="secondary" disabled={busy} onClick={()=>void load(true)}>Atualizar configuração</button></div>
+    <section className="card form-card"><div className="section-heading"><h2>Detecção de anomalias</h2><button className="secondary" disabled={busy} onClick={()=>void load(true)} data-icon="refresh"><ActionIcon name="refresh"/>Atualizar configuração</button></div>
       <p className="muted">A configuração padrão vale para as origens sem configuração própria. Cada alteração cria uma versão e reanalisa as séries armazenadas.</p>
       <form onSubmit={save}>
         <label>Aplicar a<select aria-label="Aplicar a" value={scope} disabled={busy} onChange={e=>selectScope(e.target.value)}><option value="">Padrão para todas as origens</option>{data.integracoes.map(i=><option key={i.codigo} value={i.codigo}>{i.publicador} · {i.agravo_nome}</option>)}</select></label>
         <label>Método<select aria-label="Método de detecção" value={method} disabled={busy} onChange={e=>{setMethod(e.target.value);setParameters({...data.metodos[e.target.value].padrao});}}>{Object.entries(data.metodos).map(([key,m])=><option key={key} value={key}>{m.nome}</option>)}</select></label>
         <p className="muted">{data.metodos[method].descricao}</p><div className="form-grid">{Object.entries(parameters).map(([key,value])=><label key={key}>{labels[key]}<input type="number" required value={Number.isFinite(value)?value:''} disabled={busy} step={key==='janela'?1:.1} min={key==='janela'?4:key==='razao_minima'?1:key==='piso'?0:.1} max={key==='janela'?52:key==='piso'?1000000:10} onChange={e=>setParameters(p=>({...p,[key]:e.target.value===''?NaN:Number(e.target.value)}))}/></label>)}</div>
         <p className="muted">Sem todas as semanas anteriores da janela, não há classificação. Uma sinalização estatística requer investigação e não confirma surto.</p>
-        <div className="form-actions">{scope&&data.ativas.some(c=>c.indicador===scope)&&<button className="secondary" type="button" disabled={busy} onClick={()=>void useDefault()}>Usar configuração padrão</button>}<button type="submit" disabled={busy}>{busy?'Salvando…':'Salvar e reanalisar'}</button></div>
+        <div className="form-actions">{scope&&data.ativas.some(c=>c.indicador===scope)&&<button className="secondary" type="button" disabled={busy} onClick={()=>void useDefault()} data-icon="refresh"><ActionIcon name="refresh"/>Usar configuração padrão</button>}<button type="submit" disabled={busy} data-icon="save"><ActionIcon name="save"/>{busy?'Salvando…':'Salvar e reanalisar'}</button></div>
       </form>
     </section>
-    <section className="card detection-history"><h2>Reanálise dos dados</h2>{data.reanalises.length?<ul className="job-list">{data.reanalises.map(j=><li key={j.id}><div><strong>{status[j.status]||j.status}</strong><small>{new Date(j.criada_em).toLocaleString('pt-BR')} · {j.status==='pendente'?'Aguardando início':`${j.processados} de ${j.total} séries`}</small><p>{j.mensagem}</p></div>{['erro','sucesso'].includes(j.status)&&data.ativas.some(c=>c.id===j.configuracao_id)&&<button className="secondary" disabled={busy} onClick={()=>void reanalyze(j.configuracao_id)}>Reanalisar</button>}</li>)}</ul>:<p>Nenhuma reanálise solicitada.</p>}</section>
+    <section className="card detection-history"><h2>Reanálise dos dados</h2>{data.reanalises.length?<ul className="job-list">{data.reanalises.map(j=><li key={j.id}><div><strong>{status[j.status]||j.status}</strong><small>{new Date(j.criada_em).toLocaleString('pt-BR')} · {j.status==='pendente'?'Aguardando início':`${j.processados} de ${j.total} séries`}</small><p>{j.mensagem}</p></div>{['erro','sucesso'].includes(j.status)&&data.ativas.some(c=>c.id===j.configuracao_id)&&<button className="secondary" disabled={busy} onClick={()=>void reanalyze(j.configuracao_id)} data-icon="refresh"><ActionIcon name="refresh"/>Reanalisar</button>}</li>)}</ul>:<p>Nenhuma reanálise solicitada.</p>}</section>
     <section className="card detection-history"><h2>Versões do detector</h2><ul className="job-list">{data.configuracoes.map(c=><li key={c.id}><div><strong>{c.nome} · versão {c.versao}</strong><small>{c.indicador?data.integracoes.find(i=>i.codigo===c.indicador)?.publicador+' · '+data.integracoes.find(i=>i.codigo===c.indicador)?.agravo_nome:'Configuração padrão'} · {c.ativa?'Ativa':'Histórica'}</small><p>{Object.entries(c.parametros).map(([k,v])=>`${labels[k]}: ${v}`).join(' · ')}</p></div></li>)}</ul></section>
   </div>;
 }

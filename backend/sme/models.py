@@ -64,6 +64,7 @@ class FonteEpidemiologica(models.Model):
     url = models.URLField(max_length=2000)
     recorte = models.ForeignKey(RecorteGeografico, on_delete=models.PROTECT)
     ativa = models.BooleanField(default=True)
+    arquivada_em = models.DateTimeField(null=True, blank=True)
     periodo_movel = models.BooleanField(default=False)
     ultima_coleta_em = models.DateTimeField(null=True, blank=True)
     criada_em = models.DateTimeField(auto_now_add=True)
@@ -258,3 +259,55 @@ class ReanaliseDeteccao(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['configuracao'], condition=models.Q(status__in=['pendente', 'executando']), name='uma_reanalise_ativa_config')]
+
+
+class ConfiguracaoEmail(models.Model):
+    """Ativação explícita do canal, separada das credenciais SMTP do ambiente."""
+    habilitado = models.BooleanField(default=False)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+
+class GrupoEmail(models.Model):
+    nome = models.CharField(max_length=100)
+    enderecos = models.JSONField(default=list)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['nome', 'pk']
+        constraints = [models.UniqueConstraint(Lower('nome'), name='grupo_email_nome_ci_unique')]
+
+
+class DestinoEmail(models.Model):
+    """Um endereço individual ou um grupo selecionado para receber alertas."""
+    email = models.EmailField(blank=True)
+    grupo = models.ForeignKey(GrupoEmail, null=True, blank=True, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=(models.Q(email='', grupo__isnull=False) |
+                (~models.Q(email='') & models.Q(grupo__isnull=True))), name='destino_email_ou_grupo'),
+            models.UniqueConstraint(Lower('email'), condition=~models.Q(email=''), name='destino_email_unico_ci'),
+            models.UniqueConstraint(fields=['grupo'], condition=models.Q(grupo__isnull=False), name='destino_grupo_unico'),
+        ]
+
+
+class EnvioAlertaEmail(models.Model):
+    """Mensagem individual e imutável de uma revisão; evita duplicar o enfileiramento."""
+    alerta = models.ForeignKey(AlertaSurto, on_delete=models.PROTECT)
+    revisao = models.PositiveIntegerField()
+    destinatario = models.EmailField()
+    assunto = models.CharField(max_length=255)
+    corpo = models.TextField()
+    status = models.CharField(max_length=12, default='pendente', choices=[
+        ('pendente', 'Pendente'), ('enviando', 'Enviando'), ('enviado', 'Enviado'),
+        ('erro', 'Falha'), ('cancelado', 'Cancelado')])
+    tentativas = models.PositiveSmallIntegerField(default=0)
+    proxima_tentativa_em = models.DateTimeField(null=True, blank=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    enviado_em = models.DateTimeField(null=True, blank=True)
+    erro = models.CharField(max_length=100, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['alerta', 'revisao', 'destinatario'], name='envio_alerta_revisao_email_unico')]
+        indexes = [models.Index(fields=['status', 'proxima_tentativa_em'], name='envio_email_pendente')]

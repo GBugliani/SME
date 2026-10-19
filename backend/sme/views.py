@@ -72,7 +72,7 @@ def source_data(source):
         effective = collection_source(source)
         get_adapter(effective).validate(effective)
         effective_url = effective.url
-        available = source.ativa
+        available = source.ativa and source.arquivada_em is None
     except CollectionError:
         available = False
     from .datasets import DATASETS, source_dataset
@@ -81,7 +81,7 @@ def source_data(source):
     from .models import ProcessamentoLote
     processing = ProcessamentoLote.objects.filter(lote__fonte=source).order_by("-lote__criada_em", "-pk").first()
     return {"indicador": source_dataset(source), "integracao":spec, "id": source.pk, "nome": source.nome, "tipo": source.tipo, "url": source.url,
-            "ativa": source.ativa, "periodo_movel":source.periodo_movel, "url_coleta":effective_url, "ultima_coleta_em": source.ultima_coleta_em,
+            "ativa": source.ativa, "arquivada_em": source.arquivada_em, "periodo_movel":source.periodo_movel, "url_coleta":effective_url, "ultima_coleta_em": source.ultima_coleta_em,
             "processamento": {"status":processing.status,"mensagem":processing.mensagem,"registros":processing.quantidade_registros} if processing else None,
             "coleta_disponivel": available, "ultima_execucao": run_data(latest),
             "recorte_tipo": source.recorte.tipo, "recorte_nome": source.recorte.nome,
@@ -185,16 +185,24 @@ def sources(request):
         return persist_source(request)
     from .models import ProcessamentoLote
     latest_processing = ProcessamentoLote.objects.filter(lote__fonte=OuterRef("pk")).order_by("-lote__criada_em", "-pk").values("status")[:1]
-    processing_failures = FonteEpidemiologica.objects.annotate(process_status=Subquery(latest_processing)).filter(process_status="erro").count()
-    queryset = FonteEpidemiologica.objects.select_related("recorte")
+    archived_param = request.GET.get("arquivadas", "0")
+    if archived_param not in ("0", "1"):
+        return error("Filtro de fontes arquivadas inválido.")
+    archived = archived_param == "1"
+    if archived and not can(request.user, "gerenciar_fontes"):
+        return error("Esta ação requer permissão para gerenciar fontes.", 403)
+    visible = FonteEpidemiologica.objects.filter(arquivada_em__isnull=True)
+    processing_failures = visible.annotate(process_status=Subquery(latest_processing)).filter(process_status="erro").count()
+    queryset = FonteEpidemiologica.objects.select_related("recorte").filter(arquivada_em__isnull=not archived)
     for term in request.GET.get("q", "").strip()[:200].split():
         queryset = queryset.filter(Q(nome__icontains=term) | Q(recorte__nome__icontains=term)
                                    | Q(recorte__codigo__icontains=term) | Q(recorte__uf__icontains=term)
                                    | Q(url__icontains=term) | Q(indicador__icontains=term))
     page = Paginator(queryset, 20).get_page(request.GET.get("page", 1))
-    return JsonResponse({"sources": [source_data(s) for s in page], "count": page.paginator.count,
+    return JsonResponse({"sources": [source_data(s) for s in page], "arquivadas": archived,
+                         "count": page.paginator.count,
                          "page": page.number, "pages": page.paginator.num_pages,
-                         "coleta_realizada": FonteEpidemiologica.objects.filter(ultima_coleta_em__isnull=False).exists(),
+                         "coleta_realizada": visible.filter(ultima_coleta_em__isnull=False).exists(),
                          "falhas_processamento": processing_failures})
 
 
@@ -205,7 +213,37 @@ def source_detail(request, source_id):
         source = FonteEpidemiologica.objects.get(pk=source_id)
     except FonteEpidemiologica.DoesNotExist:
         return error("Fonte não encontrada.", 404)
+    if source.arquivada_em is not None:
+        return error("Restaure a fonte antes de editá-la.", 409)
     return persist_source(request, source)
+
+
+@require_http_methods(["PUT"])
+@authorized(permission="gerenciar_fontes")
+def source_archive(request, source_id):
+    try:
+        data = payload(request)
+    except ValueError as exc:
+        return error(str(exc))
+    if set(data) != {"arquivar"} or type(data["arquivar"]) is not bool:
+        return error("Informe arquivar como true ou false.")
+    try:
+        with transaction.atomic():
+            source = FonteEpidemiologica.objects.select_for_update().get(pk=source_id)
+            if (source.arquivada_em is not None) != data["arquivar"]:
+                if data["arquivar"]:
+                    source.arquivada_em = timezone.now()
+                    source.ativa = False
+                    action = "fonte_arquivada"
+                else:
+                    source.arquivada_em = None
+                    action = "fonte_restaurada"
+                source.save(update_fields=["arquivada_em", "ativa", "atualizada_em"])
+                RegistroAuditoria.objects.create(usuario=request.user, acao=action,
+                    entidade="FonteEpidemiologica", entidade_id=source.pk)
+    except FonteEpidemiologica.DoesNotExist:
+        return error("Fonte não encontrada.", 404)
+    return JsonResponse({"source": source_data(source)})
 
 
 def run_data(run):

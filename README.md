@@ -14,6 +14,8 @@ docker compose exec backend python manage.py createsuperuser
 
 Escolha o e-mail e a senha do administrador no terminal. Não existe senha padrão. Acesse **http://localhost:8080** e faça login.
 
+O canal opcional de alertas por e-mail usa SMTP e destinatários individuais ou grupos gerenciados em **Administração → E-mail**. Ele inicia desativado; consulte [Instalação](docs/INSTALACAO.md#alertas-por-e-mail-opcional) para preencher o `.env` e habilitá-lo.
+
 Para desligar preservando o banco:
 
 ```powershell
@@ -31,7 +33,6 @@ Não use `down -v` para desligar normalmente: essa opção apaga o volume do ban
 | `infra/` | Proxy Nginx e DAG de coleta no Airflow |
 | `scripts/` | Preparação e diagnóstico do ambiente |
 | `docs/` | Instalação, decisões, QA e publicação |
-| `Diagramas/` | Diagramas originais fornecidos pela equipe |
 
 ## Documentação
 

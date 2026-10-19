@@ -28,6 +28,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-sme}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: db
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_SECURITY: ${SMTP_SECURITY:-ssl}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-}
     command: ["sh", "-c", "python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120 --access-logfile -"]
     depends_on:
       db:
@@ -47,6 +54,27 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: db
     command: ["python", "manage.py", "process_detection_jobs", "--loop"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+  mailer:
+    image: sme-backend
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Execute scripts/setup.ps1 antes de iniciar}
+      DJANGO_DEBUG: "true"
+      POSTGRES_DB: ${POSTGRES_DB:-sme}
+      POSTGRES_USER: ${POSTGRES_USER:-sme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_SECURITY: ${SMTP_SECURITY:-ssl}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-}
+    command: ["python", "manage.py", "process_email_jobs", "--loop"]
     depends_on:
       backend:
         condition: service_healthy

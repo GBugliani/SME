@@ -104,7 +104,7 @@ def normalize_infodengue(data):
 
 def detect_series(series):
     from .detection import analyze_territory
-    analyze_territory(series.recorte_id, series.indicador)
+    analyze_territory(series.recorte_id, series.indicador, notify_email=True)
 
 
 def process_lote(lote_id):
