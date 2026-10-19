@@ -92,7 +92,9 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
   const [tab, setTab] = useState('inicio');
   const currentTab=useRef(tab);currentTab.current=tab;
   const contentRef=useRef<HTMLElement>(null);
+  const [advancedPanels,setAdvancedPanels] = useState(false);
   const [mapControlsVisible,setMapControlsVisible]=useState(true);
+  const [mobilePanelHintVisible,setMobilePanelHintVisible]=useState(true);
   useLayoutEffect(()=>{
     if(tab!=='inicio')return;
     const panel=contentRef.current?.querySelector<HTMLElement>('.territory-panel');
@@ -105,6 +107,8 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
       const dockTop=hint.getBoundingClientRect().top-8;
       const mapBounds=panel.getBoundingClientRect();
       setMapControlsVisible(mapBounds.top<dockTop&&mapBounds.bottom>dockTop&&comparison.getBoundingClientRect().top>dockTop);
+      const firstInfoPanel=grid?.querySelector<HTMLElement>('.dashboard-left .card, .dashboard-right .card');
+      setMobilePanelHintVisible(Boolean(firstInfoPanel && firstInfoPanel.getBoundingClientRect().top>=innerHeight));
     };
     const schedule=()=>{if(frame===null)frame=requestAnimationFrame(()=>{frame=null;update();});};
     const observer=new ResizeObserver(schedule);
@@ -119,7 +123,7 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
       window.removeEventListener('scroll',schedule);
       window.removeEventListener('resize',schedule);
     };
-  },[tab]);
+  },[tab,advancedPanels]);
   const helpReturnTab=useRef('inicio');
   const helpReturnScroll=useRef(0);
   const previousScreen=useRef(tab);
@@ -134,7 +138,6 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
     return()=>animation?.cancel();
   },[tab]);
   const [indicators, setIndicators] = useState<Indicators|null>(null);
-  const [advancedPanels,setAdvancedPanels] = useState(false);
   const latestWeek = indicators?.serie.slice().reverse().find(point => point.casos !== null);
   const [refreshIndicators,setRefreshIndicators] = useState(0);
   const [mapOptions,setMapOptions] = useState<IndicatorOptions|null>(null);
@@ -268,14 +271,7 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
     if(lastTerritory.current===key) return;
     const firstSelection=lastTerritory.current===null;
     lastTerritory.current=key;
-    if(firstSelection){
-      if(activeMapRegionRef.current===null){
-        fitMode.current='estado';
-        const frame=requestAnimationFrame(()=>fitMap('estado'));
-        return()=>cancelAnimationFrame(frame);
-      }
-      return;
-    }
+    if(firstSelection && activeMapRegionRef.current!==null) return;
     const region=indicators.territorio.tipo==='municipio'
       ? getIntermediateRegionIndex(indicators.territorio.codigo)
       : getIntermediateRegionIndex((immediateRegions as Record<string,string[]>)[indicators.territorio.codigo]?.[0]||'');
@@ -466,6 +462,7 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
       <Notice message={success} kind="success"/>
       {tab === 'inicio' ? <>
       <div className="dashboard-heading"><div><span className="eyebrow">PAINEL TERRITORIAL</span><h1>Monitoramento epidemiológico</h1></div><div className="dashboard-tools"><button type="button" className="secondary filter-trigger advanced-panels-toggle" aria-expanded={advancedPanels} aria-controls="dashboard-left dashboard-right" onClick={()=>setAdvancedPanels(value=>!value)} data-icon={advancedPanels?'close':'list'}><ActionIcon name={advancedPanels?'close':'list'}/>{advancedPanels?'Mostrar resumo':'Informações avançadas'}</button><ExportDataGate user={user} data={indicators} onExpired={onLogout}/><IndicatorFilters onData={setIndicators} onOptions={setMapOptions} onExpired={onLogout} refresh={refreshIndicators} mapSelection={mapSelection}/></div></div>
+      <p className="mobile-panel-hint" hidden={!mobilePanelHintVisible}>Role para ver os painéis de informações ↓</p>
       <div className="dashboard-grid">
         <aside id="dashboard-left" className={`dashboard-left ${advancedPanels?'advanced':'compact'}`}>{advancedPanels ? <>
           <section className="card summary-card"><div className="section-heading"><span className="eyebrow">BASE DE MONITORAMENTO</span><span className="badge inactive">{indicators?.semanas_com_dados?'Dados disponíveis':'Sem série'}</span></div><h2>Resumo do monitoramento</h2><div className="primary-metric"><strong>{loading || page.arquivadas ? '…' : error ? '—' : String(page.count).padStart(2, '0')}</strong><span>fontes públicas<br />cadastradas</span></div><div className="metric-rule" /><dl className="status-list"><div><dt>Coleta</dt><dd>{indicators?.semanas_com_dados ? 'Dados processados' : page.coleta_realizada ? 'Aguardando processamento' : 'Aguardando coleta'}</dd></div><div><dt>Casos no período</dt><dd>{indicators&&indicators.semanas_com_dados?number(indicators.casos_total):'—'}</dd></div><div><dt>Tendência</dt><dd>{trend(indicators?.tendencia_percentual)}</dd></div><div><dt>Seu perfil</dt><dd>{user.perfil}</dd></div></dl><button className="text-button" onClick={() => setTab('fontes')} data-icon="database"><ActionIcon name="database"/>{canSources ? 'Gerenciar fontes' : 'Consultar fontes'} </button></section>

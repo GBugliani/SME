@@ -166,7 +166,9 @@ button[data-icon]{display:inline-flex;align-items:center;justify-content:center;
 /* O dock acompanha a janela somente enquanto cabe na área visível do mapa. */
 .monitoring-shell .map-zoom{position:fixed;left:50%;right:auto;top:auto;bottom:calc(16px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);display:flex;z-index:5}
 .monitoring-shell .map-zoom button+button{border-top:0;border-left:1px solid var(--line)}
-.monitoring-shell .map-gesture-hint{position:fixed;left:50%;right:auto;top:auto;bottom:calc(68px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);width:max-content;max-width:calc(100vw - 32px);margin:0;padding:2px 8px;border-radius:6px;background:#111c;text-align:center;z-index:5}
+.monitoring-shell .map-gesture-hint{position:fixed;left:50%;right:auto;top:auto;bottom:calc(68px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);width:max-content;max-width:calc(100vw - 32px);margin:0;text-align:center;text-shadow:0 1px 3px #000;z-index:5}
+.mobile-panel-hint{display:none}
+@media(max-width:900px){.monitoring-shell .mobile-panel-hint:not([hidden]){position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:5;display:block;width:max-content;max-width:calc(100vw - 24px);margin:0;color:#d6e3f8;font-size:13px;line-height:1.35;text-align:center;text-shadow:0 1px 3px #000;pointer-events:none}}
 .monitoring-shell .map-zoom,.monitoring-shell .map-gesture-hint{transition:opacity .18s ease,visibility .18s}
 .monitoring-shell .map-stage.map-controls-hidden .map-zoom,.monitoring-shell .map-stage.map-controls-hidden .map-gesture-hint{opacity:0;visibility:hidden;pointer-events:none}
 @media(prefers-reduced-motion:reduce){.monitoring-shell .map-zoom,.monitoring-shell .map-gesture-hint{transition:none}}
