@@ -23,7 +23,7 @@ services:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Execute scripts/setup.ps1 antes de iniciar}
       DJANGO_DEBUG: "true"
       COLETA_TOKEN: ${COLETA_TOKEN:?Execute scripts/setup.ps1 para configurar a coleta}
-      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend,192.168.10.67
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend
       POSTGRES_DB: ${POSTGRES_DB:-sme}
       POSTGRES_USER: ${POSTGRES_USER:-sme}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -99,7 +99,6 @@ services:
       dockerfile: frontend/Dockerfile
     ports:
       - "127.0.0.1:8080:80"
-      - "192.168.10.67:8080:80"
     depends_on:
       backend:
         condition: service_healthy

@@ -1,0 +1,9 @@
+# Copie para compose.lan.yaml e substitua o IP pelo IPv4 do seu computador.
+# Use somente em uma rede local confiável.
+services:
+  backend:
+    environment:
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend,192.168.10.67
+  frontend:
+    ports:
+      - "192.168.10.67:8080:80"

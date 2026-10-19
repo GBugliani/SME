@@ -23,13 +23,13 @@ O script gera `.env` com segredos aleatórios e preserva um arquivo já existent
 
 O primeiro build baixa imagens e dependências, por isso precisa de internet. As migrações são aplicadas automaticamente ao iniciar a API. No cadastro do administrador, use uma senha com pelo menos 12 caracteres. A digitação da senha não aparece no terminal.
 
-Abra [SME local](http://localhost:8080). Use sempre o mesmo endereço para preservar cookies e sessão. O banco não publica uma porta na rede. A interface escuta em `127.0.0.1` e no IPv4 local `192.168.10.67`.
+Abra [SME local](http://localhost:8080). Use sempre o mesmo endereço para preservar cookies e sessão. O banco não publica uma porta na rede. Por padrão, a interface escuta somente em `127.0.0.1`, inclusive no servidor.
 
 ### Acessar pelo celular na mesma rede
 
-Conecte o celular ao Wi-Fi do mesmo roteador do computador e abra http://192.168.10.67:8080 . O computador e o Docker precisam estar ligados. `localhost` no celular aponta para o próprio celular. A sessão do celular é independente da sessão no PC.
+Conecte o celular ao Wi-Fi do mesmo roteador do computador. Confira o IPv4 do computador com `ipconfig`, copie `compose.lan.example.yaml` para `compose.lan.yaml` e substitua `192.168.10.67` pelo IPv4 encontrado nas duas linhas do arquivo. Inicie com `docker compose -f compose.yaml -f compose.lan.yaml up -d --build` e abra `http://SEU-IP:8080` no celular. O computador e o Docker precisam estar ligados. `localhost` no celular aponta para o próprio celular. A sessão do celular é independente da sessão no PC.
 
-A configuração publica a interface somente no endereço local indicado, preservando também o acesso por `localhost`. Se o IPv4 do computador mudar, confira com `ipconfig`, atualize a segunda entrada de `frontend.ports` e o `DJANGO_ALLOWED_HOSTS` do backend no `compose.yaml`, e execute `docker compose up -d backend frontend`. Não use `*` em hosts permitidos nem encaminhe essa porta no roteador para a internet.
+O arquivo `compose.lan.yaml` é ignorado pelo Git e só é aplicado quando incluído com `-f`; atualizações do repositório não publicarão o IP local no servidor. Se o IPv4 mudar, atualize esse arquivo e execute novamente o comando acima. Para voltar ao modo somente local, execute `docker compose up -d --force-recreate backend frontend`. Não use `*` em hosts permitidos nem encaminhe essa porta no roteador para a internet.
 
 Se o Firewall do Windows bloquear o acesso, permita TCP 8080 para a sub-rede local no perfil da sua rede doméstica. Não é necessário publicar portas do PostgreSQL, backend ou Airflow.
 
