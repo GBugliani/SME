@@ -143,10 +143,12 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
   const [mapOptions,setMapOptions] = useState<IndicatorOptions|null>(null);
   const availableCityCodes=useMemo(()=>new Set(mapOptions?.integracoes.flatMap(item=>item.codigos_com_dados||[])||[]),[mapOptions]);
   const [mapSelection,setMapSelection] = useState<MapSelection|null>(null);
+  const mapSelectionSequence=useRef(0);
+  const [filterResetSequence,setFilterResetSequence]=useState(0);
   const [pickedCity,setPickedCity] = useState<PickedCity|null>(null);
   useEffect(()=>{if(tab!=='inicio'){setMapSelection(null);setPickedCity(null);}},[tab]);
   const territory = useRef<Indicators['territorio']|null>(null);
-  if (indicators) territory.current = indicators.territorio;
+  territory.current = indicators?.territorio ?? null;
   const selectedCodes = useMemo(()=>new Set(indicators?.territorio.tipo === 'regiao'
     ? (immediateRegions as Record<string,string[]>)[indicators.territorio.codigo] || []
     : indicators ? [indicators.territorio.codigo] : []),[indicators]);
@@ -157,6 +159,14 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
     import('./municipalities.json').then(data => { if (active) setMunicipalities(data.default); }).catch(() => { if (active) setError('Não foi possível carregar os limites municipais. Atualize a página para tentar novamente.'); });
     return () => { active = false; };
   }, [tab]);
+  const tourCities=useMemo(()=>municipalities.filter(city=>availableCityCodes.has(city.id)),[municipalities,availableCityCodes]);
+  const [tourCity,setTourCity]=useState<Municipality|null>(null);
+  const [tourPaused,setTourPaused]=useState(false);
+  const [tourRestart,setTourRestart]=useState(0);
+  const tourCityCode=useRef<string|null>(null);
+  const lastTourCityCode=useRef<string|null>(null);
+  const tourAllowed=useRef(false);
+  tourAllowed.current=tab==='inicio'&&!indicators&&!tourPaused;
   const [page, setPage] = useState<SourcePage>({ sources: [], arquivadas: false, count: 0, page: 1, pages: 1, coleta_realizada: false });
   const [sourceSearch,setSourceSearch]=useState('');
   const sourceSearchRef=useRef(sourceSearch);sourceSearchRef.current=sourceSearch;
@@ -218,18 +228,28 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
   },[tab,municipalities]);
   const labelScale=mapPixelScale*zoom;
   const zoomAnchor = useRef({x:360,y:220});
-  const fitMode = useRef<'estado'|'recorte'|'regiao'>('estado');
+  const fitMode = useRef<'estado'|'recorte'|'regiao'|'passeio'>('estado');
   const lastTerritory = useRef<string|null>(null);
-  function fitMap(mode: 'estado'|'recorte'|'regiao', animated=true) {
+  function pauseMapTour() {
+    if(!tourAllowed.current)return;
+    tourAllowed.current=false;
+    tourCityCode.current=null;
+    setTourCity(null);
+    setTourPaused(true);
+    fitMode.current='estado';
+    cancelMapAnimation();
+  }
+  function fitMap(mode: 'estado'|'recorte'|'regiao'|'passeio', animated=true) {
     const svg = mapRef.current;
     const matrix = svg?.getScreenCTM();
     if (!svg || !matrix) return;
     const current = territory.current;
-    const codes = new Set(mode === 'recorte' && current ? current.tipo === 'regiao'
-      ? (immediateRegions as Record<string,string[]>)[current.codigo] || [] : [current.codigo] : []);
+    const codes = new Set(mode === 'passeio' && tourCityCode.current ? [tourCityCode.current]
+      : mode === 'recorte' && current ? current.tipo === 'regiao'
+        ? (immediateRegions as Record<string,string[]>)[current.codigo] || [] : [current.codigo] : []);
     const shapes = mode === 'regiao' && activeMapRegionRef.current !== null
       ? Array.from(svg.querySelectorAll<SVGPathElement>(`[data-intermediate-region="${activeMapRegionRef.current}"]`))
-      : mode === 'recorte' && codes.size
+      : (mode === 'recorte' || mode === 'passeio') && codes.size
         ? Array.from(svg.querySelectorAll<SVGPathElement>('[data-municipality]')).filter(p=>codes.has(p.dataset.municipality!))
         : [svg.querySelector<SVGPathElement>('[data-state]')!];
     const bounds = shapes.filter(Boolean).map(p=>p.getBBox());
@@ -242,14 +262,15 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
     const inverse=matrix.inverse();
     const a=new DOMPoint(area.left,area.top).matrixTransform(inverse), b=new DOMPoint(area.right,area.bottom).matrixTransform(inverse);
     // Margem mantém os municípios vizinhos visíveis; o estado inteiro cabe mesmo em telas estreitas.
-    const fill=mode==='regiao' ? (innerWidth<=760?.86:.72) : (innerWidth<=760?.94:.8);
-    const next=Math.min(10, Math.max(.1, Math.min((b.x-a.x)/Math.max(1,right-left),(b.y-a.y)/Math.max(1,bottom-top))*fill));
+    const fill=mode==='regiao' ? (innerWidth<=760?.86:.72) : mode==='passeio' ? .68 : (innerWidth<=760?.94:.8);
+    const next=Math.min(mode==='passeio'?5.5:10, Math.max(.1, Math.min((b.x-a.x)/Math.max(1,right-left),(b.y-a.y)/Math.max(1,bottom-top))*fill));
     zoomAnchor.current={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
     drag.current=null; setHoveredCity(null);
-    moveMap({zoom:next,pan:{x:(a.x+b.x)/2-360-next*((left+right)/2-360),y:(a.y+b.y)/2-220-next*((top+bottom)/2-220)}},animated);
+    moveMap({zoom:next,pan:{x:(a.x+b.x)/2-360-next*((left+right)/2-360),y:(a.y+b.y)/2-220-next*((top+bottom)/2-220)}},animated,mode==='passeio'?1300:700);
   }
   function focusMapRegion(index:number) {
     if(index<0 || index>=intermediateRegions.length)return;
+    pauseMapTour();
     activeMapRegionRef.current=index;
     setActiveMapRegion(index);
     fitMode.current='regiao';
@@ -258,30 +279,70 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
     fitMap('regiao');
   }
   function resetMapRegions() {
+    pauseMapTour();
     activeMapRegionRef.current=null;
     setActiveMapRegion(null);
     fitMode.current='estado';
     setPickedCity(null);
     setHoveredCity(null);
     fitMap('estado');
+    if(!indicators)setTourPaused(false);
+  }
+  function restoreMapAndTour() {
+    resetMapRegions();
+    lastTerritory.current=null;
+    tourCityCode.current=null;
+    setTourCity(null);
+    setMapSelection(null);
+    setIndicators(null);
+    setFilterResetSequence(value=>value+1);
+    setTourPaused(false);
+    setTourRestart(value=>value+1);
   }
   useEffect(()=>{
     if(tab !== 'inicio' || !municipalities.length || !indicators) return;
     const key=`${indicators.territorio.tipo}:${indicators.territorio.codigo}`;
     if(lastTerritory.current===key) return;
-    const firstSelection=lastTerritory.current===null;
     lastTerritory.current=key;
-    if(firstSelection && activeMapRegionRef.current!==null) return;
     const region=indicators.territorio.tipo==='municipio'
       ? getIntermediateRegionIndex(indicators.territorio.codigo)
       : getIntermediateRegionIndex((immediateRegions as Record<string,string[]>)[indicators.territorio.codigo]?.[0]||'');
     activeMapRegionRef.current=region>=0?region:null;
     setActiveMapRegion(activeMapRegionRef.current);
     fitMode.current='recorte';
-    if(!firstSelection && innerWidth<=760) mapRef.current?.closest('.territory-panel')?.scrollIntoView({block:'start'});
+    if(innerWidth<=760) mapRef.current?.closest('.territory-panel')?.scrollIntoView({block:'end'});
     const frame=requestAnimationFrame(()=>fitMap(fitMode.current));
     return()=>cancelAnimationFrame(frame);
   },[indicators?.territorio.tipo,indicators?.territorio.codigo,municipalities,tab]);
+  useEffect(()=>{
+    if(tab!=='inicio'||indicators||tourPaused||!mapControlsVisible||!tourCities.length||window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      tourCityCode.current=null;
+      setTourCity(null);
+      return;
+    }
+    let timer=0;
+    let queue:Municipality[]=[];
+    const next=()=>{
+      if(document.hidden){timer=window.setTimeout(next,1000);return;}
+      if(!queue.length){
+        queue=[...tourCities];
+        for(let index=queue.length-1;index>0;index--){
+          const random=Math.floor(Math.random()*(index+1));
+          [queue[index],queue[random]]=[queue[random],queue[index]];
+        }
+        if(queue.length>1&&queue[0].id===lastTourCityCode.current)[queue[0],queue[1]]=[queue[1],queue[0]];
+      }
+      const city=queue.shift()!;
+      lastTourCityCode.current=city.id;
+      tourCityCode.current=city.id;
+      setTourCity(city);
+      fitMode.current='passeio';
+      fitMap('passeio');
+      timer=window.setTimeout(next,6500);
+    };
+    timer=window.setTimeout(next,700);
+    return()=>window.clearTimeout(timer);
+  },[tab,indicators,tourPaused,mapControlsVisible,tourCities,tourRestart]);
   useEffect(()=>{
     if(tab!=='inicio') return;
     let frame=0;
@@ -314,10 +375,11 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
   const hoveredMapRegion=activeMapRegion===null&&hoveredCity?getIntermediateRegionIndex(hoveredCity.id):null;
   const suppressMapClick=useRef(false);
   function selectMapIntegration(cityCode:string, integration:Integration) {
-    setMapSelection(previous=>({cityCode,integrationCode:integration.codigo,requestId:(previous?.requestId||0)+1}));
+    setMapSelection({cityCode,integrationCode:integration.codigo,requestId:++mapSelectionSequence.current});
     setPickedCity(null);
   }
   function openCity(city:Municipality, x:number, y:number) {
+    pauseMapTour();
     setHoveredCity(null);
     const integrations=availableCityIntegrations(mapOptions,city.id);
     if(integrations.length===1){selectMapIntegration(city.id,integrations[0]);return;}
@@ -351,6 +413,7 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
     if (!svg || tab !== 'inicio') return;
     const wheel = (event: WheelEvent) => {
       if (!event.ctrlKey) return;
+      pauseMapTour();
       event.preventDefault();
       const matrix = svg.getScreenCTM();
       if (!matrix) return;
@@ -369,6 +432,7 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
     const touchStart = (event: TouchEvent) => {
       const pair = gesture(event);
       if (!pair || pair.distance === 0) return;
+      pauseMapTour();
       event.preventDefault(); cancelMapAnimation(); drag.current = null; setHoveredCity(null);
       pinch = { ...pair, view: currentMapView.current };
     };
@@ -394,6 +458,28 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
       svg.removeEventListener('touchcancel', touchEnd);
     };
   }, [tab]);
+  useEffect(()=>{
+    if(tab!=='inicio')return;
+    const svg=mapRef.current;
+    const dock=svg?.closest('.territory-panel')?.querySelector('.map-controls-dock');
+    const dashboardTools=svg?.closest('.monitoring-shell')?.querySelector('.dashboard-tools');
+    const pause=()=>pauseMapTour();
+    const pauseOnKey=(event:Event)=>{if((event as KeyboardEvent).key==='Enter'||(event as KeyboardEvent).key===' ')pause();};
+    svg?.addEventListener('pointerdown',pause,true);
+    svg?.addEventListener('keydown',pauseOnKey,true);
+    dock?.addEventListener('pointerdown',pause,true);
+    dock?.addEventListener('keydown',pauseOnKey,true);
+    dashboardTools?.addEventListener('pointerdown',pause,true);
+    dashboardTools?.addEventListener('keydown',pauseOnKey,true);
+    return()=>{
+      svg?.removeEventListener('pointerdown',pause,true);
+      svg?.removeEventListener('keydown',pauseOnKey,true);
+      dock?.removeEventListener('pointerdown',pause,true);
+      dock?.removeEventListener('keydown',pauseOnKey,true);
+      dashboardTools?.removeEventListener('pointerdown',pause,true);
+      dashboardTools?.removeEventListener('keydown',pauseOnKey,true);
+    };
+  },[tab]);
   const drag = useRef<{ x: number; y: number; panX: number; panY: number; moved:boolean } | null>(null);
   const [collecting, setCollecting] = useState<number | null>(null);
   const [archiving, setArchiving] = useState<number | null>(null);
@@ -461,7 +547,7 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
       <Notice message={error}><button className="secondary" onClick={() => void load(page.page)} data-icon="refresh"><ActionIcon name="refresh"/>Tentar novamente</button></Notice>
       <Notice message={success} kind="success"/>
       {tab === 'inicio' ? <>
-      <div className="dashboard-heading"><div><span className="eyebrow">PAINEL TERRITORIAL</span><h1>Monitoramento epidemiológico</h1></div><div className="dashboard-tools"><button type="button" className="secondary filter-trigger advanced-panels-toggle" aria-expanded={advancedPanels} aria-controls="dashboard-left dashboard-right" onClick={()=>setAdvancedPanels(value=>!value)} data-icon={advancedPanels?'close':'list'}><ActionIcon name={advancedPanels?'close':'list'}/>{advancedPanels?'Mostrar resumo':'Informações avançadas'}</button><ExportDataGate user={user} data={indicators} onExpired={onLogout}/><IndicatorFilters onData={setIndicators} onOptions={setMapOptions} onExpired={onLogout} refresh={refreshIndicators} mapSelection={mapSelection}/></div></div>
+      <div className="dashboard-heading"><div><span className="eyebrow">PAINEL TERRITORIAL</span><h1>Monitoramento epidemiológico</h1></div><div className="dashboard-tools"><button type="button" className="secondary filter-trigger advanced-panels-toggle" aria-expanded={advancedPanels} aria-controls="dashboard-left dashboard-right" onClick={()=>setAdvancedPanels(value=>!value)} data-icon={advancedPanels?'close':'list'}><ActionIcon name={advancedPanels?'close':'list'}/>{advancedPanels?'Mostrar resumo':'Informações avançadas'}</button><ExportDataGate user={user} data={indicators} onExpired={onLogout}/><IndicatorFilters onData={setIndicators} onOptions={setMapOptions} onExpired={onLogout} refresh={refreshIndicators} mapSelection={mapSelection} resetSelection={filterResetSequence}/></div></div>
       <p className="mobile-panel-hint" hidden={!mobilePanelHintVisible}>Role para ver os painéis de informações ↓</p>
       <div className="dashboard-grid">
         <aside id="dashboard-left" className={`dashboard-left ${advancedPanels?'advanced':'compact'}`}>{advancedPanels ? <>
@@ -470,7 +556,7 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
           {indicators&&<><DataFreshness data={indicators}/><DataQuality data={indicators}/></>}
           </> : <><CompactOverview data={indicators}/><CompactRecent data={indicators} latestWeek={latestWeek}/><CompactQuality data={indicators}/></>}
         </aside>
-        <section className="territory-panel" aria-label="Mapa de referência do estado de São Paulo"><div className={`map-stage${mapControlsVisible ? "" : " map-controls-hidden"}`}><svg ref={mapRef} className="interactive-map" viewBox="-30 -30 780 500" role="group" aria-labelledby="map-title map-description" onPointerDown={e => { if (e.pointerType === 'touch' || e.button !== 0) return; suppressMapClick.current=false; cancelMapAnimation(); setHoveredCity(null); setPickedCity(null); const path=(e.target as Element).closest('[data-municipality], [data-map-region]'); if(!path)e.currentTarget.setPointerCapture(e.pointerId); drag.current = { x: e.clientX, y: e.clientY, panX: currentMapView.current.pan.x, panY: currentMapView.current.pan.y, moved:false }; }} onPointerMove={e => { if (!drag.current) return; if(Math.hypot(e.clientX-drag.current.x,e.clientY-drag.current.y)>5){drag.current.moved=true;if(!e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.setPointerCapture(e.pointerId);} if(!drag.current.moved)return; const matrix = e.currentTarget.getScreenCTM(); if (!matrix) return; const inverse = matrix.inverse(); const start = new DOMPoint(drag.current.x, drag.current.y).matrixTransform(inverse); const current = new DOMPoint(e.clientX, e.clientY).matrixTransform(inverse); const nextPan = { x: drag.current.panX + current.x - start.x, y: drag.current.panY + current.y - start.y }; moveMap({ ...currentMapView.current, pan: nextPan },false); }} onPointerUp={() => { suppressMapClick.current=Boolean(drag.current?.moved); drag.current=null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }}><title id="map-title">Contorno do estado de São Paulo</title><desc id="map-description">Mapa em duas etapas: escolha uma região geográfica intermediária de São Paulo para aproximar e depois selecione um município. Passe o mouse sobre um município para ver seu nome.</desc><defs><linearGradient id="map-fill" x2="1" y2="1"><stop stopColor="#293b5c"/><stop offset="1" stopColor="#142238"/></linearGradient></defs><g ref={mapGroup} transform={`translate(${currentMapView.current.pan.x} ${currentMapView.current.pan.y}) translate(360 220) scale(${currentMapView.current.zoom}) translate(-360 -220)`}><path data-state d={saoPauloPath} fill="url(#map-fill)" stroke="#668ad0" strokeWidth="1.5"/>{municipalities.map(city => <path key={city.id} data-municipality={city.id} data-intermediate-region={getIntermediateRegionIndex(city.id)} d={city.path} tabIndex={activeMapRegion!==null&&availableCityCodes.has(city.id)?0:undefined} role={activeMapRegion!==null&&availableCityCodes.has(city.id)?'button':undefined} aria-label={activeMapRegion!==null&&availableCityCodes.has(city.id)?mapCityActionLabel(city):undefined} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();const bounds=event.currentTarget.getBoundingClientRect();selectMapCity(city,bounds.left+bounds.width/2,bounds.top+bounds.height/2);}}} className={`municipality ${hoveredMapRegion===getIntermediateRegionIndex(city.id)?'region-hovered':''} ${selectedCodes.has(city.id) ? 'selected-territory' : ''} ${hoveredCity?.id === city.id || pickedCity?.id === city.id ? 'highlighted' : ''} ${availableCityCodes.has(city.id) ? 'has-data' : ''}`} fill="transparent" stroke="#4a6286" strokeWidth=".65" onPointerMove={event => { if (event.pointerType === 'touch' || drag.current) return; setHoveredCity({ id: city.id, name: city.name, x: Math.max(12, Math.min(window.innerWidth - 272, event.clientX + 16)), y: Math.max(12, Math.min(window.innerHeight - 140, event.clientY + 16)) }); }} onPointerLeave={() => setHoveredCity(null)} onClick={event=>{if(suppressMapClick.current){suppressMapClick.current=false;return;}selectMapCity(city,event.clientX,event.clientY);}}><title>{city.name} · IBGE {city.id}</title></path>)}<path className="map-region-borders" d={mapRegions.borders}/><MapRegionLabels labels={mapRegions.labels} pixelsPerUnit={labelScale} focusedCode={activeMapRegion===null?null:intermediateRegions[activeMapRegion].code} onSelect={code=>focusMapRegion(intermediateRegions.findIndex(region=>region.code===code))}/></g></svg>{activeMapRegion!==null&&<button type="button" className="secondary map-region-back" onClick={resetMapRegions} data-icon="arrowLeft"><ActionIcon name="arrowLeft"/>Todas as regiões</button>}{hoveredCity && !pickedCity && <div className="municipality-tooltip" role="status" style={{ left: hoveredCity.x, top: hoveredCity.y }}><strong>{hoveredCity.name}</strong><span>São Paulo · IBGE {hoveredCity.id}</span><p>{mapTooltipMessage(hoveredCity)}</p></div>}{pickedCity && <MapCityPicker city={pickedCity} options={mapOptions} onClose={()=>setPickedCity(null)} onSelect={integration=>selectMapIntegration(pickedCity.id,integration)}/>}<p className="map-gesture-hint"><span className="mouse-gesture">Ctrl + scroll para ampliar</span><span className="touch-gesture">Use dois dedos para ampliar</span></p><div className="map-zoom"><button aria-label="Ampliar mapa" disabled={zoom >= 10} onClick={() => changeZoom(1.3)} data-icon="zoomIn"><ActionIcon name="zoomIn"/></button><button aria-label="Reduzir mapa" disabled={zoom <= .1} onClick={() => changeZoom(1 / 1.3)} data-icon="zoomOut"><ActionIcon name="zoomOut"/></button><button className="map-reset" aria-label="Restaurar posição e zoom do mapa" title="Restaurar mapa" onClick={resetMapRegions}><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/><circle cx="12" cy="12" r="3"/></svg></button></div></div></section>
+        <section className="territory-panel" aria-label="Mapa de referência do estado de São Paulo"><div className={`map-stage${mapControlsVisible ? "" : " map-controls-hidden"}`}><svg ref={mapRef} className="interactive-map" viewBox="-30 -30 780 500" role="group" aria-labelledby="map-title map-description" onPointerDown={e => { if (e.pointerType === 'touch' || e.button !== 0) return; suppressMapClick.current=false; cancelMapAnimation(); setHoveredCity(null); setPickedCity(null); const path=(e.target as Element).closest('[data-municipality], [data-map-region]'); if(!path)e.currentTarget.setPointerCapture(e.pointerId); drag.current = { x: e.clientX, y: e.clientY, panX: currentMapView.current.pan.x, panY: currentMapView.current.pan.y, moved:false }; }} onPointerMove={e => { if (!drag.current) return; if(Math.hypot(e.clientX-drag.current.x,e.clientY-drag.current.y)>5){drag.current.moved=true;if(!e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.setPointerCapture(e.pointerId);} if(!drag.current.moved)return; const matrix = e.currentTarget.getScreenCTM(); if (!matrix) return; const inverse = matrix.inverse(); const start = new DOMPoint(drag.current.x, drag.current.y).matrixTransform(inverse); const current = new DOMPoint(e.clientX, e.clientY).matrixTransform(inverse); const nextPan = { x: drag.current.panX + current.x - start.x, y: drag.current.panY + current.y - start.y }; moveMap({ ...currentMapView.current, pan: nextPan },false); }} onPointerUp={() => { suppressMapClick.current=Boolean(drag.current?.moved); drag.current=null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }}><title id="map-title">Contorno do estado de São Paulo</title><desc id="map-description">Mapa em duas etapas: escolha uma região geográfica intermediária de São Paulo para aproximar e depois selecione um município. Passe o mouse sobre um município para ver seu nome.</desc><defs><linearGradient id="map-fill" x2="1" y2="1"><stop stopColor="#293b5c"/><stop offset="1" stopColor="#142238"/></linearGradient></defs><g ref={mapGroup} transform={`translate(${currentMapView.current.pan.x} ${currentMapView.current.pan.y}) translate(360 220) scale(${currentMapView.current.zoom}) translate(-360 -220)`}><path data-state d={saoPauloPath} fill="url(#map-fill)" stroke="#668ad0" strokeWidth="1.5"/>{municipalities.map(city => <path key={city.id} data-municipality={city.id} data-intermediate-region={getIntermediateRegionIndex(city.id)} d={city.path} tabIndex={activeMapRegion!==null&&availableCityCodes.has(city.id)?0:undefined} role={activeMapRegion!==null&&availableCityCodes.has(city.id)?'button':undefined} aria-label={activeMapRegion!==null&&availableCityCodes.has(city.id)?mapCityActionLabel(city):undefined} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();const bounds=event.currentTarget.getBoundingClientRect();selectMapCity(city,bounds.left+bounds.width/2,bounds.top+bounds.height/2);}}} className={`municipality ${hoveredMapRegion===getIntermediateRegionIndex(city.id)?'region-hovered':''} ${selectedCodes.has(city.id) ? 'selected-territory' : ''} ${hoveredCity?.id === city.id || pickedCity?.id === city.id ? 'highlighted' : ''} ${availableCityCodes.has(city.id) ? 'has-data' : ''} ${tourCity?.id===city.id ? 'touring' : ''}`} fill="transparent" stroke="#4a6286" strokeWidth=".65" onPointerMove={event => { if (event.pointerType === 'touch' || drag.current) return; setHoveredCity({ id: city.id, name: city.name, x: Math.max(12, Math.min(window.innerWidth - 272, event.clientX + 16)), y: Math.max(12, Math.min(window.innerHeight - 140, event.clientY + 16)) }); }} onPointerLeave={() => setHoveredCity(null)} onClick={event=>{if(suppressMapClick.current){suppressMapClick.current=false;return;}selectMapCity(city,event.clientX,event.clientY);}}><title>{city.name} · IBGE {city.id}</title></path>)}<path className="map-region-borders" d={mapRegions.borders}/><MapRegionLabels labels={mapRegions.labels} pixelsPerUnit={labelScale} focusedCode={activeMapRegion===null?null:intermediateRegions[activeMapRegion].code} onSelect={code=>focusMapRegion(intermediateRegions.findIndex(region=>region.code===code))}/></g></svg>{tourCity&&!indicators&&<div className="map-tour-label" aria-live="off"><span>EXPLORANDO MUNICÍPIOS COM DADOS</span><strong>{tourCity.name}</strong></div>}{hoveredCity && !pickedCity && <div className="municipality-tooltip" role="status" style={{ left: hoveredCity.x, top: hoveredCity.y }}><strong>{hoveredCity.name}</strong><span>São Paulo · IBGE {hoveredCity.id}</span><p>{mapTooltipMessage(hoveredCity)}</p></div>}{pickedCity && <MapCityPicker city={pickedCity} options={mapOptions} onClose={()=>setPickedCity(null)} onSelect={integration=>selectMapIntegration(pickedCity.id,integration)}/>}<p className="map-gesture-hint"><span className="mouse-gesture">Ctrl + scroll para ampliar</span><span className="touch-gesture">Use dois dedos para ampliar</span></p><div className="map-controls-dock">{activeMapRegion!==null&&<button type="button" className="secondary filter-trigger map-region-back" onClick={resetMapRegions} data-icon="arrowLeft"><ActionIcon name="arrowLeft"/>Todas as regiões</button>}<div className="map-zoom"><button aria-label="Ampliar mapa" disabled={zoom >= 10} onClick={() => changeZoom(1.3)} data-icon="zoomIn"><ActionIcon name="zoomIn"/></button><button aria-label="Reduzir mapa" disabled={zoom <= .1} onClick={() => changeZoom(1 / 1.3)} data-icon="zoomOut"><ActionIcon name="zoomOut"/></button><button className="map-reset" aria-label="Restaurar posição e zoom do mapa" title="Restaurar mapa" onClick={restoreMapAndTour}><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/><circle cx="12" cy="12" r="3"/></svg></button></div></div></div></section>
         <aside id="dashboard-right" className={`dashboard-right ${advancedPanels?'advanced':'compact'}`}>{advancedPanels ? <><section className="card"><div className="section-heading"><h3>Fontes cadastradas</h3><span className="counter">{page.arquivadas?'…':page.count}</span></div>{loading || page.arquivadas ? <p role="status" className="muted">Carregando fontes…</p> : page.sources.length ? <SourceFeed page={page} onExpired={onLogout}/> : <div className="compact-empty"><span aria-hidden="true">↗</span><h3>Nenhuma fonte cadastrada</h3><p className="muted">Associe dados públicos a um município ou região.</p></div>}{canSources && <button className="text-button" onClick={() => { setTab('fontes'); setEditor('new'); }} data-icon="plus"><ActionIcon name="plus"/>Cadastrar fonte </button>}</section><SeriesChart data={indicators}/>{indicators&&<section className="card data-provenance"><div className="section-heading"><h3>Origem dos dados</h3></div><p><strong>{indicators.territorio.nome}</strong> · {indicators.agravo_nome}</p>{indicators.integracao&&<><p>{indicators.integracao.publicador} · Base: {indicators.integracao.base_original}</p><p>{indicators.integracao.indicador_nome} · {indicators.integracao.base_temporal}</p><p className="muted">{indicators.integracao.definicao}</p><a href={indicators.integracao.documentacao} target="_blank" rel="noreferrer">Metodologia da fonte ↗</a></>}<p>Período: {indicators.serie.length ? `${indicators.serie[0].data.split('-').reverse().join('/')} a ${indicators.serie.at(-1)!.data.split('-').reverse().join('/')}` : 'Sem dados no período'}</p><p>Coleta dos lotes exibidos: {indicators.coletado_em ? new Date(indicators.coletado_em).toLocaleString('pt-BR') : '—'}</p><p>Última consulta bem-sucedida à fonte: {indicators.atualidade.ultima_consulta_em ? new Date(indicators.atualidade.ultima_consulta_em).toLocaleString('pt-BR') : '—'}</p><p className="provenance-source-label">{indicators.fontes.length === 1 ? 'Fonte:' : 'Fontes:'}</p>{indicators.fontes.map(f=><p key={f.id}><a href={f.url} target="_blank" rel="noreferrer">{f.nome} ↗</a></p>)}<p>Processamento: {indicators.atualizado_em?new Date(indicators.atualizado_em).toLocaleString('pt-BR'):'Sem dados no período'}</p>{indicators.territorio.tipo==='regiao'&&<p>Agregação dos {indicators.municipios_cobertos} municípios coletados, de {indicators.municipios_regiao} na região. Não representa a região inteira quando a cobertura é parcial.</p>}</section>}</> : <><CompactOrigin data={indicators}/><CompactSeries data={indicators}/><CompactSources data={indicators}/></>}</aside>
       </div><TerritoryComparison context={indicators} onExpired={onLogout}/></>
       : tab === "ajuda" ? <HelpPage user={user}/> : tab === "administracao" ? (user.administrador ? <Administration user={user} onExpired={onLogout} onUserChanged={onUserChanged}/> : <p>Seu perfil não tem acesso à administração.</p>) : <><div className="page-heading"><div><span className="eyebrow">{canSources ? 'ADMINISTRAÇÃO' : 'CONSULTA'}</span><h1>Fontes de dados</h1><p className="muted">{canSources ? 'Gerencie a origem dos dados e os territórios monitorados.' : 'Consulte a origem dos dados e os territórios monitorados.'}</p></div><div className="source-heading-actions">{canSources && !editor && <button onClick={() => { setEditor('new'); setSuccess(''); }} data-icon="plus"><ActionIcon name="plus"/>Cadastrar fonte</button>}</div></div>{canSources && editor ?

@@ -164,21 +164,35 @@ button[data-icon]{display:inline-flex;align-items:center;justify-content:center;
 .dashboard-grid .summary-card h2{margin:18px 0}.dashboard-grid .section-heading{margin-bottom:18px}
 
 /* O dock acompanha a janela somente enquanto cabe na área visível do mapa. */
-.monitoring-shell .map-zoom{position:fixed;left:50%;right:auto;top:auto;bottom:calc(16px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);display:flex;z-index:5}
-.monitoring-shell .map-zoom button+button{border-top:0;border-left:1px solid var(--line)}
+.monitoring-shell .map-controls-dock{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:5;display:flex;align-items:stretch;overflow:hidden;border:1px solid #494949;border-radius:24px;background:#202020;pointer-events:auto}
+.monitoring-shell .map-controls-dock .map-zoom{position:static;left:auto;right:auto;top:auto;bottom:auto;transform:none;display:flex;z-index:auto;overflow:visible;border:0;border-radius:0;box-shadow:none}
+.monitoring-shell .map-controls-dock .map-region-back{flex:none;min-height:42px;border:0;border-right:1px solid #494949;border-radius:0;background:transparent;color:#e9e9e9}
+.monitoring-shell .map-controls-dock .map-region-back:hover{background:#303030}
+.monitoring-shell .map-controls-dock .map-zoom button{background:transparent;color:#e9e9e9}
+.monitoring-shell .map-controls-dock .map-zoom button:hover:not(:disabled){background:#303030}
+.monitoring-shell .map-controls-dock .map-zoom button+button{border-top:0;border-left:1px solid #494949}
+.monitoring-shell .map-controls-dock .map-zoom .map-reset{border-top:0}
+.monitoring-shell .map-controls-dock button:focus-visible{outline-offset:-3px}
 .monitoring-shell .map-gesture-hint{position:fixed;left:50%;right:auto;top:auto;bottom:calc(68px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);width:max-content;max-width:calc(100vw - 32px);margin:0;text-align:center;text-shadow:0 1px 3px #000;z-index:5}
 .mobile-panel-hint{display:none}
 @media(max-width:900px){.monitoring-shell .mobile-panel-hint:not([hidden]){position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:5;display:block;width:max-content;max-width:calc(100vw - 24px);margin:0;color:#d6e3f8;font-size:13px;line-height:1.35;text-align:center;text-shadow:0 1px 3px #000;pointer-events:none}}
-.monitoring-shell .map-zoom,.monitoring-shell .map-gesture-hint{transition:opacity .18s ease,visibility .18s}
-.monitoring-shell .map-stage.map-controls-hidden .map-zoom,.monitoring-shell .map-stage.map-controls-hidden .map-gesture-hint{opacity:0;visibility:hidden;pointer-events:none}
-@media(prefers-reduced-motion:reduce){.monitoring-shell .map-zoom,.monitoring-shell .map-gesture-hint{transition:none}}
+.monitoring-shell .map-controls-dock,.monitoring-shell .map-gesture-hint{transition:opacity .18s ease,visibility .18s}
+.monitoring-shell .map-stage.map-controls-hidden .map-controls-dock,.monitoring-shell .map-stage.map-controls-hidden .map-gesture-hint{opacity:0;visibility:hidden;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.monitoring-shell .map-controls-dock,.monitoring-shell .map-gesture-hint{transition:none}}
 .municipality[data-intermediate-region="0"]{fill:#37517426}.municipality[data-intermediate-region="1"]{fill:#5d76a32b}.municipality[data-intermediate-region="2"]{fill:#3d67952b}.municipality[data-intermediate-region="3"]{fill:#63769d2b}.municipality[data-intermediate-region="4"]{fill:#425e8c2b}.municipality[data-intermediate-region="5"]{fill:#527ba12b}.municipality[data-intermediate-region="6"]{fill:#345a852b}.municipality[data-intermediate-region="7"]{fill:#667ba32b}.municipality[data-intermediate-region="8"]{fill:#365f932b}.municipality[data-intermediate-region="9"]{fill:#59769b2b}.municipality[data-intermediate-region="10"]{fill:#3e69982b}
-.municipality.selected-territory{fill:#8cabee55}.municipality.highlighted,.municipality:focus-visible{fill:#8fb4f070}
-.map-stage .interactive-map .municipality{cursor:pointer}.municipality.region-hovered{fill:#8fb4f04a}
+.municipality.region-hovered{fill:#8fb4f04a}
+.municipality.has-data{fill:#79b6ffb3;stroke:#c7e6ff;stroke-width:1.6;filter:drop-shadow(0 0 3px #6cb4ff)}
+.municipality.selected-territory{fill:#a8c7ffb0;stroke:#e3efff;stroke-width:1.5}
+.municipality.highlighted,.municipality:focus-visible{fill:#c2d8ffcc;stroke:#fff;stroke-width:1.8}
+.municipality.touring{fill:#c5e1ff;stroke:#fff;stroke-width:2;filter:drop-shadow(0 0 8px #82bfff)}
+.monitoring-shell .map-tour-label{position:absolute;top:20%;left:50%;transform:translateX(-50%);z-index:3;width:max-content;max-width:calc(100% - 24px);padding:9px 14px;border:1px solid #7098d0;border-radius:14px;background:#172338eb;box-shadow:0 6px 20px #0006;text-align:center;pointer-events:none}
+.map-tour-label span{display:block;color:#a9c8f6;font-size:11px;font-weight:700;letter-spacing:.7px}.map-tour-label strong{display:block;color:#fff;font-size:17px;line-height:1.3}
+.monitoring-shell .map-stage.map-controls-hidden .map-tour-label{visibility:hidden}
+.map-stage .interactive-map .municipality{cursor:pointer}
 .map-region-borders{pointer-events:none;fill:none;stroke:#b5d1ff;stroke-width:2;stroke-opacity:.95;filter:drop-shadow(0 0 2px #101e39)}
 .map-region-labels{pointer-events:none}.map-region-labels line{stroke:#d0e0ff;stroke-width:1;opacity:.8}.map-region-labels text{fill:#f2f6ff;stroke:#142238;stroke-width:3px;paint-order:stroke fill;font:700 13px 'DM Sans',Arial,sans-serif;letter-spacing:.2px}.map-region-labels .region-name-short{display:none}
 .map-region-labels .map-region-label-button{pointer-events:visiblePainted;cursor:pointer}.map-region-labels .map-region-label-button:hover text,.map-region-labels .map-region-label-button:focus-visible text{fill:#fff;stroke:#325a99;stroke-width:4px}
-.monitoring-shell .map-region-back{position:absolute;top:12px;left:12px;z-index:6;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-color:#58739d;background:#161d2ce8;color:#f0f5ff;pointer-events:auto}.monitoring-shell .map-stage.map-controls-hidden .map-region-back{opacity:0;visibility:hidden;pointer-events:none}
+@media(max-width:360px){.monitoring-shell .map-region-back{padding:7px 9px;font-size:14px;gap:6px}}
 @media(max-width:760px){.map-region-labels .region-name-full{display:none}.map-region-labels .region-name-short{display:block}.map-region-labels text{font-size:11px}.dashboard-tools{display:grid;grid-template-columns:max-content 1fr;justify-content:start;align-items:center;column-gap:12px;row-gap:12px}.dashboard-tools .advanced-panels-toggle{grid-column:1/-1;justify-self:start}.dashboard-tools .export-control{grid-column:1;justify-self:start}.dashboard-tools .filter-control{grid-column:1/-1;justify-self:start}}
 .chart-interaction{position:relative}.chart-interaction .series-chart{touch-action:pan-y}
 .chart-tooltip{position:absolute;top:8px;z-index:2;width:max-content;max-width:calc(100% - 20px);padding:12px 14px;border:1px solid #47536b;border-radius:10px;background:#191b20f5;box-shadow:0 5px 18px #0005;font-size:14px;line-height:1.5;pointer-events:none}

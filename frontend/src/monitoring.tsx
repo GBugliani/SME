@@ -19,7 +19,7 @@ export function trend(value:number|null|undefined) {
   return `${value>0?'Alta':'Queda'} de ${Math.abs(value).toLocaleString('pt-BR',{maximumFractionDigits:1})}%`;
 }
 
-export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSelection }: {onData:(data:Indicators|null)=>void; onOptions:(data:IndicatorOptions|null)=>void; onExpired:()=>void; refresh:number; mapSelection:MapSelection|null}) {
+export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSelection, resetSelection }: {onData:(data:Indicators|null)=>void; onOptions:(data:IndicatorOptions|null)=>void; onExpired:()=>void; refresh:number; mapSelection:MapSelection|null; resetSelection:number}) {
   const [options,setOptions]=useState<IndicatorOptions|null>(null);
   const [type,setType]=useState('municipio');
   const [code,setCode]=useState('');
@@ -33,6 +33,7 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
   const [expanded,setExpanded]=useState(false);
   const requestVersion = useRef(0);
   const lastMapSelectionId = useRef<number|null>(null);
+  const previousResetSelection=useRef(resetSelection);
   const callback = useRef(onData); callback.current=onData;
   const optionsCallback = useRef(onOptions); optionsCallback.current=onOptions;
   async function query(t:string,c:string,a:string,s:string,e:string,i:string,closeOnSuccess=true) {
@@ -53,13 +54,18 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
       const chosen=data.integracoes.find(i=>i.codigo==='infodengue_dengue')||data.integracoes[0];
       const agravo=chosen?.agravo||data.agravos[0]?.codigo||'dengue';
       setDisease(agravo);setIndicator(chosen?.codigo||'');
-      const available=data.municipios.filter(m=>chosen?.codigos_com_dados?.includes(m.codigo));
-      const first=available.find(m=>m.codigo==='3550308')||available[0];
-      if(first){setType('municipio');setCode(first.codigo);void query('municipio',first.codigo,agravo,'','',chosen?.codigo||'',false);}
-      else {setBusy(false);callback.current(null);}
+      setBusy(false);
     }).catch(err=>{if(active){setBusy(false);if(err instanceof ApiError&&err.status===401)onExpired();else setError(err.message);}});
     return()=>{active=false;requestVersion.current++;optionsCallback.current(null);};
   },[refresh]);
+  useEffect(()=>{
+    if(previousResetSelection.current===resetSelection)return;
+    previousResetSelection.current=resetSelection;
+    requestVersion.current++;
+    lastMapSelectionId.current=null;
+    setBusy(false);setCode('');setType('municipio');setStart('');setEnd('');setError('');
+    filterDialog.current?.close();
+  },[resetSelection]);
   useEffect(()=>{
     if(!mapSelection||!options||lastMapSelectionId.current===mapSelection.requestId)return;
     const integration=options.integracoes.find(item=>item.codigo===mapSelection.integrationCode && item.codigos_com_dados?.includes(mapSelection.cityCode));
@@ -72,14 +78,14 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
   const availableCities=options?.municipios.filter(m=>selectedIntegration?.codigos_com_dados?.includes(m.codigo))||[];
   const availableRegions=options?.regioes.filter(r=>availableCities.some(m=>m.regiao_codigo===r.codigo))||[];
   const territories=type==='municipio'?availableCities:availableRegions;
-  useEffect(()=>{if(!territories.some(t=>t.codigo===code))setCode(territories.find(t=>t.codigo==='3550308')?.codigo||territories[0]?.codigo||'');},[indicator,type,options]);
+  useEffect(()=>{if(code&&!territories.some(t=>t.codigo===code))setCode('');},[indicator,type,options]);
   function submit(event:FormEvent){event.preventDefault();void query(type,code,disease,start,end,indicator);}
   return <div className="filter-control"><button className="filter-trigger secondary" aria-haspopup="dialog" aria-expanded={expanded} onClick={()=>{filterDialog.current?.showModal();setExpanded(true);}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="#171717"/><circle cx="15" cy="17" r="3" fill="#171717"/></svg>Filtrar</button>
   <Notice message={!expanded?error:''}/>
   <dialog ref={filterDialog} className="filter-dialog" aria-labelledby="filter-title" onClose={()=>setExpanded(false)}><div className="filter-dialog-heading"><h2 id="filter-title">Filtros</h2><button className="secondary filter-close" type="button" aria-label="Fechar filtros" onClick={()=>filterDialog.current?.close()}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><form onSubmit={submit}>
-    <label>Recorte<select aria-label="Recorte" value={type} onChange={e=>{const t=e.target.value;setType(t);setCode((t==='municipio'?availableCities:availableRegions)?.[0]?.codigo||'');}}><option value="municipio">Município</option><option value="regiao">Região imediata</option></select></label>
-    <label>Agravo<select aria-label="Agravo" value={disease} onChange={e=>{setDisease(e.target.value);setIndicator(options?.integracoes.find(i=>i.agravo===e.target.value)?.codigo||'');}}>{options?.agravos.length?options.agravos.map(a=><option key={a.codigo} value={a.codigo}>{a.nome}</option>):<option value="dengue">Dengue</option>}</select></label>
-    <label className="filter-territory">Origem / indicador<select aria-label="Origem / indicador" required value={indicator} onChange={e=>setIndicator(e.target.value)}><option value="">Selecione a origem</option>{options?.integracoes.filter(i=>i.agravo===disease).map(i=><option key={i.codigo} value={i.codigo}>{i.publicador} · {i.indicador_nome}</option>)}</select></label>
+    <label>Recorte<select aria-label="Recorte" value={type} onChange={e=>{setType(e.target.value);setCode('');}}><option value="municipio">Município</option><option value="regiao">Região imediata</option></select></label>
+    <label>Agravo<select aria-label="Agravo" value={disease} onChange={e=>{setDisease(e.target.value);setIndicator(options?.integracoes.find(i=>i.agravo===e.target.value)?.codigo||'');setCode('');}}>{options?.agravos.length?options.agravos.map(a=><option key={a.codigo} value={a.codigo}>{a.nome}</option>):<option value="dengue">Dengue</option>}</select></label>
+    <label className="filter-territory">Origem / indicador<select aria-label="Origem / indicador" required value={indicator} onChange={e=>{setIndicator(e.target.value);setCode('');}}><option value="">Selecione a origem</option>{options?.integracoes.filter(i=>i.agravo===disease).map(i=><option key={i.codigo} value={i.codigo}>{i.publicador} · {i.indicador_nome}</option>)}</select></label>
     <label className="filter-territory">{type==='municipio'?'Município':'Região'}<select aria-label={type==='municipio'?'Município':'Região'} required value={code} onChange={e=>setCode(e.target.value)}><option value="">Selecione</option>{territories?.map(t=><option key={t.codigo} value={t.codigo}>{t.nome}</option>)}</select></label>
     <label>De<input aria-label="De" type="date" value={start} onChange={e=>setStart(e.target.value)}/></label><label>Até<input aria-label="Até" type="date" value={end} onChange={e=>setEnd(e.target.value)}/></label>
     <small className="filter-period-note">Datas de início das semanas epidemiológicas.</small>
