@@ -1,9 +1,10 @@
 from copy import deepcopy
+from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.utils import timezone
-from .collection import collect_source, CollectionError, InfoDengueAdapter, collect_pilot
+from .collection import collect_source, CollectionError, InfoDengueAdapter, collect_pilot, MUNICIPIOS_SP
 from .models import FonteEpidemiologica, RecorteGeografico, ExecucaoColeta, LoteColeta
 
 URL = "https://info.dengue.mat.br/api/alertcity?geocode=3550308&disease=dengue&format=json&ew_start=1&ew_end=52&ey_start=2024&ey_end=2024"
@@ -81,6 +82,17 @@ class CollectionTests(TestCase):
             with self.assertRaises(CollectionError): self.adapter.validate_payload([row], self.source, q)
         with self.assertRaises(CollectionError): self.adapter.validate_payload(ROWS * 2, self.source, q)
         with self.assertRaises(CollectionError): self.adapter.validate_payload({"error": "not available"}, self.source, q)
+
+    def test_accepts_known_city_name_variants_only_with_matching_ibge_code(self):
+        q = self.adapter.validate(self.source)
+        for code, name in [('3506607', 'Biritiba-Mirim'), ('3550001', 'São Luís do Paraitinga')]:
+            source = SimpleNamespace(recorte=SimpleNamespace(codigo=code, nome=MUNICIPIOS_SP[code]))
+            row = {**ROWS[0], 'municipio_nome': name, 'id': int(code + '20240100001')}
+            self.adapter.validate_payload([row], source, q)
+            with self.assertRaises(CollectionError):
+                self.adapter.validate_payload([{**row, 'id': ROWS[0]['id']}], source, q)
+            with self.assertRaises(CollectionError):
+                self.adapter.validate_payload([{**row, 'municipio_nome': 'Campinas'}], source, q)
 
     @patch("sme.collection.socket.getaddrinfo", return_value=[(2, 1, 6, "", ("127.0.0.1", 443))])
     def test_private_dns_is_blocked_before_connection(self, dns):

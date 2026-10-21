@@ -1,7 +1,7 @@
 import {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {ActionIcon} from './action-icon';
 import type {Integration} from './api';
-import type {IndicatorOptions} from './monitoring';
+import type {IndicatorOptions, MapSignal} from './monitoring';
 
 export type PickedCity = {id:string; name:string; x:number; y:number};
 
@@ -9,13 +9,15 @@ export function availableCityIntegrations(options:IndicatorOptions|null, cityCod
   return options?.integracoes.filter(item=>item.codigos_com_dados?.includes(cityCode)) ?? [];
 }
 
-export function MapCityPicker({city, options, onSelect, onClose}: {
+export function MapCityPicker({city, options, signal, onSelect, onClose}: {
   city:PickedCity;
   options:IndicatorOptions|null;
+  signal?:MapSignal;
   onSelect:(integration:Integration)=>void;
   onClose:()=>void;
 }) {
   const integrations=availableCityIntegrations(options,city.id);
+  const signaledIntegration=integrations.find(item=>item.codigo===signal?.indicador);
   const panel=useRef<HTMLDivElement>(null);
   const [position,setPosition]=useState({x:city.x+14,y:city.y+14});
   useLayoutEffect(()=>{
@@ -36,6 +38,7 @@ export function MapCityPicker({city, options, onSelect, onClose}: {
   },[onClose]);
   return <div ref={panel} className="map-city-picker" role="dialog" aria-label={`Selecionar monitoramento de ${city.name}`} style={{left:position.x,top:position.y}}>
     <div className="map-city-picker-heading"><div><strong>{city.name}</strong><span>São Paulo · IBGE {city.id}</span></div><button type="button" className="secondary" aria-label="Fechar seleção do município" onClick={onClose} data-icon="close"><ActionIcon name="close"/></button></div>
+    {signal&&<p className="map-city-signal">{signaledIntegration?.agravo_nome||'Série monitorada'}: {signal.observado.toLocaleString('pt-BR')} casos na semana de {signal.data_referencia.split('-').reverse().join('/')}, acima do limiar de {signal.limiar.toLocaleString('pt-BR')}. Sinal estatístico; não confirma surto.</p>}
     {options===null?<p>Carregando séries disponíveis…</p>:integrations.length===0?<p>Não há dados processados para este município.</p>:<><p>{integrations.length===1?'Selecione a série disponível:':'Selecione o agravo e a origem:'}</p><div className="map-city-picker-options">{integrations.map(item=><button type="button" className="secondary" key={item.codigo} onClick={()=>onSelect(item)} data-icon="arrowRight"><span><strong>{item.agravo_nome}</strong><small>{item.publicador} · {item.indicador_nome}</small></span><ActionIcon name="arrowRight"/></button>)}</div></>}
   </div>;
 }

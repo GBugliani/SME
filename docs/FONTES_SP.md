@@ -4,7 +4,7 @@
 
 O piloto começou com **dengue em São Paulo capital**, usando **InfoDengue**, e já foi ampliado para os municípios paulistas do catálogo de 645 municípios do IBGE. Apenas fontes cadastradas, compatíveis e habilitadas são coletadas; isso não comprova que a API tenha dados completos para todos os municípios e períodos.
 
-O sistema também integra **chikungunya e zika pelo InfoDengue**, e **SRAG de São Paulo capital pelo InfoGripe**. O **SIVEP-Gripe / Ministério da Saúde** permite acompanhar SRAG total nos municípios paulistas com registros publicados, escolhendo um ano desde 2019. Veja [Múltiplos provedores e agravos](MULTIPLOS_PROVEDORES.md) para definições e limites.
+O sistema também integra **chikungunya e zika pelo InfoDengue**, **SRAG de São Paulo capital pelo InfoGripe**, **SRAG total municipal pelo SIVEP-Gripe** e **síndrome gripal por COVID-19 pelo e-SUS Notifica**. Nas duas fontes do Ministério da Saúde, o administrador escolhe os municípios paulistas e um ano fixo ou acompanhamento contínuo; dados só aparecem quando a fonte tem registros publicados e foi coletada. Veja [Múltiplos provedores e agravos](MULTIPLOS_PROVEDORES.md) para definições e limites.
 
 Como administrador, escolha provedor, agravo, município e, no InfoDengue, anos em **Fontes de dados → Cadastrar fonte**. A URL, o código IBGE e o nome são preenchidos pelo sistema. O campo **Pesquisar fontes** localiza cadastros por município, código IBGE, UF, nome ou termos da URL; o resultado é paginado. Usuários comuns também podem pesquisar e consultar, sem editar ou coletar manualmente.
 

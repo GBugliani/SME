@@ -7,7 +7,7 @@ from django.test import TestCase, Client
 from .models import (RecorteGeografico, FonteEpidemiologica, LoteColeta, RegistroEpidemiologico,
                      SerieEpidemiologica, ProcessamentoLote, Anomalia, ConfiguracaoDeteccao)
 from .processing import process_lote, week_start, MovingBaseline
-from .indicators import REGIONS
+from .indicators import REGIONS, map_signal_level
 from .collection import collect_source
 
 
@@ -134,11 +134,35 @@ class SprintTwoTests(TestCase):
         data=self.client.get('/api/indicadores/opcoes/').json()
         self.assertEqual(data['municipios'][0]['codigo'],'3550308')
         self.assertEqual(data['agravos'][0]['codigo'],'dengue')
+        self.assertEqual(data['ultimas_semanas_mapa'],[{'codigo':'3550308','indicador':'infodengue_dengue',
+            'data_referencia':week_start(2024,1).isoformat(),'casos':10}])
         for params in [{'codigo':'garbage'},{'tipo':'outro'},{'inicio':'2024-99-99'},{'inicio':'2024-02-01','fim':'2024-01-01'},{'agravo':'zika'}]:
             self.assertEqual(self.query(**params).status_code,400)
         self.client.logout()
         self.assertEqual(self.query().status_code,401)
         self.assertEqual(self.client.get('/api/indicadores/opcoes/').status_code,401)
+
+    def test_map_preview_uses_latest_week_with_current_count(self):
+        process_lote(self.make_lote([2,None,7]).pk)
+        first=self.client.get('/api/indicadores/opcoes/').json()['ultimas_semanas_mapa'][0]
+        self.assertEqual((first['data_referencia'],first['casos']), (week_start(2024,3).isoformat(),7))
+
+        process_lote(self.make_lote([2,None,None]).pk)
+        corrected=self.client.get('/api/indicadores/opcoes/').json()['ultimas_semanas_mapa'][0]
+        self.assertEqual((corrected['data_referencia'],corrected['casos']), (week_start(2024,1).isoformat(),2))
+        self.assertEqual(corrected['casos'],next(point['casos'] for point in reversed(self.query().json()['serie']) if point['casos'] is not None))
+
+    def test_map_signal_remains_visible_for_four_available_weeks(self):
+        self.assertEqual([map_signal_level(value, 20) for value in (25, 40, 100)], [1, 2, 3])
+        process_lote(self.make_lote([10]*8+[100]).pk)
+        signals=self.client.get('/api/indicadores/opcoes/').json()['sinalizacoes_mapa']
+        self.assertEqual(len(signals), 1)
+        self.assertEqual((signals[0]['codigo'], signals[0]['nivel'], signals[0]['observado']),
+                         ('3550308', 3, 100))
+        process_lote(self.make_lote([10]*8+[100, 10]).pk)
+        self.assertEqual(len(self.client.get('/api/indicadores/opcoes/').json()['sinalizacoes_mapa']), 1)
+        process_lote(self.make_lote([10]*8+[100]+[10]*4).pk)
+        self.assertEqual(self.client.get('/api/indicadores/opcoes/').json()['sinalizacoes_mapa'], [])
 
     def test_week_calendar_boundaries_and_invalid_week_53(self):
         self.assertEqual(week_start(2020,53).isoformat(),'2020-12-27')

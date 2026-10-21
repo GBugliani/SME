@@ -29,7 +29,7 @@ def raw_rows(data):
                 year, week = divmod(int(row['SE']), 100)
             elif lot.adaptador == 'infogripe':
                 year, week = int(row['Ano epidemiológico']), int(row['Semana epidemiológica'])
-            elif lot.adaptador == 'sivep':
+            elif lot.adaptador in ('sivep', 'esus'):
                 year, week = int(row['ano']), int(row['semana'])
             else:
                 raise ValueError('O lote usa um provedor sem exportação de registros brutos.')
@@ -73,7 +73,7 @@ def export_data(request):
     metadata.update({'exportado_em': exported_at, 'modo': mode,
         'filtros': {k: request.GET.get(k, '') for k in ('tipo', 'codigo', 'agravo', 'indicador', 'inicio', 'fim')},
         'observacao': ('Registros do lote interpretados pelo coletor, sem agregação entre municípios. '
-                      'No SIVEP, são as linhas municipais extraídas do XLSX, com lacunas explícitas. '
+                      'No SIVEP e e-SUS, são as linhas municipais extraídas do XLSX, com lacunas explícitas. '
                       'Não são os bytes do arquivo original. Revisões vigentes são as mesmas do painel.') if mode == 'brutos' else
                      'Série semanal do recorte. Contagens ausentes permanecem nulas; cobertura parcial não representa toda a região.'})
     if fmt == 'json':

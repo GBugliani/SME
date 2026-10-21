@@ -10,7 +10,9 @@ export type Indicators = { territorio: {tipo:string; codigo:string; nome:string}
   filtros?:{inicio:string|null;fim:string|null};
   qualidade:{semanas_esperadas:number;semanas_completas:number;semanas_sem_contagem_completa:number;completude_percentual:number|null;municipios_com_dados:number;municipios_previstos:number;cobertura_percentual:number;janela_deteccao:number;semanas_avaliaveis:number;semanas_com_dados_sem_base:number;inicio_historico:string|null;fim_historico:string|null};
 };
-export type IndicatorOptions = { integracoes:Integration[]; municipios:{codigo:string; nome:string; regiao_codigo:string}[]; regioes:{codigo:string; nome:string}[]; agravos:{codigo:string; nome:string}[] };
+export type MapSignal = {codigo:string; indicador:string; data_referencia:string; observado:number; limiar:number; nivel:1|2|3};
+export type MapLatestWeek = {codigo:string; indicador:string; data_referencia:string; casos:number};
+export type IndicatorOptions = { integracoes:Integration[]; municipios:{codigo:string; nome:string; regiao_codigo:string}[]; regioes:{codigo:string; nome:string}[]; agravos:{codigo:string; nome:string}[]; sinalizacoes_mapa:MapSignal[]; ultimas_semanas_mapa:MapLatestWeek[] };
 export type MapSelection = { cityCode:string; integrationCode:string; requestId:number };
 export const number = (value:number) => value.toLocaleString('pt-BR');
 export function trend(value:number|null|undefined) {

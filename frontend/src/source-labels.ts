@@ -6,9 +6,9 @@ export function territoryLabel(source:Source) {
 
 export function sourcePeriodLabel(source:Pick<Source,'url'|'nome'|'integracao'|'periodo_movel'>&{url_coleta?:string}) {
   try {
-    if(source.periodo_movel)return `${source.integracao?.publicador||'Fonte'} · ${source.integracao?.agravo_nome||''} · ${source.integracao?.provedor==='sivep'?'Ano atual automático':'Ano atual e anterior automáticos'}`;
+    if(source.periodo_movel)return `${source.integracao?.publicador||'Fonte'} · ${source.integracao?.agravo_nome||''} · ${['sivep','esus'].includes(source.integracao?.provedor||'')?'Ano atual automático':'Ano atual e anterior automáticos'}`;
     const url=new URL(source.url);
-    if(source.integracao?.provedor==='sivep')return `${source.integracao.publicador} ${url.searchParams.get('ano')||''} · SRAG`;
+    if(['sivep','esus'].includes(source.integracao?.provedor||''))return `${source.integracao?.publicador} ${url.searchParams.get('ano')||''} · ${source.integracao?.agravo_nome}`;
     if(url.hostname!=='info.dengue.mat.br'||url.pathname!=='/api/alertcity')return source.integracao?`${source.integracao.publicador} · ${source.integracao.agravo_nome}`:source.nome;
     const first=url.searchParams.get('ey_start'),last=url.searchParams.get('ey_end');
     if(!first||!last||!/^\d{4}$/.test(first)||!/^\d{4}$/.test(last)||first>last)return source.integracao?`${source.integracao.publicador} · ${source.integracao.agravo_nome}`:source.nome;

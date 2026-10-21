@@ -49,6 +49,7 @@ export function CompactQuality({data}:{data:Indicators|null}) {
       <div><dt>Cobertura territorial</dt><dd>{percent(quality?.cobertura_percentual)}</dd></div>
     </dl>
     <small className="compact-dashboard-note">Ausência de dados não significa zero casos.</small>
+    {data?.atualidade.ultima_semana_fechada&&<small className="compact-dashboard-note">Comparação com a semana encerrada de {date(data.atualidade.ultima_semana_fechada)}. O prazo de publicação varia por provedor.</small>}
   </section>;
 }
 

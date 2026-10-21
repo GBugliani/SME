@@ -2,14 +2,14 @@ from types import SimpleNamespace
 from urllib.parse import urlencode
 from .collection import MUNICIPIOS_SP, InfoDengueAdapter, CollectionError
 from .processing import week_start
-from .datasets import DATASETS, INFOGRIPE_URL, SIVEP_URL
+from .datasets import DATASETS, ESUS_URL, INFOGRIPE_URL, SIVEP_URL
 
 
 def prepare_source(data):
     if 'provedor' not in data:
         return data
     provider = data['provedor']
-    disease = data.get('agravo', 'dengue' if provider == 'infodengue' else 'srag')
+    disease = data.get('agravo', 'dengue' if provider == 'infodengue' else 'covid' if provider == 'esus' else 'srag')
     if not isinstance(disease, str) or not isinstance(provider, str) or f'{provider}_{disease}' not in DATASETS:
         raise ValueError('Provedor inválido.')
     code = data.get('municipio')
@@ -25,13 +25,16 @@ def prepare_source(data):
         data = {**data, 'ano_inicio':timezone.localdate().year-(provider == 'infodengue'),
             'ano_fim':timezone.localdate().year, 'semana_inicio':1}
         data.pop('semana_fim', None)
-    if provider == 'sivep':
+    if provider in ('sivep', 'esus'):
         from django.utils import timezone
         year = data.get('ano_inicio')
-        if type(year) is not int or not 2019 <= year <= timezone.localdate().year:
-            raise ValueError('Selecione um ano entre 2019 e o ano atual.')
-        return {'nome':data.get('nome') or f'SIVEP-Gripe {year}', 'indicador':'sivep_srag',
-                'tipo':'xlsx','url':f'{SIVEP_URL}?ano={year}','ativa':data.get('ativa'), 'periodo_movel':rolling,
+        first_year = 2023 if provider == 'esus' else 2019
+        if type(year) is not int or not first_year <= year <= timezone.localdate().year:
+            raise ValueError(f'Selecione um ano entre {first_year} e o ano atual.')
+        dataset = 'esus_covid' if provider == 'esus' else 'sivep_srag'
+        url = ESUS_URL if provider == 'esus' else SIVEP_URL
+        return {'nome':data.get('nome') or f'{"e-SUS COVID-19" if provider == "esus" else "SIVEP-Gripe"} {year}', 'indicador':dataset,
+                'tipo':'xlsx','url':f'{url}?ano={year}','ativa':data.get('ativa'), 'periodo_movel':rolling,
                 'recorte_tipo':'municipio','recorte_codigo':code,'recorte_nome':MUNICIPIOS_SP[code],'recorte_uf':'SP'}
     if provider == 'infogripe':
         if code != '3550308':

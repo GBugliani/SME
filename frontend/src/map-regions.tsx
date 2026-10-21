@@ -32,7 +32,7 @@ export function getIntermediateRegionIndex(cityCode: string) {
 }
 
 export type RegionLabel = { code: string; name: string; shortName: string; x: number; y: number };
-export type MapRegions = { borders: string; labels: RegionLabel[] };
+export type MapRegions = { borders: string; outlines: string[]; labels: RegionLabel[] };
 type PlacedRegionLabel = RegionLabel & { offsetX: number; offsetY: number };
 
 function rings(path: string): Point[][] {
@@ -55,7 +55,7 @@ function centroid(points: Point[]) {
 }
 
 export function buildMapRegions(cities: Municipality[]): MapRegions {
-  const edges = new Map<string, { a: Point; b: Point; regions: Set<number> }>();
+  const edges = new Map<string, { a: Point; b: Point; regions: Set<number>; count: number }>();
   const centers = intermediateRegions.map(() => ({ weight: 0, x: 0, y: 0 }));
 
   for (const city of cities) {
@@ -73,15 +73,24 @@ export function buildMapRegions(cities: Municipality[]): MapRegions {
         const aKey = `${a.x},${a.y}`, bKey = `${b.x},${b.y}`;
         const key = aKey < bKey ? `${aKey}|${bKey}` : `${bKey}|${aKey}`;
         const edge = edges.get(key);
-        if (edge) edge.regions.add(region);
-        else edges.set(key, { a, b, regions: new Set([region]) });
+        if (edge) { edge.regions.add(region); edge.count++; }
+        else edges.set(key, { a, b, regions: new Set([region]), count: 1 });
       }
     }
   }
 
+  const borders: string[] = [];
+  const outlines = intermediateRegions.map(() => [] as string[]);
+  for (const edge of edges.values()) {
+    if (edge.regions.size === 1 && edge.count > 1) continue;
+    const segment = `M${edge.a.x},${edge.a.y}L${edge.b.x},${edge.b.y}`;
+    if (edge.regions.size > 1) borders.push(segment);
+    for (const region of edge.regions) outlines[region].push(segment);
+  }
+
   return {
-    borders: Array.from(edges.values()).filter(edge => edge.regions.size > 1)
-      .map(edge => `M${edge.a.x},${edge.a.y}L${edge.b.x},${edge.b.y}`).join(''),
+    borders: borders.join(''),
+    outlines: outlines.map(segments => segments.join('')),
     labels: intermediateRegions.map((item, index) => ({
       code: item.code, name: item.name, shortName: item.shortName,
       x: centers[index].weight ? centers[index].x / centers[index].weight : 0,
@@ -122,7 +131,7 @@ export function MapRegionLabels({ labels, pixelsPerUnit, focusedCode, onSelect }
   const visibleLabels = focusedCode ? labels.filter(label => label.code === focusedCode) : labels;
   const positioned = placeRegionLabels(visibleLabels, scale, window.matchMedia('(max-width: 760px)').matches);
   return <g className="map-region-labels">{positioned.map(label =>
-    <g key={label.code} className={focusedCode ? '' : 'map-region-label-button'} role={focusedCode ? undefined : 'button'} tabIndex={focusedCode ? undefined : 0} aria-label={focusedCode ? undefined : `Ampliar região de ${label.name}`} onClick={focusedCode ? undefined : () => onSelect(label.code)} onKeyDown={focusedCode ? undefined : event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(label.code); } }} data-map-region={label.code} data-region-x={label.x} data-region-y={label.y} data-offset-x={label.offsetX} data-offset-y={label.offsetY} transform={`translate(${label.x + label.offsetX / scale} ${label.y + label.offsetY / scale}) scale(${inverseScale})`}>
+    <g key={label.code} className={focusedCode ? 'map-region-label-selected' : 'map-region-label-button'} role={focusedCode ? undefined : 'button'} tabIndex={focusedCode ? undefined : 0} aria-label={focusedCode ? undefined : `Ampliar região de ${label.name}`} onClick={focusedCode ? undefined : () => onSelect(label.code)} onKeyDown={focusedCode ? undefined : event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(label.code); } }} data-map-region={label.code} data-region-x={label.x} data-region-y={label.y} data-offset-x={label.offsetX} data-offset-y={label.offsetY} transform={`translate(${label.x + label.offsetX / scale} ${label.y + label.offsetY / scale}) scale(${inverseScale})`}>
       {(label.offsetX !== 0 || label.offsetY !== 0) && <line x1={-label.offsetX} y1={-label.offsetY} x2="0" y2="0"/>}
       <text className="region-name-full" textAnchor="middle" dominantBaseline="central">{label.name}</text>
       <text className="region-name-short" textAnchor="middle" dominantBaseline="central">{label.shortName}</text>

@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from types import SimpleNamespace
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -75,3 +76,11 @@ class InitialCollectionTests(TestCase):
         self.assertEqual(job.mensagem, 'Fonte indisponível.')
         self.assertEqual(self.client.get('/api/fontes/').json()['sources'][0]['coleta_inicial_status'], 'erro')
         self.assertIsNone(run_next_initial_collection())
+
+    def test_recorded_collection_failure_is_not_marked_completed(self):
+        source = FonteEpidemiologica.objects.get(pk=self.register().json()['source']['id'])
+        with patch('sme.initial_collection.collect_source', return_value=SimpleNamespace(
+                status='erro', mensagem='Dados incompatíveis.')):
+            job = run_next_initial_collection()
+        self.assertEqual((job.status, job.mensagem), ('erro', 'Dados incompatíveis.'))
+        self.assertEqual(self.client.get('/api/fontes/').json()['sources'][0]['coleta_inicial_status'], 'erro')

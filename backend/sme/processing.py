@@ -33,7 +33,7 @@ class SeriesRepository:
         disease, _ = Agravo.objects.get_or_create(codigo=lote.agravo, defaults={'nome':DISEASES[lote.agravo]})
         series, _ = SerieEpidemiologica.objects.get_or_create(fonte=source, recorte=territory, agravo=disease, indicador=lote.indicador or infer_dataset(lote.url_origem))
         existing = {(r.ano,r.semana):r for r in series.registros.select_related('lote').only('ano','semana','lote_id','lote__criada_em')}
-        if lote.adaptador == 'sivep' and rows:
+        if lote.adaptador in ('sivep', 'esus') and rows:
             published = {(r['ano'], r['semana']) for r in rows}
             year = rows[0]['ano']
             for key, old in existing.items():

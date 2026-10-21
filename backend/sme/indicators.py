@@ -1,7 +1,9 @@
 import json
 from datetime import date, timedelta
 from pathlib import Path
-from .models import RegistroEpidemiologico, Agravo
+from django.db.models import F, Window
+from django.db.models.functions import RowNumber
+from .models import RegistroEpidemiologico, Agravo, AlertaSurto
 from .datasets import DATASETS
 from .detectors import strategy
 from .detection import configuration_for, configuration_data
@@ -10,18 +12,58 @@ from .series_data import current_records
 REGIONS = json.loads(Path(__file__).with_name('regioes_sp.json').read_text(encoding='utf-8'))
 
 
+def map_signal_level(observed, threshold):
+    """Intensidade do excesso sobre o limiar, não risco clínico ou incidência."""
+    if threshold <= 0 or observed <= threshold:
+        return 0
+    ratio = observed / threshold
+    return 3 if ratio >= 2.5 else 2 if ratio >= 1.5 else 1
+
+
 def options():
-    available = RegistroEpidemiologico.objects.filter(casos__isnull=False)
-    codes = set(available.values_list('serie__recorte__codigo', flat=True))
+    # A revisão vigente por semana deve ser a mesma exibida no painel.
+    current = (RegistroEpidemiologico.objects.filter(serie__indicador__in=DATASETS)
+               .annotate(revision=Window(
+                   expression=RowNumber(),
+                   partition_by=[F('serie__recorte__codigo'), F('serie__indicador'), F('data_referencia')],
+                   order_by=[F('lote__criada_em').desc(), F('lote_id').desc(), F('pk').desc()],
+               ))
+               .filter(revision=1)
+               .order_by('serie__recorte__codigo', 'serie__indicador', '-data_referencia')
+               .values_list('serie__recorte__codigo', 'serie__indicador', 'data_referencia', 'casos'))
+    coverage = {}
+    latest = {}
+    for code, indicator, day, cases in current.iterator(chunk_size=2000):
+        if cases is None:
+            continue
+        coverage.setdefault(indicator, set()).add(code)
+        latest.setdefault((code, indicator), (day, cases))
+    codes = set().union(*coverage.values()) if coverage else set()
     municipalities = [{'codigo':c, 'nome':REGIONS[c]['nome'], 'regiao_codigo':REGIONS[c]['regiao_codigo']} for c in codes if c in REGIONS]
     municipalities.sort(key=lambda r:r['nome'])
     region_codes = {REGIONS[c]['regiao_codigo'] for c in codes if c in REGIONS}
     regions = {v['regiao_codigo']:v['regiao_nome'] for v in REGIONS.values() if v['regiao_codigo'] in region_codes}
-    coverage = {}
-    for key, code in available.order_by().values_list('serie__indicador','serie__recorte__codigo').distinct():
-        coverage.setdefault(key, []).append(code)
+    signals = []
+    if latest:
+        # A última semana isolada pode ter recuado após uma alta recente. Mantemos
+        # a sinalização visível apenas nas quatro semanas disponíveis seguintes.
+        newest_relevant = max(day for day, _ in latest.values())
+        oldest_relevant = newest_relevant - timedelta(days=21)
+        for code, indicator, day, observed, threshold in AlertaSurto.objects.filter(
+                ativa=True, data_referencia__range=(oldest_relevant, newest_relevant)).order_by().values_list(
+                'recorte__codigo', 'indicador', 'data_referencia', 'observado', 'limiar'):
+            last_week = latest.get((code, indicator))
+            if last_week is None or not last_week[0] - timedelta(days=21) <= day <= last_week[0]:
+                continue
+            level = map_signal_level(observed, threshold)
+            if level:
+                signals.append({'codigo':code, 'indicador':indicator, 'data_referencia':day.isoformat(),
+                                'observado':observed, 'limiar':round(threshold, 1), 'nivel':level})
     return {'integracoes':[{**DATASETS[k], 'codigos_com_dados':sorted(coverage[k])} for k in DATASETS if k in coverage], 'municipios':municipalities, 'regioes':[{'codigo':c,'nome':n} for c,n in sorted(regions.items(),key=lambda x:x[1])],
-            'agravos':list(Agravo.objects.filter(serieepidemiologica__registros__isnull=False).distinct().values('codigo','nome'))}
+            'agravos':list(Agravo.objects.filter(serieepidemiologica__registros__isnull=False).distinct().values('codigo','nome')),
+            'sinalizacoes_mapa':signals,
+            'ultimas_semanas_mapa':[{'codigo':code, 'indicador':indicator, 'data_referencia':day.isoformat(), 'casos':cases}
+                                    for (code, indicator), (day, cases) in latest.items()]}
 
 
 def query_indicators(params, configuration=None):

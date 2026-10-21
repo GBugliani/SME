@@ -25,7 +25,12 @@ class CollectionError(Exception):
 
 
 def normalized(value):
-    return "".join(c for c in unicodedata.normalize("NFKD", value.casefold()) if not unicodedata.combining(c)).strip()
+    plain = "".join(c for c in unicodedata.normalize("NFKD", value.casefold()) if not unicodedata.combining(c))
+    return " ".join("".join(c if c.isalnum() else " " for c in plain).split())
+
+
+# A API usa a grafia "Luís" para o código que o catálogo do IBGE nomeia "Luiz".
+INFO_DENGUE_NAME_ALIASES = {'3550001': {'sao luis do paraitinga'}}
 
 
 def fetch_public(host, path, *, limit=MAX_BYTES):
@@ -110,6 +115,7 @@ class InfoDengueAdapter:
         if not isinstance(data, list) or len(data) > 106:
             raise CollectionError("Resposta inesperada: lista de até 106 semanas esperada.")
         seen = set()
+        accepted_names = {normalized(source.recorte.nome)} | INFO_DENGUE_NAME_ALIASES.get(source.recorte.codigo, set())
         lower, upper = int(q["ey_start"]) * 100 + int(q["ew_start"]), int(q["ey_end"]) * 100 + int(q["ew_end"])
         for row in data:
             if not isinstance(row, dict) or not {"SE", "casos", "municipio_nome", "id"} <= row.keys():
@@ -118,7 +124,7 @@ class InfoDengueAdapter:
             if not isinstance(week, int) or isinstance(week, bool) or not lower <= week <= upper or not 1 <= week % 100 <= 53 or week in seen:
                 raise CollectionError("Semana repetida, inválida ou fora do período solicitado.")
             seen.add(week)
-            if normalized(str(row["municipio_nome"])) != normalized(source.recorte.nome) or not str(row["id"]).startswith(source.recorte.codigo):
+            if normalized(str(row["municipio_nome"])) not in accepted_names or not str(row["id"]).startswith(source.recorte.codigo):
                 raise CollectionError("A fonte retornou dados de outro município.")
             if row["casos"] is not None and (isinstance(row["casos"], bool) or not isinstance(row["casos"], (int, float)) or not math.isfinite(row["casos"]) or row["casos"] < 0):
                 raise CollectionError("Contagem de casos inválida no conteúdo bruto.")
@@ -131,7 +137,8 @@ def get_adapter(source):
         raise CollectionError("Esta fonte não possui integração habilitada. Selecione um provedor no cadastro assistido.")
     from .infogripe import InfoGripeAdapter
     from .sivep import SivepAdapter
-    registry = {'infodengue':InfoDengueAdapter, 'infogripe':InfoGripeAdapter, 'sivep':SivepAdapter}
+    from .esus import EsusCovidAdapter
+    registry = {'infodengue':InfoDengueAdapter, 'infogripe':InfoGripeAdapter, 'sivep':SivepAdapter, 'esus':EsusCovidAdapter}
     factory = registry.get(spec['provedor'])
     if factory is None:
         raise CollectionError('Adaptador não instalado para este provedor.')
@@ -168,7 +175,7 @@ def collect_source(source_id, *, origin="manual", user=None):
             current = FonteEpidemiologica.objects.select_for_update().get(pk=source.pk)
             if current.arquivada_em is not None or not current.ativa or current.atualizada_em != source.atualizada_em:
                 raise CollectionError("A configuração da fonte mudou durante a coleta; resultado descartado.")
-            if adapter.name == 'sivep':
+            if adapter.name in ('sivep', 'esus'):
                 # Uma versão A pode reaparecer após B. Ela é uma revisão nova,
                 # não um reprocessamento do lote antigo que seria ignorado.
                 latest = source.lotes.defer('conteudo_original').order_by('-pk').first()
@@ -186,7 +193,7 @@ def collect_source(source_id, *, origin="manual", user=None):
                 "conteudo_original": None if getattr(adapter, 'arquivo_original', None) else getattr(adapter, 'raw_body', None),
                 "sha256_original": hashlib.sha256(adapter.raw_body).hexdigest() if getattr(adapter, 'raw_body', None) is not None else ''})
             run.lote, run.repetida, run.quantidade_registros = lote, not created, len(data)
-            has_data = bool(data) and (adapter.name != 'sivep' or any(row['casos'] is not None for row in data))
+            has_data = bool(data) and (adapter.name not in ('sivep', 'esus') or any(row['casos'] is not None for row in data))
             run.status = "sucesso" if has_data else "vazia"
             run.mensagem = "Dados brutos coletados." if has_data else "A fonte não retornou contagens para este município; isso não significa zero casos."
             run.finalizada_em = timezone.now()

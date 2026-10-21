@@ -12,8 +12,8 @@ def collection_source(source):
     from .processing import week_start
     spec = DATASETS.get(source_dataset(source), {})
     provider = spec.get('provedor')
-    if provider not in ('infodengue', 'sivep'):
-        raise CollectionError('O período móvel está disponível para InfoDengue e SIVEP-Gripe.')
+    if provider not in ('infodengue', 'sivep', 'esus'):
+        raise CollectionError('O período móvel está disponível para InfoDengue, SIVEP-Gripe e e-SUS Notifica.')
     # Nunca corrige ou disfarça URL/território inválidos: os adaptadores validam
     # também a configuração persistida antes de resolver os anos.
     from .collection import get_adapter

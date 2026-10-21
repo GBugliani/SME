@@ -2,9 +2,10 @@
 from urllib.parse import parse_qs, urlsplit
 
 SIVEP_URL = 'https://gitlab.com/cgcovid/dados-publicos/-/tree/main/Dados%20unificados/Unificado%20Srag'
+ESUS_URL = 'https://gitlab.com/cgcovid/dados-publicos/-/tree/main/Dados%20unificados/Unificado%20e-SUS'
 
 INFOGRIPE_URL = 'https://raw.githubusercontent.com/infogripe/Boletim_InfoGripe/main/Dados/InfoGripe/capitais_serie_estimativas_tendencia_sem_filtro_febre.csv'
-DISEASES = {'dengue': 'Dengue', 'chikungunya': 'Chikungunya', 'zika': 'Zika', 'srag': 'SRAG'}
+DISEASES = {'dengue': 'Dengue', 'chikungunya': 'Chikungunya', 'zika': 'Zika', 'srag': 'SRAG', 'covid': 'COVID-19'}
 DATASETS = {
     f'infodengue_{code}': {
         'codigo': f'infodengue_{code}', 'provedor': 'infodengue', 'publicador': 'InfoDengue',
@@ -37,6 +38,16 @@ DATASETS['sivep_srag'] = {
     'documentacao': 'https://gitlab.com/cgcovid/dados-publicos/-/blob/main/Dados%20unificados/README.md',
 }
 
+DATASETS['esus_covid'] = {
+    'codigo': 'esus_covid', 'provedor': 'esus', 'publicador': 'e-SUS Notifica / Ministério da Saúde',
+    'base_original': 'e-SUS Notifica', 'agravo': 'covid', 'agravo_nome': 'COVID-19',
+    'indicador_nome': 'Casos de síndrome gripal por COVID-19', 'unidade': 'casos', 'frequencia': 'semanal',
+    'base_temporal': 'Semana de início dos sintomas', 'base_territorial': 'Município de residência',
+    'definicao': 'Casos leves e moderados de síndrome gripal por COVID-19. Não inclui a série separada de SRAG hospitalizada. Semanas ausentes não equivalem a zero.',
+    'versao': 'esus_covid_v1', 'formato': 'xlsx', 'municipios': 'SP',
+    'documentacao': 'https://gitlab.com/cgcovid/dados-publicos/-/blob/main/Dados%20unificados/README.md',
+}
+
 
 def infer_dataset(url):
     """Compatibilidade para cadastros antigos; validação completa cabe ao adaptador."""
@@ -46,6 +57,8 @@ def infer_dataset(url):
         return code if code in DATASETS else ''
     if url.startswith(SIVEP_URL + '?ano='):
         return 'sivep_srag'
+    if url.startswith(ESUS_URL + '?ano='):
+        return 'esus_covid'
     return 'infogripe_srag' if url == INFOGRIPE_URL else ''
 
 

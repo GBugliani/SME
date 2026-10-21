@@ -21,11 +21,12 @@ Em **Fontes de dados → Cadastrar fonte/Editar → Período de coleta**, escolh
 | Período fixo | Mantém os anos e semanas escolhidos. |
 | Acompanhamento contínuo / InfoDengue | Ano atual e anterior, todas as semanas, resolvidos a cada execução. |
 | Acompanhamento contínuo / SIVEP-Gripe | Ano atual, versão publicada mais recente. Não coleta automaticamente o ano anterior. |
+| Acompanhamento contínuo / e-SUS Notifica | Ano atual, versão publicada mais recente de SG por COVID-19. Não coleta automaticamente o ano anterior. |
 | InfoGripe | Consulta todo o histórico do CSV; não precisa de um seletor móvel. |
 
 Exemplo: no InfoDengue uma coleta contínua em 2026 consulta 2025–2026; em 2027 passa a consultar 2026–2027. Semanas 52/53 seguem o calendário epidemiológico do ano. Isso não garante que a fonte já tenha publicado todas as semanas solicitadas ou dados de todos os agravos/municípios.
 
-O Airflow usa o mesmo resolvedor da coleta manual. Cadastrar uma fonte habilitada agenda a primeira coleta no worker `collector`; a lista mostra quando ela está agendada ou em execução. Fontes habilitadas já cadastradas e ainda sem tentativa também entram na fila quando o worker inicia. As coletas seguintes continuam na rotina diária do Airflow, às 06h de São Paulo, ou podem ser iniciadas com **Coletar agora**. No SIVEP, se o ano atual ainda não foi publicado, a tentativa falha explicitamente e mantém o histórico, sem preencher zeros nem apresentar o ano anterior como atual. Para coletar/revisar anos anteriores, use um acompanhamento fixo.
+O Airflow usa o mesmo resolvedor da coleta manual. Cadastrar uma fonte habilitada agenda a primeira coleta no worker `collector`; a lista mostra quando ela está agendada ou em execução. Fontes habilitadas já cadastradas e ainda sem tentativa também entram na fila quando o worker inicia. As coletas seguintes continuam na rotina diária do Airflow, às 06h de São Paulo, ou podem ser iniciadas com **Coletar agora**. No SIVEP e no e-SUS, se o ano atual ainda não foi publicado, a tentativa falha explicitamente e mantém o histórico, sem preencher zeros nem apresentar o ano anterior como atual. Para coletar/revisar anos anteriores, use um acompanhamento fixo.
 
 ### Preservação e migração
 

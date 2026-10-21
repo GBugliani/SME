@@ -4,6 +4,7 @@ import {api, ApiError, type User} from './api';
 import {Notice, useTimedMessage} from './notifications';
 import {DetectionSettings} from './detection-settings';
 import {EmailSettings} from './email-settings';
+import {PasswordInput} from './password-input';
 
 type Profile = {id:number; nome:string; permissoes:string[]; sistema:boolean; administrador:boolean};
 type Profiles = {perfis:Profile[]; permissoes:Record<string,string>};
@@ -90,8 +91,8 @@ export function Administration({user,onExpired,onUserChanged}:{user:User;onExpir
     {tab==='deteccao'?<DetectionSettings onExpired={onExpired}/>:tab==='email'?<EmailSettings onExpired={onExpired}/>:resetUser ? <section className="card form-card"><div className="section-heading"><h2>Redefinir senha</h2><button className="secondary" disabled={busy} onClick={()=>setResetUser(null)} data-icon="close"><ActionIcon name="close"/>Cancelar</button></div>
       <p><strong>{resetUser.nome}</strong><br/>{resetUser.email}</p>
       <form onSubmit={resetPassword}>
-        <label>Sua senha de administrador<input name="admin_password" type="password" autoComplete="current-password" required maxLength={1024}/></label>
-        <div className="form-grid"><label>Nova senha<input name="password" type="password" autoComplete="new-password" minLength={12} maxLength={1024} required/></label><label>Confirmar nova senha<input name="password_confirmation" type="password" autoComplete="new-password" minLength={12} maxLength={1024} required/></label></div>
+        <label>Sua senha de administrador<PasswordInput name="admin_password" visibilityLabel="sua senha de administrador" autoComplete="current-password" required maxLength={1024}/></label>
+        <div className="form-grid"><label>Nova senha<PasswordInput name="password" visibilityLabel="nova senha" autoComplete="new-password" minLength={12} maxLength={1024} required/></label><label>Confirmar nova senha<PasswordInput name="password_confirmation" visibilityLabel="confirmação da nova senha" autoComplete="new-password" minLength={12} maxLength={1024} required/></label></div>
         <p className="muted">Use pelo menos 12 caracteres. As sessões dessa conta serão encerradas.{resetUser.id===user.id?' Você precisará entrar novamente.':''}</p>
         <div className="form-actions"><button type="submit" disabled={busy} data-icon="key"><ActionIcon name="key"/>{busy?'Redefinindo…':'Salvar nova senha'}</button></div>
       </form>
@@ -102,7 +103,7 @@ export function Administration({user,onExpired,onUserChanged}:{user:User;onExpir
           {profiles.perfis.map(p=><option value={p.id} key={p.id}>{p.nome}</option>)}
         </select></label>
         <label className="checkbox"><input type="checkbox" name="ativo" defaultChecked={selectedUser?.ativo??true}/>Conta ativa</label>
-        {editUser==='new'?<><div className="form-grid"><label>Senha inicial<input name="password" type="password" minLength={12} maxLength={1024} required autoComplete="new-password"/></label><label>Confirmar senha<input name="password_confirmation" type="password" minLength={12} maxLength={1024} required autoComplete="new-password"/></label></div><p className="muted">Use pelo menos 12 caracteres. A redefinição de senha é feita pela administração.</p></>:<p className="muted">Desativar uma conta bloqueia seu acesso e preserva o histórico. Use Redefinir senha na lista de usuários quando necessário.</p>}
+        {editUser==='new'?<><div className="form-grid"><label>Senha inicial<PasswordInput name="password" visibilityLabel="senha inicial" minLength={12} maxLength={1024} required autoComplete="new-password"/></label><label>Confirmar senha<PasswordInput name="password_confirmation" visibilityLabel="confirmação da senha" minLength={12} maxLength={1024} required autoComplete="new-password"/></label></div><p className="muted">Use pelo menos 12 caracteres. A redefinição de senha é feita pela administração.</p></>:<p className="muted">Desativar uma conta bloqueia seu acesso e preserva o histórico. Use Redefinir senha na lista de usuários quando necessário.</p>}
         <div className="form-actions"><button disabled={busy} type="submit" data-icon="save"><ActionIcon name="save"/>{busy?'Salvando…':'Salvar usuário'}</button></div>
       </form>
     </section> : editProfile ? <section className="card form-card"><div className="section-heading"><h2>{editProfile==='new'?'Criar perfil':'Editar perfil'}</h2><button className="secondary" disabled={busy} onClick={()=>setEditProfile(null)} data-icon="close"><ActionIcon name="close"/>Cancelar</button></div>

@@ -9,10 +9,19 @@
 | InfoDengue | Zika | Municípios do catálogo de SP | Casos notificados por semana |
 | InfoGripe / Fiocruz | SRAG | São Paulo capital | Casos reportados, sem exigência de febre, escala casos e grupo jurídico 0 |
 | SIVEP-Gripe / Ministério da Saúde | SRAG total | Municípios de SP presentes na planilha | Casos por residência e semana de início dos sintomas |
+| e-SUS Notifica / Ministério da Saúde | Síndrome gripal por COVID-19 | Municípios de SP presentes na planilha | Casos leves e moderados por residência e semana de início dos sintomas |
 
 O catálogo de municípios não garante disponibilidade para todos os agravos e períodos. Uma resposta vazia não significa zero. Estimativas da fonte são armazenadas separadamente; o gráfico e o detector usam casos observados.
 
 O CSV InfoGripe utilizado contém capitais. Esta implementação filtra São Paulo capital; não atribui seus números ao estado inteiro. SRAG é uma síndrome: não corresponde a todos os casos de gripe ou Covid. Outros arquivos, filtros de sintomas ou vírus exigem contratos próprios.
+
+O e-SUS Notifica usa o conjunto agregado de SG por COVID-19 publicado pelo Ministério da Saúde, distinto do SIVEP-Gripe/SRAG. Os arquivos são organizados por município e semana epidemiológica. A publicação de um arquivo novo não garante que todos os municípios ou semanas tenham contagens; ausências permanecem nulas. [Descrição oficial dos dados unificados](https://dadosabertos.saude.gov.br/dataset/srag-2019-a-2026).
+
+Tuberculose, doença de Chagas, HIV/aids e as três séries de sífilis não aparecem neste catálogo: ainda não foi validada para elas uma base **pública, municipal e atualizada ao menos semanalmente** que corresponda às contagens do monitoramento. A frequência de notificação em um sistema não equivale à frequência de publicação aberta. Indicadores anuais não são convertidos em alertas semanais.
+
+- [O boletim federal de tuberculose de 2026](https://www.gov.br/saude/pt-br/centrais-de-conteudo/publicacoes/boletins/epidemiologicos/especiais/2026/boletim-epidemiologico-de-tuberculose-numero-especial-mar-2026.pdf/@@download/file) informa consolidação do Sinan três vezes ao ano.
+- Os [painéis do Dathi](https://www.gov.br/aids/pt-br/indicadores-epidemiologicos/paineis-de-indicadores-e-dados-basicos) trazem HIV/aids, sífilis e tuberculose por município, mas sua disponibilidade não demonstra publicação semanal. As planilhas consultadas para aids e sífilis usam séries anuais.
+- A [orientação de notificação de Chagas crônica](https://portal.saude.sp.gov.br/resources/cve-centro-de-vigilancia-epidemiologica/publicacoes/chagas/guia_notificacao_dcc_atualizacao_ms_052024.pdf) informa notificação semanal no e-SUS Notifica. Isso não estabelece uma exportação pública municipal semanal para ingestão automática.
 
 CVE-SP, TBWEB e Seade **não estão habilitados para coleta** nesta entrega. O sistema permite registrar uma URL pública como referência, mas informa quando não existe integração automática. Esses provedores exigem validação dos arquivos e um adaptador próprio.
 
@@ -23,8 +32,9 @@ CVE-SP, TBWEB e Seade **não estão habilitados para coleta** nesta entrega. O s
 3. No InfoDengue, escolha período fixo (até dois anos e semanas) ou **Acompanhamento contínuo**, que consulta ano atual e anterior automaticamente. Cadastros existentes continuam fixos até serem editados.
 4. No InfoGripe, o coletor lê o histórico disponível no arquivo. A seleção temporal é feita no Monitoramento.
 5. No SIVEP-Gripe, escolha um ano fixo desde 2019 ou **Acompanhamento contínuo** para o ano atual. A pasta publicada mais recente do ano é descoberta automaticamente. Um ano ainda não publicado gera falha explícita e mantém o histórico. A disponibilidade é conferida na coleta.
-6. Salve a fonte habilitada. A primeira coleta entra na fila automaticamente; acompanhe o estado na lista de fontes. Para repeti-la manualmente, use **Coletar agora**. As atualizações seguintes seguem o Airflow, às 06h de São Paulo.
-7. Em **Monitoramento → Filtrar**, escolha agravo e **Origem / indicador**. Os municípios/regiões oferecidos correspondem às séries armazenadas dessa integração.
+6. No e-SUS Notifica, escolha um ano fixo desde 2023 ou **Acompanhamento contínuo** para o ano atual. O arquivo mais recente do ano é descoberto automaticamente, sem misturar a série de SRAG.
+7. Salve a fonte habilitada. A primeira coleta entra na fila automaticamente; acompanhe o estado na lista de fontes. Para repeti-la manualmente, use **Coletar agora**. As atualizações seguintes seguem o Airflow, às 06h de São Paulo.
+8. Em **Monitoramento → Filtrar**, escolha agravo e **Origem / indicador**. Os municípios/regiões oferecidos correspondem às séries armazenadas dessa integração.
 
 O painel **Origem dos dados** identifica o publicador, a base original, a definição e o período. Não basta selecionar outro agravo para obter dados: ele precisa ter sido coletado e processado.
 
@@ -57,7 +67,7 @@ O perfil padrão Usuário consulta e exporta dados. Administradores podem delega
 - Entre cadastros sobrepostos do **mesmo indicador**, a revisão coletada mais recentemente prevalece por município/semana. Um reprocessamento de lote antigo não substitui um mais recente. Não há comparação automática entre indicadores diferentes.
 - A data da coleta não é a data de atualização epidemiológica. Os cabeçalhos HTTP são preservados quando presentes; ETag não é uma data. Os provedores podem não informar uma data de atualização. O período efetivamente observado vem dos registros.
 - Ausências no interior da série permanecem lacunas; não são preenchidas com zero. Agregações regionais informam cobertura parcial e exigem a mesma integração.
-- Versões novas do arquivo podem revisar o passado. No SIVEP-Gripe, o lote é um retrato anual: a retirada de uma semana torna sua contagem nula (sem dados), preservando o original anterior. Nos demais adaptadores, retirada de semanas exige política específica.
+- Versões novas do arquivo podem revisar o passado. No SIVEP-Gripe e no e-SUS Notifica, o lote é um retrato anual: a retirada de uma semana torna sua contagem nula (sem dados), preservando o original anterior. Nos demais adaptadores, retirada de semanas exige política específica.
 
 ### Operação
 
@@ -70,7 +80,7 @@ docker compose exec backend python manage.py process_lotes
 
 `collect_infodengue` permanece como alias histórico para `collect_sources`. O ID do DAG `sme_infodengue_piloto` foi conservado para preservar histórico e impedir dois agendamentos concorrentes; apesar do nome, ele atende todas as integrações habilitadas. Há no máximo duas tarefas de coleta simultâneas. Falhas de processamento aparecem como falha da execução, com os dados brutos mantidos para investigação.
 
-Os arquivos originais ficam no PostgreSQL nesta etapa. Planejar retenção, capacidade e armazenamento externo antes de ampliar o volume em produção. O limite é 5 MiB por resposta InfoDengue , 8 MiB por CSV InfoGripe e 32 MiB por XLSX SIVEP-Gripe (até 256 MiB expandido). Arquivos maiores geram falha explícita, sem importação parcial.
+Os arquivos originais ficam no PostgreSQL nesta etapa. Planejar retenção, capacidade e armazenamento externo antes de ampliar o volume em produção. O limite é 5 MiB por resposta InfoDengue, 8 MiB por CSV InfoGripe e 32 MiB por XLSX SIVEP-Gripe/e-SUS (até 256 MiB expandido). Arquivos maiores geram falha explícita, sem importação parcial.
 
 ## Adicionar uma integração
 

@@ -50,7 +50,7 @@ def run_next_initial_collection():
             job.status = 'ignorada' if source.coletas.exists() else 'erro'
             job.mensagem = str(exc)[:300]
         else:
-            job.status = 'concluida'
+            job.status = 'erro' if run.status == 'erro' else 'concluida'
             job.mensagem = run.mensagem
     job.save(update_fields=['status', 'mensagem', 'atualizada_em'])
     return job
