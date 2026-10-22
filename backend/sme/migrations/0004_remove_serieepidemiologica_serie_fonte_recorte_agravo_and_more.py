@@ -24,7 +24,6 @@ def identify_existing(apps, schema_editor):
                          'versao':'infodengue_v1', 'legado':True,
                          'observacao':'Lote anterior à preservação dos bytes HTTP; hash original indisponível.'} if indicator else {})
     for series in Series.objects.using(schema_editor.connection.alias).select_related('agravo').iterator():
-        # A implementação anterior processava exclusivamente InfoDengue/dengue.
         if series.agravo.codigo == 'dengue':
             Series.objects.using(schema_editor.connection.alias).filter(pk=series.pk).update(indicador='infodengue_dengue')
 

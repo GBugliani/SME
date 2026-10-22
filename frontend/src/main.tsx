@@ -7,6 +7,7 @@ import { IndicatorFilters, SeriesChart, type Indicators, type IndicatorOptions, 
 import {MapCityPicker, availableCityIntegrations, type PickedCity} from './map-city-picker';
 import {MapTourPreview} from './map-tour-preview';
 import {MapRegionLabels, buildMapRegions, getIntermediateRegionIndex, intermediateRegions} from './map-regions';
+import {exactDecimal} from './number-format';
 import { saoPauloPath } from './territory';
 import smeLogo from './assets/sme-logo.webp';
 import immediateRegions from './regions.json';
@@ -434,7 +435,7 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
   function mapTooltipMessage(city:{id:string}) {
     const signal=mapSignals.get(city.id);
     const signalSource=mapOptions?.integracoes.find(item=>item.codigo===signal?.indicador);
-    const signalText=signal ? ` ${signalSource?.agravo_nome||'Série monitorada'}: sinalização ${['','leve','moderada','forte'][signal.nivel]} na semana de ${signal.data_referencia.split('-').reverse().join('/')}: ${signal.observado.toLocaleString('pt-BR')} casos, acima do limiar de ${signal.limiar.toLocaleString('pt-BR')}. Não confirma surto.` : '';
+    const signalText=signal ? ` ${signalSource?.agravo_nome||'Série monitorada'}: sinalização ${['','leve','moderada','forte'][signal.nivel]} na semana de ${signal.data_referencia.split('-').reverse().join('/')}: ${signal.observado.toLocaleString('pt-BR')} casos, acima do limiar de ${exactDecimal(signal.limiar)}. Não confirma surto.` : '';
     if(activeMapRegion===null || activeMapRegion!==getIntermediateRegionIndex(city.id)){
       const region=intermediateRegions[getIntermediateRegionIndex(city.id)];
       return (region ? `Clique para ampliar a região de ${region.name}.` : 'Escolha uma região no mapa.')+signalText;
@@ -594,7 +595,7 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
       <Notice message={success} kind="success"/>
       {tab === 'inicio' ? <>
       <div className="dashboard-layout">
-      <div className="dashboard-heading"><div className="dashboard-title"><span className="eyebrow">PAINEL TERRITORIAL</span><h1>Monitoramento epidemiológico</h1></div><div className="dashboard-tools"><button type="button" className="secondary filter-trigger advanced-panels-toggle" disabled={!hasSelectedMunicipality} aria-expanded={showDetailedPanels} aria-controls="dashboard-left dashboard-right" onClick={()=>setAdvancedPanels(value=>!value)} data-icon={showDetailedPanels?'close':'list'}><ActionIcon name={showDetailedPanels?'close':'list'}/>{showDetailedPanels?'Mostrar resumo':'Informações detalhadas'}</button><ExportDataGate user={user} data={indicators} onExpired={onLogout}/><IndicatorFilters onData={setIndicators} onOptions={setMapOptions} onExpired={onLogout} refresh={refreshIndicators} mapSelection={mapSelection} resetSelection={filterResetSequence}/></div></div>
+      <div className="dashboard-heading"><div className="dashboard-title"><span className="eyebrow">PAINEL TERRITORIAL</span><h1>Monitoramento epidemiológico</h1></div><div className="dashboard-tools"><button type="button" className="secondary filter-trigger advanced-panels-toggle" disabled={!hasSelectedMunicipality} aria-expanded={showDetailedPanels} aria-controls="dashboard-left dashboard-right" onClick={()=>setAdvancedPanels(value=>!value)} data-icon={showDetailedPanels?'close':'list'}><ActionIcon name={showDetailedPanels?'close':'list'}/>{showDetailedPanels?'Mostrar resumo':'Informações detalhadas'}</button><ExportDataGate user={user} data={indicators} onExpired={onLogout}/><IndicatorFilters onData={setIndicators} onOptions={setMapOptions} onExpired={onLogout} refresh={refreshIndicators} mapSelection={mapSelection} resetSelection={filterResetSequence} appliedData={indicators}/></div></div>
       {!hasSelectedMunicipality && <p className="map-selection-hint" role="status"><strong>Para ver os dados:</strong> {tourCity ? 'selecione o resumo do município em destaque ou escolha um município no mapa.' : activeMapRegion === null ? 'selecione uma região e depois um município no mapa.' : 'selecione um município destacado no mapa.'}</p>}
       <p className="mobile-panel-hint" hidden={!hasSelectedMunicipality||!mobilePanelHintVisible}>Role para ver os painéis de informações ↓</p>
       <div className="dashboard-grid">

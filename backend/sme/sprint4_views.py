@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from .administration import lock_administration
+from .alert_presentation import alert_message
 from .datasets import DATASETS
 from .detection import configuration_for, configuration_data, job_data
 from .detectors import METHODS, validate_parameters
@@ -128,7 +129,9 @@ def alerts_queryset(user):
 
 def alert_data(alert):
     spec = DATASETS[alert.indicador]
-    return {'id':alert.pk, 'titulo':alert.titulo, 'mensagem':alert.mensagem, 'ativa':alert.ativa, 'canal':alert.canal,
+    return {'id':alert.pk, 'titulo':alert.titulo,
+        'mensagem':alert_message(spec['agravo_nome'], alert.observado, alert.data_referencia, alert.limiar),
+        'ativa':alert.ativa, 'canal':alert.canal,
         'motivo_encerramento':alert.motivo_encerramento, 'revisao':alert.revisao,
         'lida':alert.revisao_lida == alert.revisao, 'territorio':{'codigo':alert.recorte.codigo, 'nome':alert.recorte.nome},
         'data_referencia':alert.data_referencia, 'observado':alert.observado, 'referencia':alert.referencia,
@@ -142,7 +145,6 @@ def alert_data(alert):
 @require_GET
 @authorized()
 def alert_options(request):
-    # Inclui sinalizações encerradas e não exige gerenciar fontes.
     rows = AlertaSurto.objects.order_by().values_list('recorte__codigo', 'indicador').distinct()
     codes, indicators = set(), set()
     for code, indicator in rows:

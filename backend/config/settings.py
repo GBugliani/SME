@@ -50,14 +50,12 @@ CSRF_FAILURE_VIEW = "sme.views.csrf_failure"
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
-# Enable only behind a trusted proxy that OVERWRITES this header.
 if os.environ.get("TRUST_PROXY", "false").lower() == "true":
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 DATA_UPLOAD_MAX_MEMORY_SIZE = 64 * 1024
 
 COLLECTION_TOKEN = os.environ.get("COLETA_TOKEN", "")
 
-# Credenciais SMTP ficam apenas no ambiente do servidor, nunca no PostgreSQL.
 SMTP_SECURITY = os.environ.get("SMTP_SECURITY", "ssl").lower()
 EMAIL_HOST = os.environ.get("SMTP_HOST", "")
 EMAIL_PORT = int(os.environ.get("SMTP_PORT", "465"))

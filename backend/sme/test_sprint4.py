@@ -53,6 +53,30 @@ class SprintFourTests(TestCase):
         self.assertIn('não confirma',alert.mensagem)
         self.assertEqual(alert.configuracao.metodo,'media_movel')
 
+    def test_alert_shows_unrounded_threshold_even_for_existing_message(self):
+        alert = AlertaSurto.objects.get()
+        alert.observado = 6
+        alert.referencia = 1.125
+        alert.limiar = 5.971067993745034
+        alert.mensagem = '6 casos acima do limiar 6.0'
+        alert.save(update_fields=['observado', 'referencia', 'limiar', 'mensagem'])
+        response = self.client.get('/api/alertas/')
+        row = response.json()['alertas'][0]
+        self.assertIn('limiar calculado de 5,971067993745034', row['mensagem'])
+        self.assertNotIn('limiar 6.0', row['mensagem'])
+        self.assertEqual((row['observado'], row['referencia'], row['limiar']),
+                         (6, 1.125, 5.971067993745034))
+
+    def test_text_change_does_not_mark_read_alert_as_new_revision(self):
+        alert = AlertaSurto.objects.get()
+        original_revision = alert.revisao
+        alert.mensagem = 'Redação anterior'
+        alert.save(update_fields=['mensagem'])
+        analyze_territory(alert.recorte_id, alert.indicador)
+        alert.refresh_from_db()
+        self.assertEqual(alert.revisao, original_revision)
+        self.assertEqual(alert.mensagem, 'Redação anterior')
+
     def test_reprocessing_and_overlapping_sources_do_not_duplicate_alert(self):
         for _ in range(2):process_lote(self.lot.pk)
         source = FonteEpidemiologica.objects.create(nome='Outro cadastro',tipo='json',indicador='infodengue_dengue',

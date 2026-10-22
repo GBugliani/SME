@@ -1,11 +1,13 @@
 from django.urls import path
 from sme import views
-from sme import administration, exports, email_views
+from sme import administration, exports, email_views, version
 from sme import sprint4_views
 
 urlpatterns = [
+    path('api/version/', version.version),
     path('api/administracao/email/', email_views.email_settings),
     path('api/administracao/email/teste/', email_views.test_email),
+    path('api/administracao/email/alerta-exemplo/', email_views.example_alert_email),
     path('api/administracao/email/destinatarios/', email_views.email_recipients),
     path('api/administracao/email/grupos/', email_views.email_groups),
     path('api/administracao/email/grupos/<int:group_id>/', email_views.email_group_detail),

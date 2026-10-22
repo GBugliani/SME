@@ -12,8 +12,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from .administration import lock_administration
-from .email_alerts import MAX_DESTINATARIOS, recipient_addresses, smtp_configured
-from .models import ConfiguracaoEmail, DestinoEmail, EnvioAlertaEmail, GrupoEmail, RegistroAuditoria
+from .email_alerts import MAX_DESTINATARIOS, alert_email_content, recipient_addresses, smtp_configured
+from .models import AlertaSurto, ConfiguracaoEmail, DestinoEmail, EnvioAlertaEmail, GrupoEmail, RegistroAuditoria
 from .views import authorized, error, payload
 
 logger = logging.getLogger(__name__)
@@ -98,7 +98,8 @@ def test_email(request):
     try:
         with transaction.atomic():
             lock_administration(request)
-            recent = RegistroAuditoria.objects.filter(usuario=request.user, acao='email_teste_solicitado',
+            recent = RegistroAuditoria.objects.filter(usuario=request.user,
+                acao__in=['email_teste_solicitado', 'email_exemplo_solicitado'],
                 criada_em__gte=timezone.now()-timedelta(minutes=15)).count()
             if recent >= 3:
                 return error('Aguarde 15 minutos antes de solicitar outro teste.', 429)
@@ -114,6 +115,46 @@ def test_email(request):
         return JsonResponse({'ok':True, 'destinatario':request.user.email})
     except Exception as exc:
         logger.warning('Teste de SMTP falhou: %s', type(exc).__name__)
+        if isinstance(exc, smtplib.SMTPAuthenticationError):
+            return error('Autenticação SMTP falhou. Confira o usuário e a senha no .env.', 502)
+        return error('O SMTP não confirmou o envio. Confira as configurações e tente novamente.', 502)
+
+
+@require_POST
+@authorized(admin=True)
+def example_alert_email(request):
+    try:
+        if payload(request):
+            raise ValueError('O exemplo é enviado somente para o e-mail da sua conta.')
+    except ValueError as exc:
+        return error(str(exc))
+    if not smtp_configured():
+        return error('Configure o SMTP no .env antes de enviar um exemplo.', 409)
+    alert = (AlertaSurto.objects.filter(ativa=True)
+             .select_related('recorte', 'lote__fonte').first())
+    if alert is None:
+        return error('Ainda não há alertas registrados para usar como exemplo.', 409)
+    try:
+        with transaction.atomic():
+            lock_administration(request)
+            recent = RegistroAuditoria.objects.filter(usuario=request.user,
+                acao__in=['email_teste_solicitado', 'email_exemplo_solicitado'],
+                criada_em__gte=timezone.now()-timedelta(minutes=15)).count()
+            if recent >= 3:
+                return error('Aguarde 15 minutos antes de solicitar outro teste.', 429)
+            audit(request.user, 'email_exemplo_solicitado', 'AlertaSurto', alert.pk, {})
+    except PermissionError as exc:
+        return error(str(exc), 403)
+    subject, body = alert_email_content(alert, example=True)
+    try:
+        sent = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL,
+                            [request.user.email]).send(fail_silently=False)
+        if sent != 1:
+            raise RuntimeError('SMTP sem confirmação de entrega')
+        return JsonResponse({'ok': True, 'destinatario': request.user.email,
+                             'alerta_id': alert.pk, 'assunto': subject})
+    except Exception as exc:
+        logger.warning('Exemplo de alerta por SMTP falhou: %s', type(exc).__name__)
         if isinstance(exc, smtplib.SMTPAuthenticationError):
             return error('Autenticação SMTP falhou. Confira o usuário e a senha no .env.', 502)
         return error('O SMTP não confirmou o envio. Confira as configurações e tente novamente.', 502)

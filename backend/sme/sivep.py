@@ -106,7 +106,6 @@ class SivepAdapter:
                     raise CollectionError('Planilha expandida excede os limites de leitura.')
             workbook = openpyxl.load_workbook(io.BytesIO(body), read_only=True, data_only=False, keep_links=False)
             sheet = workbook['Município e Semana']
-            # O arquivo oficial declara A1 mesmo contendo milhares de linhas.
             sheet.reset_dimensions()
             rows = sheet.iter_rows(values_only=True)
             if tuple(next(rows)) != HEADER:
@@ -137,7 +136,6 @@ class SivepAdapter:
                     selected[week] = int(cases)
             if not weeks:
                 raise CollectionError('Arquivo sem semanas publicadas.')
-            # Conferência independente: nenhuma soma de outras abas no indicador.
             state_sheet = workbook['UF e Semana']
             state_sheet.reset_dimensions()
             state_rows = state_sheet.iter_rows(values_only=True)
@@ -154,8 +152,6 @@ class SivepAdapter:
                     state_totals[week] = row[2]
             if totals != state_totals:
                 raise CollectionError('Totais municipais e estaduais de SP divergem; coleta rejeitada.')
-            # Snapshot completo do período: uma revisão pode retirar uma contagem.
-            # Ausências explícitas substituem a contagem antiga sem inventar zero.
             return [{'ano':year, 'semana':week, 'codigo':source.recorte.codigo,
                      'casos':selected.get(week)} for week in range(1, max(weeks)+1)]
         except CollectionError:

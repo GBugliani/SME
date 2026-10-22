@@ -32,9 +32,28 @@ addFiles(existsSync(join(root, 'backend-version')) ? join(root, 'backend-version
 addFiles(existsSync(join(root, 'infra-version')) ? join(root, 'infra-version') : join(root, '..', 'infra'), 'infra');
 addFile(existsSync(join(root, 'compose-version.yaml')) ? join(root, 'compose-version.yaml') : join(root, '..', 'compose.yaml'), 'compose.yaml');
 
+function backendCodeId(directory: string) {
+  const digest = createHash('sha256');
+  function walk(dir: string, prefix: string) {
+    for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)) {
+      if (entry.name.startsWith('.') || entry.name === '__pycache__') continue;
+      const path = join(dir, entry.name);
+      const name = `${prefix}/${entry.name}`;
+      if (entry.isDirectory()) walk(path, name);
+      else if (entry.isFile() && (entry.name.endsWith('.py') || entry.name === 'requirements.txt')) {
+        digest.update(name);
+        digest.update(readFileSync(path).toString('utf8').replaceAll('\r\n', '\n'));
+      }
+    }
+  }
+  walk(directory, 'backend');
+  return digest.digest('hex').slice(0, 8);
+}
+
 const buildInfo = {
   version: packageInfo.version,
-  revision: hash.digest('hex').slice(0, 8),
+  packageId: hash.digest('hex').slice(0, 8),
+  expectedBackendId: backendCodeId(existsSync(join(root, 'backend-version')) ? join(root, 'backend-version') : join(root, '..', 'backend')),
   builtAt: new Date().toISOString(),
 };
 

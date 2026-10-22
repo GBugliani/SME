@@ -86,7 +86,6 @@ class RegistroAuditoria(models.Model):
 
 
 class TentativaLogin(models.Model):
-    # Hash of normalized email; no password or credential is recorded.
     chave = models.CharField(max_length=64, unique=True)
     falhas = models.PositiveIntegerField(default=0)
     inicio = models.DateTimeField()

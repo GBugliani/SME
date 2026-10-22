@@ -15,7 +15,6 @@ from .sivep import API, MAX_FILE, shared_resource
 ROOT = 'Dados unificados/Unificado e-SUS'
 CITY_HEADER = ('estadoIBGE', 'municipio', 'semEpi', 'casos')
 STATE_HEADER = ('estadoIBGE', 'semEpi', 'casos')
-# Grafia da planilha pública de 2026 difere do nome no catálogo IBGE.
 CITY_ALIASES = {'florinia': '3516101'}
 
 

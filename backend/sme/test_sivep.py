@@ -69,11 +69,11 @@ class SivepTests(TestCase):
         second=FonteEpidemiologica.objects.create(nome='Ubatuba',tipo='xlsx',indicador='sivep_srag',url=self.source.url,recorte=city)
         with self.fetch() as request:
             first=collect_source(self.source.pk);other=collect_source(second.pk);repeat=collect_source(self.source.pk)
-        self.assertEqual(request.call_count,2) # Catálogo e um único XLSX para ambos.
+        self.assertEqual(request.call_count,2)
         self.assertEqual(first.lote.arquivo_original_id,other.lote.arquivo_original_id)
         self.assertEqual(first.lote_id,repeat.lote_id)
         self.assertTrue(repeat.repetida)
-        self.assertEqual(ArquivoColeta.objects.count(),2) # Inclui catálogo.
+        self.assertEqual(ArquivoColeta.objects.count(),2)
 
     def test_revision_removes_old_count_preserving_original_and_old_reprocessing(self):
         with self.fetch(): first=collect_source(self.source.pk)

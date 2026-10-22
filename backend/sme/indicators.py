@@ -21,7 +21,6 @@ def map_signal_level(observed, threshold):
 
 
 def options():
-    # A revisão vigente por semana deve ser a mesma exibida no painel.
     current = (RegistroEpidemiologico.objects.filter(serie__indicador__in=DATASETS)
                .annotate(revision=Window(
                    expression=RowNumber(),
@@ -123,7 +122,6 @@ def query_indicators(params, configuration=None):
             p.update({k:v for k,v in flags[p['data']].items() if k not in ('data','observado')})
             p['anomalia']=True
     selected = [p for p in history if (not start or p['data']>=start) and (not end or p['data']<=end)]
-    # Contabiliza também as lacunas nas bordas explicitamente solicitadas.
     first = start or (history[0]['data'] if history else None)
     last = end or (history[-1]['data'] if history else None)
     if first and last and first <= last:

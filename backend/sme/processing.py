@@ -25,7 +25,6 @@ def week_start(year, week):
 
 class SeriesRepository:
     def persist(self, lote, rows):
-        # Fonte serializa revisões do mesmo território. Dados do lote permanecem imutáveis.
         source = lote.fonte
         from .models import FonteEpidemiologica, RecorteGeografico
         FonteEpidemiologica.objects.select_for_update().get(pk=source.pk)
@@ -41,7 +40,6 @@ class SeriesRepository:
                     RegistroEpidemiologico.objects.filter(pk=old.pk).update(casos=None, casos_estimados=None, lote=lote)
         for row in rows:
             old = existing.get((row['ano'],row['semana']))
-            # Reprocessamento de lote antigo não sobrescreve uma revisão mais recente.
             if old and (old.lote.criada_em, old.lote_id) > (lote.criada_em, lote.pk):
                 continue
             RegistroEpidemiologico.objects.update_or_create(serie=series, ano=row['ano'], semana=row['semana'],

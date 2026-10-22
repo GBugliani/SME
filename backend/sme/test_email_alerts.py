@@ -105,9 +105,11 @@ class EmailAlertTests(TestCase):
             self.assertEqual(reader.get(path).status_code,403)
         self.assertEqual(reader.put('/api/administracao/email/destinatarios/',{},content_type='application/json').status_code,403)
         self.assertEqual(reader.post('/api/administracao/email/teste/',{},content_type='application/json').status_code,403)
+        self.assertEqual(reader.post('/api/administracao/email/alerta-exemplo/',{},content_type='application/json').status_code,403)
         csrf = Client(enforce_csrf_checks=True);csrf.force_login(self.admin)
         self.assertEqual(csrf.post('/api/administracao/email/grupos/',{},content_type='application/json').status_code,403)
         self.assertEqual(csrf.post('/api/administracao/email/teste/',{},content_type='application/json').status_code,403)
+        self.assertEqual(csrf.post('/api/administracao/email/alerta-exemplo/',{},content_type='application/json').status_code,403)
 
     def test_admin_can_test_own_mailbox_with_rate_limit_and_safe_errors(self):
         with override_settings(EMAIL_HOST_PASSWORD=''):
@@ -123,6 +125,28 @@ class EmailAlertTests(TestCase):
             self.assertNotIn(b'secret',response.content)
         self.assertEqual(self.post('/api/administracao/email/teste/',{}).status_code,429)
         self.assertEqual(len(mail.outbox),2)
+
+    def test_admin_can_receive_real_alert_content_marked_as_example(self):
+        self.assertEqual(self.post('/api/administracao/email/alerta-exemplo/',{}).status_code,409)
+        self.configure()
+        lot = self.recent_lot()
+        self.assertEqual(process_lote(lot.pk).status,'sucesso')
+        queued = EnvioAlertaEmail.objects.first()
+        response = self.post('/api/administracao/email/alerta-exemplo/',{})
+        self.assertEqual(response.status_code,200,response.content)
+        self.assertEqual(response.json()['alerta_id'],queued.alerta_id)
+        self.assertEqual(len(mail.outbox),1)
+        example = mail.outbox[0]
+        self.assertEqual(example.to,[self.admin.email])
+        self.assertIn('Exemplo de alerta',example.subject)
+        self.assertIn('DEMONSTRAÇÃO',example.body)
+        self.assertIn(queued.corpo,example.body)
+        self.assertEqual(EnvioAlertaEmail.objects.count(),3)
+        self.assertEqual(self.post('/api/administracao/email/alerta-exemplo/',
+            {'destinatario':'other@example.org'}).status_code,400)
+        self.assertEqual(self.post('/api/administracao/email/alerta-exemplo/',{}).status_code,200)
+        self.assertEqual(self.post('/api/administracao/email/alerta-exemplo/',{}).status_code,200)
+        self.assertEqual(self.post('/api/administracao/email/alerta-exemplo/',{}).status_code,429)
 
     def test_recent_collection_queues_one_per_address_and_worker_sends(self):
         self.configure()

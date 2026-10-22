@@ -60,7 +60,13 @@ export function EmailSettings({onExpired}:{onExpired:()=>void}){
   async function testSmtp(){
     setBusy(true);setError('');
     try{const result=await api<{destinatario:string}>('/administracao/email/teste/','POST',{});
-      setSuccess(`E-mail de teste enviado para ${result.destinatario}. Confira a caixa de entrada.`);
+      setSuccess(`O SMTP aceitou o teste para ${result.destinatario}. Confira a caixa de entrada.`);
+    }catch(e){handle(e);}finally{setBusy(false);}
+  }
+  async function sendExample(){
+    setBusy(true);setError('');
+    try{const result=await api<{destinatario:string}>('/administracao/email/alerta-exemplo/','POST',{});
+      setSuccess(`O SMTP aceitou o exemplo de alerta para ${result.destinatario}. Confira a caixa de entrada.`);
     }catch(e){handle(e);}finally{setBusy(false);}
   }
   async function retry(id:number){
@@ -81,7 +87,9 @@ export function EmailSettings({onExpired}:{onExpired:()=>void}){
       <p className="muted">SMTP: {data.smtp_configurado?'configurado no servidor':'pendente no .env do servidor'} · {data.destinatarios_resolvidos} destinatário{data.destinatarios_resolvidos===1?'':'s'} único{data.destinatarios_resolvidos===1?'':'s'}.</p>
       {!data.smtp_configurado&&<p className="muted">Preencha host, porta, segurança, usuário, senha e remetente no .env; reinicie backend e mailer para aplicar.</p>}
       <div className="email-control-actions"><button type="button" disabled={busy||(!data.habilitado&&(!data.smtp_configurado||!data.destinatarios_resolvidos))} onClick={()=>void toggle()} data-icon="toggle"><ActionIcon name={data.habilitado?"pause":"check"}/>{data.habilitado?'Desativar envio':'Ativar envio'}</button>
-        <button type="button" className="secondary" disabled={busy||!data.smtp_configurado} onClick={()=>void testSmtp()} data-icon="send"><ActionIcon name="send"/>Enviar teste para meu e-mail</button></div>
+        <button type="button" className="secondary" disabled={busy||!data.smtp_configurado} onClick={()=>void testSmtp()} data-icon="send"><ActionIcon name="send"/>Enviar teste para meu e-mail</button>
+        <button type="button" className="secondary" disabled={busy||!data.smtp_configurado} onClick={()=>void sendExample()} data-icon="send"><ActionIcon name="send"/>Enviar exemplo de alerta</button></div>
+      <p className="muted">O exemplo usa o alerta ativo mais recente e o mesmo conteúdo do envio automático. Ele será identificado como demonstração e enviado apenas para o e-mail da sua conta.</p>
     </section>
     <section className="card">
       <div className="section-heading"><h2>Destinatários</h2><span className="muted">Endereços individuais e grupos</span></div>

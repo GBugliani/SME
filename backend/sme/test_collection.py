@@ -188,7 +188,6 @@ class CollectionTests(TestCase):
     def test_scheduler_covers_more_than_five_sources_and_skips_disabled(self, fetch):
         for i in range(6):
             FonteEpidemiologica.objects.create(nome=f"Fonte {i}", tipo="json", url=URL + ":" + str(i), recorte=self.source.recorte)
-        # URLs distintas mas válidas: parâmetros em ordem diferente.
         for i, source in enumerate(FonteEpidemiologica.objects.exclude(pk=self.source.pk)):
             source.url = URL.replace("ew_start=1", "ew_start=" + "0" * (i + 1) + "1")
             source.save()

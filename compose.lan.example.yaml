@@ -1,5 +1,4 @@
-# Copie para compose.lan.yaml e substitua o IP pelo IPv4 do seu computador.
-# Use somente em uma rede local confiável.
+# copie para compose.lan.yaml e substitua o IP pelo IPv4 do seu computador
 services:
   backend:
     environment:

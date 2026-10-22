@@ -1,0 +1,3 @@
+// Não arredonde valores usados em comparações: 6 casos podem superar 5,971...
+// mesmo quando ambos seriam exibidos como 6 com poucas casas decimais.
+export const exactDecimal = (value:number) => String(value).replace('.', ',');

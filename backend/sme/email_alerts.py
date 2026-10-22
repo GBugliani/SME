@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .datasets import DATASETS
+from .alert_presentation import decimal_pt
 from .models import ConfiguracaoEmail, DestinoEmail, EnvioAlertaEmail
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,28 @@ def eligible_week(day, today=None):
     return day + timedelta(days=7) <= today <= day + timedelta(days=21)
 
 
+def alert_email_content(alert, *, example=False):
+    """Compartilha o conteúdo do aviso automático com a demonstração ao admin."""
+    spec = DATASETS[alert.indicador]
+    disease = spec['agravo_nome']
+    place = f'{alert.recorte.nome}/{alert.recorte.uf}' if alert.recorte.uf else alert.recorte.nome
+    week = alert.data_referencia.strftime('%d/%m/%Y')
+    subject = f'[SME] {disease} · {place} · semana de {week}'
+    body = (f'Sinalização epidemiológica: {disease}\n'
+            f'Território: {place}\nSemana iniciada em: {week}\n'
+            f'{spec["indicador_nome"]}: {alert.observado}\n'
+            f'Referência: {decimal_pt(alert.referencia)}\nLimiar: {decimal_pt(alert.limiar)}\n'
+            f'Origem: {alert.lote.fonte.nome}\n\n'
+            'O resultado estatístico requer investigação e não confirma um surto.\n')
+    if settings.APP_PUBLIC_URL:
+        body += f'Abra o SME: {settings.APP_PUBLIC_URL.rstrip("/")}/\n'
+    if example:
+        subject = f'[SME] Exemplo de alerta · {disease} · {place} · semana de {week}'
+        body = ('DEMONSTRAÇÃO — este alerta já estava registrado no SME. '
+                'Este e-mail não indica uma nova ocorrência.\n\n' + body)
+    return subject[:255], body
+
+
 def enqueue_alert_email(alert):
     """Chamado na mesma transação da coleta, nunca por reanálise histórica."""
     if not eligible_week(alert.data_referencia):
@@ -52,19 +75,7 @@ def enqueue_alert_email(alert):
     if len(addresses) > MAX_DESTINATARIOS:
         logger.error('Número de destinatários de alerta acima do limite configurado.')
         return 0
-    spec = DATASETS[alert.indicador]
-    disease = spec['agravo_nome']
-    place = f'{alert.recorte.nome}/{alert.recorte.uf}' if alert.recorte.uf else alert.recorte.nome
-    week = alert.data_referencia.strftime('%d/%m/%Y')
-    subject = f'[SME] {disease} · {place} · semana de {week}'[:255]
-    body = (f'Sinalização epidemiológica: {disease}\n'
-            f'Território: {place}\nSemana iniciada em: {week}\n'
-            f'{spec["indicador_nome"]}: {alert.observado}\n'
-            f'Referência: {alert.referencia:.1f}\nLimiar: {alert.limiar:.1f}\n'
-            f'Origem: {alert.lote.fonte.nome}\n\n'
-            'O resultado estatístico requer investigação e não confirma um surto.\n')
-    if settings.APP_PUBLIC_URL:
-        body += f'Abra o SME: {settings.APP_PUBLIC_URL.rstrip("/")}/\n'
+    subject, body = alert_email_content(alert)
     created = 0
     for address in addresses:
         _, was_created = EnvioAlertaEmail.objects.get_or_create(
@@ -80,8 +91,6 @@ def run_next_email():
         return None
     now = timezone.now()
     with transaction.atomic():
-        # Um worker interrompido devolve a mensagem à fila. SMTP não fornece
-        # confirmação transacional: um crash após o aceite pode duplicar a entrega.
         EnvioAlertaEmail.objects.filter(status='enviando', atualizado_em__lt=now-timedelta(minutes=10)).update(
             status='pendente', proxima_tentativa_em=now, atualizado_em=now)
         delivery = (EnvioAlertaEmail.objects.select_for_update(skip_locked=True)
@@ -104,7 +113,6 @@ def run_next_email():
         if sent != 1:
             raise RuntimeError('SMTP não confirmou a entrega')
     except Exception as exc:
-        # Erros SMTP podem incluir dados privados; exponha somente o tipo.
         logger.warning('Falha no envio do aviso %s: %s', delivery.pk, type(exc).__name__)
         delivery.status = 'erro' if delivery.tentativas >= MAX_TENTATIVAS else 'pendente'
         delivery.erro = type(exc).__name__[:100]

@@ -30,7 +30,7 @@ export function CompactRecent({data,latestWeek}:{data:Indicators|null;latestWeek
     </>:<p className="compact-dashboard-source">Nenhuma semana com contagem no período selecionado.</p>}
     <dl className="compact-dashboard-facts">
       <div><dt>Última semana na base</dt><dd>{date(data?.atualidade.ultima_semana_base)}</dd></div>
-      <div><dt>Defasagem da base</dt><dd>{data?.atualidade.defasagem_semanas==null?'—':data.atualidade.defasagem_semanas===0?'Semana recente':`${number(data.atualidade.defasagem_semanas)} semanas`}</dd></div>
+      <div><dt>Defasagem da base</dt><dd>{data?.atualidade.defasagem_semanas==null?'—':data.atualidade.defasagem_semanas===0?'Semana recente':`${number(data.atualidade.defasagem_semanas)} ${data.atualidade.defasagem_semanas===1?'semana':'semanas'}`}</dd></div>
     </dl>
     {data?.atualidade.periodo_historico&&<small className="compact-dashboard-note">O filtro mostra um período histórico; há dados mais recentes armazenados.</small>}
   </section>;

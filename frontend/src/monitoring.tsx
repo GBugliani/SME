@@ -3,6 +3,7 @@ import {Notice,useTimedMessage} from './notifications';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import { api, ApiError, type Integration } from './api';
 import type {DetectorConfig} from './detection-settings';
+import {exactDecimal} from './number-format';
 
 export type Point = { data: string; ano: number | null; semana: number | null; casos: number | null; anomalia: boolean; referencia: number | null; limiar: number | null; municipios_com_dados: number };
 export type Indicators = { territorio: {tipo:string; codigo:string; nome:string}; agravo:string; agravo_nome:string; integracao:Integration|null; serie:Point[]; casos_total:number; semanas_com_dados:number; semanas_sem_dados:number; tendencia_percentual:number|null; anomalias:number; municipios_cobertos:number; municipios_regiao:number; codigos_cobertos:string[]; fontes:{id:number; nome:string; url:string}[]; coletado_em:string|null; atualizado_em:string|null; detector:DetectorConfig;
@@ -21,14 +22,14 @@ export function trend(value:number|null|undefined) {
   return `${value>0?'Alta':'Queda'} de ${Math.abs(value).toLocaleString('pt-BR',{maximumFractionDigits:1})}%`;
 }
 
-export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSelection, resetSelection }: {onData:(data:Indicators|null)=>void; onOptions:(data:IndicatorOptions|null)=>void; onExpired:()=>void; refresh:number; mapSelection:MapSelection|null; resetSelection:number}) {
+export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSelection, resetSelection, appliedData }: {onData:(data:Indicators|null)=>void; onOptions:(data:IndicatorOptions|null)=>void; onExpired:()=>void; refresh:number; mapSelection:MapSelection|null; resetSelection:number; appliedData:Indicators|null}) {
   const [options,setOptions]=useState<IndicatorOptions|null>(null);
-  const [type,setType]=useState('municipio');
-  const [code,setCode]=useState('');
-  const [disease,setDisease]=useState('dengue');
-  const [indicator,setIndicator]=useState('');
-  const [start,setStart]=useState('');
-  const [end,setEnd]=useState('');
+  const [type,setType]=useState(appliedData?.territorio.tipo==='regiao'?'regiao':'municipio');
+  const [code,setCode]=useState(appliedData?.territorio.codigo||'');
+  const [disease,setDisease]=useState(appliedData?.agravo||'dengue');
+  const [indicator,setIndicator]=useState(appliedData?.integracao?.codigo||'');
+  const [start,setStart]=useState(appliedData?.filtros?.inicio||'');
+  const [end,setEnd]=useState(appliedData?.filtros?.fim||'');
   const [busy,setBusy]=useState(false);
   const [error,setError]=useTimedMessage();
   const filterDialog=useRef<HTMLDialogElement>(null);
@@ -38,6 +39,7 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
   const previousResetSelection=useRef(resetSelection);
   const callback = useRef(onData); callback.current=onData;
   const optionsCallback = useRef(onOptions); optionsCallback.current=onOptions;
+  const appliedDataRef = useRef(appliedData); appliedDataRef.current=appliedData;
   async function query(t:string,c:string,a:string,s:string,e:string,i:string,closeOnSuccess=true) {
     // Mantém a consulta anterior visível até a nova estar pronta, sem desmontar o painel/mapa.
     const version=++requestVersion.current; setBusy(true); setError('');
@@ -52,9 +54,21 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
   useEffect(()=>{
     let active=true; setBusy(true);
     api<IndicatorOptions>('/indicadores/opcoes/').then(data=>{
-      if(!active)return; setOptions(data); optionsCallback.current(data); setStart(''); setEnd('');
-      const chosen=data.integracoes.find(i=>i.codigo==='infodengue_dengue')||data.integracoes[0];
+      if(!active)return; setOptions(data); optionsCallback.current(data);
+      const applied=appliedDataRef.current;
+      const matching=data.integracoes.find(i=>i.codigo===applied?.integracao?.codigo);
+      const hasTerritory=Boolean(matching&&applied&&(applied.territorio.tipo==='municipio'
+        ? matching.codigos_com_dados?.includes(applied.territorio.codigo)
+        : data.regioes.some(region=>region.codigo===applied.territorio.codigo)
+          && data.municipios.some(city=>city.regiao_codigo===applied.territorio.codigo
+            && matching.codigos_com_dados?.includes(city.codigo))));
+      if(applied&&!hasTerritory)callback.current(null);
+      const chosen=(hasTerritory?matching:null)||data.integracoes.find(i=>i.codigo==='infodengue_dengue')||data.integracoes[0];
       const agravo=chosen?.agravo||data.agravos[0]?.codigo||'dengue';
+      setType(hasTerritory&&applied?.territorio.tipo==='regiao'?'regiao':'municipio');
+      setCode(hasTerritory&&applied?applied.territorio.codigo:'');
+      setStart(hasTerritory?applied?.filtros?.inicio||'':'');
+      setEnd(hasTerritory?applied?.filtros?.fim||'':'');
       setDisease(agravo);setIndicator(chosen?.codigo||'');
       setBusy(false);
     }).catch(err=>{if(active){setBusy(false);if(err instanceof ApiError&&err.status===401)onExpired();else setError(err.message);}});
@@ -80,7 +94,7 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
   const availableCities=options?.municipios.filter(m=>selectedIntegration?.codigos_com_dados?.includes(m.codigo))||[];
   const availableRegions=options?.regioes.filter(r=>availableCities.some(m=>m.regiao_codigo===r.codigo))||[];
   const territories=type==='municipio'?availableCities:availableRegions;
-  useEffect(()=>{if(code&&!territories.some(t=>t.codigo===code))setCode('');},[indicator,type,options]);
+  useEffect(()=>{if(options&&code&&!territories.some(t=>t.codigo===code))setCode('');},[indicator,type,options]);
   function submit(event:FormEvent){event.preventDefault();void query(type,code,disease,start,end,indicator);}
   return <div className="filter-control"><button className="filter-trigger secondary" aria-haspopup="dialog" aria-expanded={expanded} onClick={()=>{filterDialog.current?.showModal();setExpanded(true);}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="#171717"/><circle cx="15" cy="17" r="3" fill="#171717"/></svg>Filtrar</button>
   <Notice message={!expanded?error:''}/>
@@ -132,7 +146,7 @@ export function SeriesChart({ data }: {data:Indicators|null}) {
       <rect x={x(Math.max(0,points.length-4))} y="26" width={plotRight-x(Math.max(0,points.length-4))} height="140" fill="#8cabee16"/>
       {[0,.5,1].map(f=><g key={f}><line x1={plotLeft} x2={plotRight} y1={y(max*f)} y2={y(max*f)} stroke="#343a45"/><text className="chart-axis-value" x={plotLeft-8} y={y(max*f)+4} textAnchor="end">{(max*f).toLocaleString('pt-BR',{notation:'compact',maximumFractionDigits:1})}</text></g>)}
       <path d={path} fill="none" stroke="#8cabee" strokeWidth="2"/><path d={averagePath} fill="none" stroke="#ddd" strokeWidth="1.5" strokeDasharray="5 4"/>
-      {points.map((p,i)=>p.anomalia&&p.casos!=null?<circle key={p.data} cx={x(i)} cy={y(p.casos)} r="4" fill="#efb768"><title>{p.data}: {number(p.casos)} casos; acima do limiar {p.limiar?.toFixed(1)}</title></circle>:null)}
+      {points.map((p,i)=>p.anomalia&&p.casos!=null?<circle key={p.data} cx={x(i)} cy={y(p.casos)} r="4" fill="#efb768"><title>{p.data}: {number(p.casos)} casos; acima do limiar {p.limiar==null?'não informado':exactDecimal(p.limiar)}</title></circle>:null)}
       {selected && active!==null && <g aria-hidden="true"><line x1={x(active)} x2={x(active)} y1="26" y2="166" stroke="#b8cbf1" strokeDasharray="3 4"/>{selected.casos!==null && <circle cx={x(active)} cy={y(selected.casos)} r="4" fill="#8cabee" stroke="#111" strokeWidth="2"/>}</g>}
       {[0,Math.floor((points.length-1)/2),points.length-1].filter((v,i,a)=>a.indexOf(v)===i).map(i=><text key={i} x={x(i)} y="192" textAnchor={i===0?'start':i===points.length-1?'end':'middle'}>{points[i].data.slice(5).split('-').reverse().join('/')}</text>)}
     </svg>{selected && active!==null && <div id={tooltipId} role="tooltip" ref={tooltip} className={`chart-tooltip ${cursor?'chart-tooltip-follow':active>=(points.length-1)/2?'chart-tooltip-right':''}`} style={cursor?{left:cursor.x-12,top:cursor.y-20,maxWidth:Math.max(1,Math.min(280,cursor.x-24))}:{left:`${x(active)/360*100}%`}}><strong>Semana de {selected.data.split('-').reverse().join('/')}</strong><dl><div><dt>Casos</dt><dd>{selected.casos===null?'Sem dados':number(selected.casos)}</dd></div><div><dt>Média de 4 semanas</dt><dd>{averages[active]===null?'Base insuficiente':averages[active]!.toLocaleString('pt-BR',{maximumFractionDigits:1})}</dd></div></dl>{selected.anomalia && <span className="anomaly-key">Acima do padrão</span>}</div>}</div><ul className="chart-legend" aria-label="Legenda do gráfico">

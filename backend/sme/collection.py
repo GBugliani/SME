@@ -29,7 +29,6 @@ def normalized(value):
     return " ".join("".join(c if c.isalnum() else " " for c in plain).split())
 
 
-# A API usa a grafia "Luís" para o código que o catálogo do IBGE nomeia "Luiz".
 INFO_DENGUE_NAME_ALIASES = {'3550001': {'sao luis do paraitinga'}}
 
 

@@ -7,7 +7,7 @@ export function DataFreshness({data}:{data:Indicators}){
   const a=data.atualidade;
   return <section className="card data-freshness" aria-label="Atualidade dos dados"><div className="section-heading"><h3>Atualidade dos dados</h3></div>
     <p className="muted">Última semana na base</p><strong className="freshness-date">{day(a.ultima_semana_base)}</strong>
-    <p><span className={`badge ${a.defasagem_semanas!==null&&a.defasagem_semanas>=4?'data-age-warning':'inactive'}`}>{a.defasagem_semanas===null?'Sem contagens disponíveis':a.defasagem_semanas===0?'Semana recente':`${a.defasagem_semanas} semanas de defasagem`}</span></p>
+    <p><span className={`badge ${a.defasagem_semanas!==null&&a.defasagem_semanas>=4?'data-age-warning':'inactive'}`}>{a.defasagem_semanas===null?'Sem contagens disponíveis':a.defasagem_semanas===0?'Semana recente':`${a.defasagem_semanas} ${a.defasagem_semanas===1?'semana':'semanas'} de defasagem`}</span></p>
     {a.periodo_historico&&<p>O filtro mostra um período histórico. Há semanas mais recentes armazenadas nesta origem e território.</p>}
     {data.territorio.tipo==='regiao'&&<small>A última semana pode estar disponível apenas em parte dos municípios.</small>}
   </section>;

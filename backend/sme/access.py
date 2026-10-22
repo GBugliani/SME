@@ -11,7 +11,6 @@ def permissions_for(user):
         return []
     if user.is_staff or user.is_superuser:
         return list(PERMISSIONS)
-    # Compatibilidade com createuser e cadastro público: nunca concede escrita.
     if user.perfil_id is None:
         return ['exportar_dados']
     return [p for p in user.perfil.permissoes if p in PERMISSIONS]

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from django.db import transaction
 from django.utils import timezone
 from .collection import CollectionError
+from .alert_presentation import alert_message
 from .datasets import DATASETS
 from .detectors import METHODS, PARAMETERS, strategy
 from .models import (PerfilAcesso, ConfiguracaoDeteccao, RecorteGeografico, Anomalia,
@@ -15,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 def lock_detection():
-    # Mesmo lock das alterações administrativas: uma ativação não cruza uma análise.
     return PerfilAcesso.objects.select_for_update().get(codigo='administrador')
 
 
@@ -67,12 +67,12 @@ def analyze_territory(territory_id, indicator, expected_config=None, notify_emai
             defaults={k:v for k,v in item.items() if k!='data'} | {'ativa':True})
         values = {'anomalia_id':anomaly.pk, 'lote_id':record.lote_id,
             'titulo':f'Crescimento acima do padrão · {territory.nome}',
-            'mensagem': f'{DATASETS[indicator]["agravo_nome"]}: {item["observado"]} casos na semana de {day:%d/%m/%Y}, acima do limiar {item["limiar"]:.1f}. Sinal de possível surto para investigação; não confirma ocorrência.',
+            'mensagem': alert_message(DATASETS[indicator]['agravo_nome'], item['observado'], day, item['limiar']),
             'observado':item['observado'], 'referencia':item['referencia'], 'limiar':item['limiar'],
             'ativa':True, 'motivo_encerramento':''}
         alert, created = AlertaSurto.objects.get_or_create(recorte_id=territory_id, indicador=indicator,
             data_referencia=day, configuracao=config, defaults=values)
-        revised = not created and any(getattr(alert, key)!=value for key,value in values.items())
+        revised = not created and any(getattr(alert, key)!=value for key,value in values.items() if key!='mensagem')
         if revised:
             for key,value in values.items(): setattr(alert, key, value)
             alert.revisao += 1
@@ -92,7 +92,6 @@ def job_data(job):
 
 
 def run_next_job():
-    # Trabalho ao menos uma vez. Uma execução interrompida volta à fila; análises são idempotentes.
     with transaction.atomic():
         ReanaliseDeteccao.objects.filter(status='executando', atualizada_em__lt=timezone.now()-timedelta(minutes=10)).update(status='pendente')
         job = ReanaliseDeteccao.objects.select_for_update(skip_locked=True).filter(status='pendente').order_by('pk').first()
