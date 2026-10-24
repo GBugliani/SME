@@ -48,6 +48,9 @@ _local_origins = "http://localhost:5173,http://127.0.0.1:5173" if DEBUG else ""
 CSRF_TRUSTED_ORIGINS = [v for v in os.environ.get("CSRF_TRUSTED_ORIGINS", _local_origins).split(",") if v]
 CSRF_FAILURE_VIEW = "sme.views.csrf_failure"
 SECURE_SSL_REDIRECT = not DEBUG
+# Chamadas internas pelo Compose usam HTTP; o nginx público bloqueia /api/internal/.
+# A coleta exige COLETA_TOKEN. O healthcheck retorna apenas o estado do banco.
+SECURE_REDIRECT_EXEMPT = [r"^api/internal/(?:coleta|health)/$"]
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 if os.environ.get("TRUST_PROXY", "false").lower() == "true":

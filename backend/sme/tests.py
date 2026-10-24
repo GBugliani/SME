@@ -134,6 +134,11 @@ class SprintOneTests(TestCase):
     @override_settings(SECURE_SSL_REDIRECT=True)
     def test_production_redirects_to_https(self):
         self.assertEqual(self.client.get('/api/auth/me/').status_code, 301)
+        self.assertEqual(self.client.get('/api/health/').status_code, 301)
+        self.assertEqual(self.client.get('/api/internal/health/').status_code, 200)
+        self.assertEqual(self.client.post('/api/internal/coleta/').status_code, 403)
+        self.assertEqual(self.client.get('/api/internal/coleta/').status_code, 405)
+        self.assertEqual(self.client.post('/api/internal/coleta/outra/').status_code, 301)
 
     @override_settings(CSRF_TRUSTED_ORIGINS=['http://127.0.0.1:5173'])
     def test_dev_proxy_origin_allowed_but_foreign_origin_rejected(self):

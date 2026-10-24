@@ -22,7 +22,7 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Execute scripts/setup.ps1 antes de iniciar}
-      DJANGO_DEBUG: "true"
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
       COLETA_TOKEN: ${COLETA_TOKEN:?Execute scripts/setup.ps1 para configurar a coleta}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
       CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}
@@ -42,7 +42,7 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/internal/health/', timeout=4)"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -51,7 +51,7 @@ services:
     image: sme-backend
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Execute scripts/setup.ps1 antes de iniciar}
-      DJANGO_DEBUG: "true"
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
       POSTGRES_DB: ${POSTGRES_DB:-sme}
       POSTGRES_USER: ${POSTGRES_USER:-sme}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -65,7 +65,7 @@ services:
     image: sme-backend
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Execute scripts/setup.ps1 antes de iniciar}
-      DJANGO_DEBUG: "true"
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
       POSTGRES_DB: ${POSTGRES_DB:-sme}
       POSTGRES_USER: ${POSTGRES_USER:-sme}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -79,7 +79,7 @@ services:
     image: sme-backend
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Execute scripts/setup.ps1 antes de iniciar}
-      DJANGO_DEBUG: "true"
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
       POSTGRES_DB: ${POSTGRES_DB:-sme}
       POSTGRES_USER: ${POSTGRES_USER:-sme}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

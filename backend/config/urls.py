@@ -32,6 +32,7 @@ urlpatterns = [
     path("api/indicadores/opcoes/", views.indicator_options),
     path("api/indicadores/", views.indicators),
     path("api/internal/coleta/", views.scheduled_collection),
+    path("api/internal/health/", views.health),
     path("api/fontes/<int:source_id>/coletas/", views.source_collection),
     path("api/health/", views.health),
     path("api/auth/csrf/", views.csrf),

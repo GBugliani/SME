@@ -25,7 +25,20 @@ O primeiro build baixa imagens e dependências, por isso precisa de internet. As
 
 O menu de perfil mostra a versão do SME e a data/hora da compilação. A numeração considera também os commits anteriores à adoção do versionamento: com 15 commits existentes, a árvore local foi preparada como `0.1.16` para o próximo commit. Antes de cada novo commit, conte os commits existentes com `git rev-list --count HEAD` e use `0.1.(contagem + 1)` em `frontend/package.json`, incluindo a mudança no próprio commit. Se essa versão já estiver preparada e ainda não tiver sido comitada, não a incremente novamente. Um push de commits já criados não muda a versão. Os commits anteriores não são reescritos; por exemplo, o commit `984d0e2` ainda contém `0.1.0` no arquivo, apesar de ser o 15º da história. A data de compilação só muda depois de reconstruir o frontend (`docker compose up -d --build frontend` ou pelo processo automático de deploy).
 
-Em um servidor com domínio público, configure no `.env` `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,seu-dominio` e `CSRF_TRUSTED_ORIGINS=https://seu-dominio`. O Compose repassa essas variáveis ao backend; depois de alterá-las, recrie o serviço com `docker compose up -d --force-recreate backend`. Um domínio ausente de `DJANGO_ALLOWED_HOSTS` causa HTTP 400 nas chamadas da API.
+Em um servidor com domínio público, configure no `.env` `DJANGO_DEBUG=false`, `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,seu-dominio` e `CSRF_TRUSTED_ORIGINS=https://seu-dominio`. Defina também segredos próprios para `DJANGO_SECRET_KEY`, `POSTGRES_PASSWORD` e `COLETA_TOKEN`; mantenha o `.env` fora do Git. O Compose repassa `DJANGO_DEBUG` aos quatro serviços Django e assume `false` quando a variável não está definida. O script `setup.ps1` marca `true` somente no ambiente local de desenvolvimento. Um domínio ausente de `DJANGO_ALLOWED_HOSTS` causa HTTP 400 nas chamadas da API.
+
+Antes de publicar, confirme que o proxy externo entrega HTTPS, que apenas ele pode alcançar o frontend local e que as portas do banco, backend e Airflow não estão expostas publicamente. A API usa cookies seguros, HSTS e redirecionamento para HTTPS quando `DJANGO_DEBUG=false`. O nginx do frontend bloqueia `/api/internal/`; Airflow e healthcheck acessam essas rotas pela rede interna do Compose via HTTP. Configure `TRUST_PROXY` somente após validar que o proxy confiável substitui `X-Forwarded-Proto` corretamente; essa variável não é repassada pelo Compose padrão. Se o proxy TLS termina antes do nginx do frontend, revise também o encaminhamento do esquema no nginx, que hoje envia `$scheme` ao backend.
+
+Depois de alterar o `.env`, recrie backend, detector, collector e mailer para que todos recebam os mesmos valores. Confira o resultado sem imprimir segredos:
+
+```sh
+sudo docker compose up -d --force-recreate backend detector collector mailer
+sudo docker compose exec -T backend python manage.py check --deploy
+sudo docker compose exec -T backend python manage.py shell -c "from django.conf import settings; print('DEBUG=', settings.DEBUG, 'HTTPS_REDIRECT=', settings.SECURE_SSL_REDIRECT, 'SESSION_COOKIE_SECURE=', settings.SESSION_COOKIE_SECURE, 'CSRF_COOKIE_SECURE=', settings.CSRF_COOKIE_SECURE)"
+sudo docker compose ps
+```
+
+`check --deploy` é uma verificação de segurança do Django, não substitui um teste da rota pública por HTTPS, do healthcheck e das execuções diárias do Airflow. Configure SMTP no `.env` se o envio de alertas por e-mail for necessário e valide um envio de teste. Mantenha backups do volume PostgreSQL e acompanhe falhas de coleta e processamento.
 
 Abra [SME local](http://localhost:8080). Use sempre o mesmo endereço para preservar cookies e sessão. O banco não publica uma porta na rede. Por padrão, a interface escuta somente em `127.0.0.1`, inclusive no servidor.
 
