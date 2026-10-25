@@ -46,7 +46,6 @@ def run_next_initial_collection():
         try:
             run = collect_source(source.pk, origin='inicial')
         except CollectionError as exc:
-            # A coleta manual ou diária pode ter começado entre a checagem e a execução.
             job.status = 'ignorada' if source.coletas.exists() else 'erro'
             job.mensagem = str(exc)[:300]
         else:

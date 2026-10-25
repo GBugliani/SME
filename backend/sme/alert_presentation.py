@@ -2,8 +2,6 @@
 
 
 def decimal_pt(value):
-    # str(float) preserva a precisão necessária para recuperar o valor usado
-    # na comparação; arredondar aqui pode transformar 6 > 5,97 em 6 > 6.
     return str(value).replace('.', ',')
 
 

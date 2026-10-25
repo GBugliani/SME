@@ -18,7 +18,6 @@ export function useTimedMessage(duration=8000):[string,(message:string)=>void] {
   const show=useCallback((value:string)=>{
     if(timer.current!==null)clearTimeout(timer.current);
     timer.current=null;setMessage(value);
-    // Mesmo uma mensagem idêntica inicia um novo prazo.
     if(value)timer.current=setTimeout(()=>{timer.current=null;setMessage('');},duration);
   },[duration]);
   useEffect(()=>()=>{if(timer.current!==null)clearTimeout(timer.current);},[]);

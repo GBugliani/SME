@@ -8,7 +8,8 @@ Django foi adotado para reaproveitar autenticação, hash de senha, sessões, pe
 
 ## Consulta e interface
 
-- O catálogo `datasets.py` define contratos de integração. Coleta, normalização, série e consulta identificam o mesmo provedor/agravo/definição. InfoDengue (dengue, chikungunya e zika), InfoGripe (SRAG da capital) e SIVEP-Gripe/MS (SRAG total municipal) têm adaptadores próprios. O SIVEP compartilha o original nacional entre lotes municipais via ArquivoColeta, com cache de download por uma hora em RecursoColeta. [Detalhes, migração e limites](MULTIPLOS_PROVEDORES.md).
+- O contorno do estado de São Paulo vem da API de Malhas do IBGE. A divisão usada para escolher regiões segue a [Divisão Regional do Brasil em Regiões Geográficas Imediatas e Intermediárias (IBGE, 2017)](https://biblioteca.ibge.gov.br/visualizacao/livros/liv100600.pdf); os códigos imediatos ficam em `frontend/src/regions.json`. As regiões do mapa são recortes geográficos.
+- O catálogo `datasets.py` define contratos de integração. Coleta, normalização, série e consulta identificam o mesmo provedor/agravo/definição. InfoDengue (dengue, chikungunya e zika), InfoGripe (SRAG da capital), SIVEP-Gripe/MS (SRAG total municipal) e e-SUS Notifica (síndrome gripal por COVID-19) têm adaptadores próprios. O SIVEP e o e-SUS compartilham o original nacional entre lotes municipais via ArquivoColeta, com cache de download por uma hora em RecursoColeta. [Detalhes, migração e limites](MULTIPLOS_PROVEDORES.md).
 - Novos lotes preservam bytes originais, hash, URL e metadados; lotes legados conservam o JSON/hash existente e são identificados como tal. A consulta exige selecionar a origem quando há indicadores distintos, impedindo a mistura de provedores.
 
 - `GET /api/fontes/?q=TERMO&page=N` exige autenticação e filtra antes da paginação de 20 fontes. Os termos são combinados: cada termo deve estar no nome da fonte, nome/código/UF do recorte ou URL. A pesquisa não acessa URLs externas nem altera cadastros. Não há normalização de acentos nesta consulta.
@@ -25,7 +26,7 @@ Django foi adotado para reaproveitar autenticação, hash de senha, sessões, pe
 - Sessão armazenada no banco, expiração de oito horas e cookie HttpOnly. Logout invalida a sessão. HTTPS/cookies seguros habilitados fora do modo debug.
 - CSRF inclusive no login; dados de autenticação não vão para localStorage. Cinco erros de login por conta suspendem tentativas por 15 minutos, em estado compartilhado no banco.
 - Redefinição de senha exige acesso administrativo, confirmação da senha do administrador e validação da nova senha. Cinco erros de confirmação suspendem tentativas por 15 minutos. O evento é auditado sem segredos e as sessões da conta alterada são encerradas; administradores comuns não podem redefinir contas de superusuário.
-- Limitação por conta deve ser complementada por limite de requisições no proxy, controle de tentativas distribuídas e limpeza periódica de registros expirados antes de publicação.
+- A limitação por conta ainda precisa ser complementada por limite de requisições no proxy, controle de tentativas distribuídas e limpeza periódica de registros expirados para uma operação sustentada.
 - URLs cadastradas devem ser HTTPS e não podem conter credenciais nem apontar literalmente para IP privado. O cadastro não acessa a URL. O coletor InfoDengue usa destino fixo permitido, verifica DNS/IP público, fixa a conexão no IP e rejeita redirects. Novos adaptadores devem preservar essas barreiras; a validação cadastral sozinha não é suficiente contra SSRF.
 - Não são importados dados individuais de pacientes nesta etapa. Segredos ficam fora do versionamento.
 
@@ -45,9 +46,3 @@ Django foi adotado para reaproveitar autenticação, hash de senha, sessões, pe
 `ReanaliseDeteccao` é a fila durável. O serviço Compose `detector` executa `process_detection_jobs --loop`, reivindicando tarefas com lock e recuperando execuções sem progresso após dez minutos. Alterações administrativas e análise compartilham um lock transacional. Configurações substituídas não continuam publicando novas análises.
 
 A comparação exige uma mesma origem/agravo e dois a quatro territórios, com a mesma configuração fixada na resposta. Ausências são preservadas e a cobertura regional parcial é explícita. O desempenho das consultas continua separado do processamento em segundo plano.
-
-## Evolução e publicação
-
-As três caixas de servidores no diagrama são responsabilidades separadas. No desenvolvimento podem executar na mesma máquina em containers. A publicação deve separar aplicação, processamento e banco logicamente e permitir separação física conforme uso, sem exigir três servidores pagos logo no início.
-
-O Compose é exclusivamente local. HTTPS, backups diários com restauração testada, observabilidade, política de retenção e execução confiável do pipeline em produção são requisitos do release.

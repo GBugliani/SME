@@ -217,12 +217,10 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
   }
   function moveMap(target: typeof mapView, animated=true, duration=700) {
     cancelMapAnimation();
-    // Anima apenas o grupo SVG; não reconstrói os 645 municípios em cada quadro.
     const regionLabels=mapGroup.current?.querySelectorAll<SVGGElement>('.map-region-labels > g');
     const write=(view:typeof mapView,commit=true)=>{
       currentMapView.current=view;
       mapGroup.current?.setAttribute('transform',`translate(${view.pan.x} ${view.pan.y}) translate(360 220) scale(${view.zoom}) translate(-360 -220)`);
-      // Mantém os nomes das regiões legíveis durante o zoom animado.
       const labelScale=Math.max(.01,mapPixelScaleRef.current*view.zoom);
       regionLabels?.forEach(label=>{
         const {regionX,regionY,offsetX,offsetY}=label.dataset;
@@ -238,7 +236,6 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
       if(innerWidth<=760 && !document.hidden && lastFrame){
         frames++;
         if(now-lastFrame>42)slowFrames++;
-        // Quadros repetidamente acima de 42 ms indicam que este aparelho não acompanha o SVG.
         if(frames>=12 && slowFrames>=5){
           reducedMapAnimation.current=true;
           mapAnimation.current=null;
@@ -302,7 +299,6 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
     if (area.bottom-area.top<140 || area.right-area.left<140) area = {left:24,right:innerWidth-24,top:120,bottom:innerHeight-80};
     const inverse=matrix.inverse();
     const a=new DOMPoint(area.left,area.top).matrixTransform(inverse), b=new DOMPoint(area.right,area.bottom).matrixTransform(inverse);
-    // Margem mantém os municípios vizinhos visíveis; o estado inteiro cabe mesmo em telas estreitas.
     const fill=mode==='regiao' ? (innerWidth<=760?.86:.72) : mode==='passeio' ? .68 : (innerWidth<=760?.94:.8);
     const next=Math.min(mode==='passeio'?5.5:10, Math.max(.1, Math.min((b.x-a.x)/Math.max(1,right-left),(b.y-a.y)/Math.max(1,bottom-top))*fill));
     zoomAnchor.current={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
@@ -388,15 +384,12 @@ function Workspace({ user, onLogout, onUserChanged }: { user: User; onLogout: ()
     if(tab!=='inicio') return;
     let frame=0;
     let layout='';
-    // Alterações de layout (inclusive a barra de rolagem) não devem interromper uma viagem em curso.
     const resize=()=>{
       cancelAnimationFrame(frame);
       frame=requestAnimationFrame(()=>{
         const svg=mapRef.current;
         const panel=svg?.closest('.territory-panel');
         if(!svg || !panel) return;
-        // A barra de endereço móvel dispara resize durante a rolagem. Só reenquadrar
-        // quando o tamanho do mapa/painel mudar, nunca por sua posição na página.
         const mapBounds=svg.getBoundingClientRect(), panelBounds=panel.getBoundingClientRect();
         const next=[mapBounds.width,mapBounds.height,panelBounds.width,panelBounds.height].map(Math.round).join(':');
         if(next===layout) return;

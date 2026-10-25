@@ -2,7 +2,7 @@
 services:
   backend:
     environment:
-      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend,192.168.10.67
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend,192.168.1.1
   frontend:
     ports:
-      - "192.168.10.67:8080:80"
+      - "192.168.1.1:8080:80"

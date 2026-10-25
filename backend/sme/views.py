@@ -281,7 +281,6 @@ def source_collection(request, source_id):
 @csrf_exempt
 @require_POST
 def scheduled_collection(request):
-    # Credencial separada para chamada interna do Airflow; nenhuma sessão de usuário.
     token = settings.COLLECTION_TOKEN
     supplied = request.headers.get("X-Coleta-Token", "")
     if not token or not secrets.compare_digest(token, supplied):

@@ -45,7 +45,6 @@ def raw_rows(data):
 
 
 def csv_cell(value):
-    # Evita interpretação de conteúdo cadastrado como fórmula em planilhas.
     if value is None:
         return ''
     if isinstance(value, str) and (value.lstrip().startswith(('=', '+', '-', '@')) or value.startswith(('\t', '\r', '\n'))):

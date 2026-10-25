@@ -144,7 +144,6 @@ def get_adapter(source):
     return factory(spec['agravo'])
 
 
-# Alias conservado para integrações internas antigas; novas chamadas usam get_adapter.
 ADAPTERS = {"infodengue": InfoDengueAdapter()}
 
 
@@ -155,7 +154,6 @@ def collect_source(source_id, *, origin="manual", user=None):
             raise CollectionError("A fonte está arquivada.")
         if not source.ativa:
             raise CollectionError("A fonte está desabilitada.")
-        # Libera execuções interrompidas pelo desligamento do container.
         source.coletas.filter(status="executando", iniciada_em__lt=timezone.now() - timedelta(minutes=10)).update(status="erro", finalizada_em=timezone.now(), mensagem="Execução interrompida; liberada para nova tentativa.")
         if source.coletas.filter(status="executando").exists():
             raise CollectionError("Já existe uma coleta em execução para esta fonte.")
@@ -170,13 +168,10 @@ def collect_source(source_id, *, origin="manual", user=None):
             **({'url':effective.url} if source.periodo_movel else {}),
             "arquivo":hashlib.sha256(adapter.raw_body).hexdigest() if getattr(adapter,"raw_body",None) is not None else None,"dados":data}, sort_keys=True, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode()).hexdigest()
         with transaction.atomic():
-            # Não persiste resultado de uma configuração modificada durante a coleta.
             current = FonteEpidemiologica.objects.select_for_update().get(pk=source.pk)
             if current.arquivada_em is not None or not current.ativa or current.atualizada_em != source.atualizada_em:
                 raise CollectionError("A configuração da fonte mudou durante a coleta; resultado descartado.")
             if adapter.name in ('sivep', 'esus'):
-                # Uma versão A pode reaparecer após B. Ela é uma revisão nova,
-                # não um reprocessamento do lote antigo que seria ignorado.
                 latest = source.lotes.defer('conteudo_original').order_by('-pk').first()
                 raw_hash = hashlib.sha256(adapter.raw_body).hexdigest()
                 if latest and latest.url_origem == effective.url and latest.sha256_original == raw_hash and latest.dados_brutos == data:
@@ -235,9 +230,8 @@ def collect_all(*, origin="airflow"):
         try:
             runs.append(collect_source(source_id, origin=origin))
         except CollectionError:
-            continue  # Fonte já em execução/desabilitada.
+            continue
     return runs
 
 
-# Compatibilidade com comandos e chamadas da primeira entrega.
 collect_pilot = collect_all

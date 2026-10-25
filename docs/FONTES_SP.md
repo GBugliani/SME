@@ -2,21 +2,17 @@
 
 ## Escopo atual
 
-O piloto começou com **dengue em São Paulo capital**, usando **InfoDengue**, e já foi ampliado para os municípios paulistas do catálogo de 645 municípios do IBGE. Apenas fontes cadastradas, compatíveis e habilitadas são coletadas; isso não comprova que a API tenha dados completos para todos os municípios e períodos.
+O piloto começou com **dengue em São Paulo capital**, usando **InfoDengue**, e já foi ampliado para os municípios paulistas do catálogo de 645 municípios do IBGE. Apenas fontes cadastradas, compatíveis e habilitadas são coletadas.
 
 O sistema também integra **chikungunya e zika pelo InfoDengue**, **SRAG de São Paulo capital pelo InfoGripe**, **SRAG total municipal pelo SIVEP-Gripe** e **síndrome gripal por COVID-19 pelo e-SUS Notifica**. Nas duas fontes do Ministério da Saúde, o administrador escolhe os municípios paulistas e um ano fixo ou acompanhamento contínuo; dados só aparecem quando a fonte tem registros publicados e foi coletada. Veja [Múltiplos provedores e agravos](MULTIPLOS_PROVEDORES.md) para definições e limites.
 
 Como administrador, escolha provedor, agravo, município e, no InfoDengue, anos em **Fontes de dados → Cadastrar fonte**. A URL, o código IBGE e o nome são preenchidos pelo sistema. O campo **Pesquisar fontes** localiza cadastros por município, código IBGE, UF, nome ou termos da URL; o resultado é paginado. Usuários comuns também podem pesquisar e consultar, sem editar ou coletar manualmente.
 
-Não é necessário restringir o desenho do banco a SP. O custo está sobretudo em baixar/processar arquivos brutos volumosos e em repetir consultas, e não em guardar algumas centenas de observações semanais por município. Exemplo ilustrativo: 10 municípios × 52 semanas × 5 anos × 1 agravo = aproximadamente 2.600 registros. Isso não é benchmark nem garantia de tempo de resposta.
-
 ## O que foi verificado
 
-Em 04/10/2026 foi feita uma consulta pública de dengue de São Paulo capital (IBGE 3550308) para as semanas 1 a 52 de 2024. A API respondeu com **52 registros semanais** e identificou o município como São Paulo. Na verificação inicial, nenhum dado foi importado. Em 05/10/2026, o coletor implementado importou esses 52 registros brutos no PostgreSQL, preservando origem e histórico das execuções. Veja o [guia de integrações](MULTIPLOS_PROVEDORES.md).
+Veja o [Guia de integrações](MULTIPLOS_PROVEDORES.md) e [Consulta de amostra](https://info.dengue.mat.br/api/alertcity?geocode=3550308&disease=dengue&format=json&ew_start=1&ew_end=52&ey_start=2024&ey_end=2024).
 
-[Consulta de amostra](https://info.dengue.mat.br/api/alertcity?geocode=3550308&disease=dengue&format=json&ew_start=1&ew_end=52&ey_start=2024&ey_end=2024)
-
-O [serviço público](https://info.dengue.mat.br/services/api) permite filtrar município, agravo, período e formato. A [documentação da API](https://info.dengue.mat.br/services/api/doc) explica os parâmetros `geocode`, `disease`, `format`, `ew_start`, `ew_end`, `ey_start` e `ey_end`. Alguns exemplos de documentação citam Rio de Janeiro, mas a consulta de SP acima foi verificada diretamente.
+O [serviço público](https://info.dengue.mat.br/services/api) permite filtrar município, agravo, período e formato. A [documentação da API](https://info.dengue.mat.br/services/api/doc) explica os parâmetros `geocode`, `disease`, `format`, `ew_start`, `ew_end`, `ey_start` e `ey_end`.
 
 ## Cuidados para a integração
 
@@ -28,6 +24,4 @@ O [serviço público](https://info.dengue.mat.br/services/api) permite filtrar m
 - Validar licença, atribuição, limites de uso e estabilidade do endpoint antes da integração regular.
 - Conferir cobertura e qualidade de cada município adicional; uma resposta bem-sucedida para a capital não prova cobertura completa do estado.
 
-O endpoint de amostra tem período fixo e serve para homologação. O coletor atual respeita o período cadastrado. Antes de operar o monitoramento atual, é necessário configurar um período recente; janelas móveis serão tratadas em uma etapa posterior.
-
-InfoGripe/SIVEP-Gripe tem integração específica para a série semanal de SRAG da capital, sem filtro de febre. Outros recortes e vírus do InfoGripe não são habilitados automaticamente. Para SRAG total nos demais municípios, escolha a integração separada SIVEP-Gripe / Ministério da Saúde. Ela lê as planilhas municipais oficiais, sem transformar ausência de linhas em zero.
+O endpoint de amostra acima tem período fixo e serve para homologação. O coletor respeita o período cadastrado. Para acompanhar publicações novas, o administrador pode escolher **Acompanhamento contínuo**: no InfoDengue, ele consulta o ano atual e o anterior em cada execução. Isso não garante que a fonte já tenha publicado todas as semanas solicitadas.

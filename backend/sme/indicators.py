@@ -44,8 +44,6 @@ def options():
     regions = {v['regiao_codigo']:v['regiao_nome'] for v in REGIONS.values() if v['regiao_codigo'] in region_codes}
     signals = []
     if latest:
-        # A última semana isolada pode ter recuado após uma alta recente. Mantemos
-        # a sinalização visível apenas nas quatro semanas disponíveis seguintes.
         newest_relevant = max(day for day, _ in latest.values())
         oldest_relevant = newest_relevant - timedelta(days=21)
         for code, indicator, day, observed, threshold in AlertaSurto.objects.filter(

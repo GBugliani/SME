@@ -41,7 +41,6 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
   const optionsCallback = useRef(onOptions); optionsCallback.current=onOptions;
   const appliedDataRef = useRef(appliedData); appliedDataRef.current=appliedData;
   async function query(t:string,c:string,a:string,s:string,e:string,i:string,closeOnSuccess=true) {
-    // Mantém a consulta anterior visível até a nova estar pronta, sem desmontar o painel/mapa.
     const version=++requestVersion.current; setBusy(true); setError('');
     try {
       const params = new URLSearchParams({tipo:t,codigo:c,agravo:a,indicador:i});

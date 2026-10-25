@@ -42,7 +42,10 @@ Não use `down -v` para desligar normalmente: essa opção apaga o volume do ban
 - [Arquitetura e decisões](docs/ARQUITETURA.md)
 - [Fontes de dados para São Paulo](docs/FONTES_SP.md)
 - [Múltiplos provedores e agravos: uso, limites e validação](docs/MULTIPLOS_PROVEDORES.md)
-- [Atualidade dos dados, acompanhamento contínuo e qualidade](docs/ACOMPANHAMENTO_CONTINUO.md)
+- [Detecção e alertas](docs/DETECCAO.md)
+- [Usuários, perfis e exportação](docs/IAM.md)
+
+O [documento acadêmico](docs/Documentacao_Software_Sistema_Monitoramento_Epidemiológico.docx) reúne especificações e diagramas, que não devem ser lidos como uma transcrição literal do código. O [painel de indicadores](docs/Painel%20de%20indicadores%20epidemiológic.txt) é uma proposta inicial preservada para consulta histórica.
 
 ## Testes
 

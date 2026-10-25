@@ -35,8 +35,6 @@ def audit(actor, action, entity, pk, before, after):
 
 
 def lock_administration(request):
-    # Uma mesma linha serializa edições de administradores, perfis e atribuições.
-    # Revalida o ator depois do lock, inclusive caso outra sessão o tenha desativado.
     PerfilAcesso.objects.select_for_update().get(codigo='administrador')
     if not Usuario.objects.filter(pk=request.user.pk, is_active=True, is_staff=True).exists():
         raise PermissionError('Seu acesso administrativo foi removido. Entre novamente.')
@@ -102,7 +100,6 @@ def save_user(request, user_id=None):
             user.full_clean()
             user.save()
             if before and before['ativo'] and not user.is_active:
-                # Reativar a conta no futuro não deve reativar cookies antigos.
                 for session in Session.objects.filter(expire_date__gt=timezone.now()).iterator():
                     if session.get_decoded().get('_auth_user_id') == str(user.pk):
                         session.delete()
