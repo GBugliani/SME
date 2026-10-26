@@ -188,10 +188,21 @@ def sources(request):
         return persist_source(request)
     from .models import ProcessamentoLote
     latest_processing = ProcessamentoLote.objects.filter(lote__fonte=OuterRef("pk")).order_by("-lote__criada_em", "-pk").values("status")[:1]
+    latest_processing_records = ProcessamentoLote.objects.filter(lote__fonte=OuterRef("pk")).order_by("-lote__criada_em", "-pk").values("quantidade_registros")[:1]
+    from .models import ColetaInicial
+    latest_run = ExecucaoColeta.objects.filter(fonte=OuterRef("pk")).order_by("-iniciada_em", "-pk")
+    latest_run_status = latest_run.values("status")[:1]
+    latest_run_records = latest_run.values("quantidade_registros")[:1]
+    initial_status = ColetaInicial.objects.filter(fonte=OuterRef("pk")).values("status")[:1]
     archived_param = request.GET.get("arquivadas", "0")
     if archived_param not in ("0", "1"):
         return error("Filtro de fontes arquivadas inválido.")
     archived = archived_param == "1"
+    status_filter = request.GET.get("situacao", "")
+    if status_filter not in ("", "problemas"):
+        return error("Filtro de situação das fontes inválido.")
+    if archived and status_filter:
+        return error("Não é possível combinar fontes arquivadas e fontes com problemas.")
     if archived and not can(request.user, "gerenciar_fontes"):
         return error("Esta ação requer permissão para gerenciar fontes.", 403)
     visible = FonteEpidemiologica.objects.filter(arquivada_em__isnull=True)
@@ -201,8 +212,23 @@ def sources(request):
         queryset = queryset.filter(Q(nome__icontains=term) | Q(recorte__nome__icontains=term)
                                    | Q(recorte__codigo__icontains=term) | Q(recorte__uf__icontains=term)
                                    | Q(url__icontains=term) | Q(indicador__icontains=term))
+    if status_filter == "problemas":
+        queryset = queryset.annotate(
+            latest_run_status=Subquery(latest_run_status),
+            latest_run_records=Subquery(latest_run_records),
+            latest_processing_status=Subquery(latest_processing),
+            latest_processing_records=Subquery(latest_processing_records),
+            initial_status=Subquery(initial_status),
+        ).filter(
+            Q(latest_run_status__in=("erro", "vazia"))
+            | Q(latest_run_status="sucesso", latest_run_records=0)
+            | Q(latest_processing_status="erro")
+            | Q(latest_processing_status="sucesso", latest_processing_records=0)
+            | Q(latest_run_status__isnull=True, initial_status__in=("erro", "ignorada", "concluida"))
+            | Q(latest_run_status__isnull=True, initial_status__isnull=True)
+        )
     page = Paginator(queryset, 20).get_page(request.GET.get("page", 1))
-    return JsonResponse({"sources": [source_data(s) for s in page], "arquivadas": archived,
+    return JsonResponse({"sources": [source_data(s) for s in page], "arquivadas": archived, "situacao": status_filter,
                          "count": page.paginator.count,
                          "page": page.number, "pages": page.paginator.num_pages,
                          "coleta_realizada": visible.filter(ultima_coleta_em__isnull=False).exists(),

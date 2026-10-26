@@ -22,7 +22,7 @@ export function CompactOverview({data}:{data:Indicators|null}) {
 
 export function CompactRecent({data,latestWeek}:{data:Indicators|null;latestWeek:Point|undefined}) {
   return <section className="card compact-dashboard-card" aria-label="Semana mais recente no período">
-    <span className="eyebrow">SEMANA RECENTE</span>
+    <span className="eyebrow">SEMANA</span>
     <h2>Última contagem no período</h2>
     {latestWeek?<>
       <p className="compact-dashboard-date">{date(latestWeek.data)}</p>
@@ -90,11 +90,12 @@ export function CompactSources({data}:{data:Indicators|null}) {
   return <section className="card compact-dashboard-card compact-dashboard-sources" aria-label="Fontes da série selecionada">
     <span className="eyebrow">FONTES</span>
     <h2>Fontes da série selecionada</h2>
-    <p className="compact-dashboard-description">{data?.integracao?.definicao||'Selecione uma série para consultar a origem dos dados exibidos.'}</p>
-    {data?.fontes.length?<ul className="compact-dashboard-links">{data.fontes.slice(0,3).map(source=><li key={source.id}><a href={source.url} target="_blank" rel="noreferrer">{source.nome} ↗</a></li>)}{data.fontes.length>3&&<li>Mais {number(data.fontes.length-3)} fontes no detalhamento.</li>}</ul>:<p className="compact-dashboard-source">Nenhuma fonte associada à série selecionada.</p>}
+    {data?.fontes.length?<ul className="compact-dashboard-links">{data.fontes.map(source=><li key={source.id}><a href={source.url} target="_blank" rel="noreferrer">{source.nome} ↗</a></li>)}</ul>:<p className="compact-dashboard-source">Nenhuma fonte associada à série selecionada.</p>}
     <dl className="compact-dashboard-facts">
       <div><dt>Coleta dos lotes exibidos</dt><dd>{timestamp(data?.coletado_em)}</dd></div>
       <div><dt>Processamento</dt><dd>{timestamp(data?.atualizado_em)}</dd></div>
+      <div><dt>Período</dt><dd>{data?.serie.length?`${date(data.serie[0].data)} a ${date(data.serie.at(-1)!.data)}`:'Sem dados no período'}</dd></div>
+      <div><dt>Última consulta à fonte</dt><dd>{timestamp(data?.atualidade.ultima_consulta_em)}</dd></div>
     </dl>
     {data?.integracao?.documentacao&&<a className="compact-dashboard-method" href={data.integracao.documentacao} target="_blank" rel="noreferrer">Metodologia da origem ↗</a>}
   </section>;

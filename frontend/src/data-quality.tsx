@@ -19,8 +19,10 @@ export function DataQuality({data}:{data:Indicators}){
     <dl className="quality-metrics"><div><dt>Semanas completas</dt><dd>{q.semanas_completas} / {q.semanas_esperadas} <small>({percent(q.completude_percentual)})</small></dd></div>
       <div><dt>Semanas sem contagem completa</dt><dd>{q.semanas_sem_contagem_completa}</dd></div>
       <div><dt>Municípios com dados</dt><dd>{q.municipios_com_dados} / {q.municipios_previstos} <small>({percent(q.cobertura_percentual)})</small></dd></div>
-      <div><dt>Semanas avaliáveis pelo detector</dt><dd>{q.semanas_avaliaveis} / {q.semanas_completas}</dd></div></dl>
-    <p className="muted">No período selecionado. Uma semana completa tem contagem em todos os municípios que possuem dados nesta série; a cobertura territorial é informada separadamente. Ausência de dados não significa zero casos.</p>
-    <details><summary>Histórico para detecção</summary><p>Histórico armazenado: {day(q.inicio_historico)} a {day(q.fim_historico)}.</p><p>O método precisa de {q.janela_deteccao} semanas anteriores consecutivas com dados. {q.semanas_com_dados_sem_base} semanas com contagem no período não têm essa base completa.</p><p>A referência pode utilizar semanas anteriores ao filtro. Uma semana sem base suficiente não é classificada como normal.</p></details>
+      <div><dt>Semanas avaliáveis pelo detector</dt><dd>{q.semanas_avaliaveis} / {q.semanas_completas}</dd></div>
+      <div><dt>Com dados, sem base suficiente</dt><dd>{q.semanas_com_dados_sem_base}</dd></div>
+      <div><dt>Histórico armazenado</dt><dd>{day(q.inicio_historico)} a {day(q.fim_historico)}</dd></div></dl>
+    <p className="muted">Semana completa tem contagem em todos os municípios cobertos. Cobertura territorial é mostrada à parte; ausência de dados não é zero.</p>
+    <details><summary>Histórico para detecção</summary><p>O método precisa de {q.janela_deteccao} semanas anteriores consecutivas com dados. A referência pode utilizar semanas anteriores ao filtro. Uma semana sem base suficiente não é classificada como normal.</p></details>
   </section>;
 }
