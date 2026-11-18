@@ -1,3 +1,4 @@
+from .alert_history import record_event, close_alerts
 """Detecção municipal canônica e alertas idempotentes com leitura individual."""
 import logging
 from datetime import timedelta
@@ -59,7 +60,7 @@ def analyze_territory(territory_id, indicator, expected_config=None, notify_emai
         raise CollectionError(str(exc)) from exc
     Anomalia.objects.filter(registro__serie__recorte_id=territory_id, registro__serie__indicador=indicator).update(ativa=False)
     alerts = AlertaSurto.objects.filter(recorte_id=territory_id, indicador=indicator)
-    alerts.filter(ativa=True).exclude(configuracao=config).update(ativa=False, motivo_encerramento='Configuração substituída', atualizada_em=timezone.now())
+    close_alerts(alerts.filter(ativa=True).exclude(configuracao=config), 'Configuração substituída')
     days = []
     for item in flags:
         day = item['data']; record = records[day]; days.append(day)
@@ -73,15 +74,19 @@ def analyze_territory(territory_id, indicator, expected_config=None, notify_emai
         alert, created = AlertaSurto.objects.get_or_create(recorte_id=territory_id, indicador=indicator,
             data_referencia=day, configuracao=config, defaults=values)
         revised = not created and any(getattr(alert, key)!=value for key,value in values.items() if key!='mensagem')
+        if not created and not alert.eventos.exists():
+            record_event(alert, 'estado_inicial')
+        was_active = alert.ativa
         if revised:
             for key,value in values.items(): setattr(alert, key, value)
             alert.revisao += 1
             alert.save()
+        if created or revised:
+            record_event(alert, 'criada' if created else 'revisada' if was_active else 'reativada')
         if notify_email and (created or revised):
             from .email_alerts import enqueue_alert_email
             enqueue_alert_email(alert)
-    alerts.filter(configuracao=config, ativa=True).exclude(data_referencia__in=days).update(
-        ativa=False, motivo_encerramento='Dados revisados: semana fora do critério', atualizada_em=timezone.now())
+    close_alerts(alerts.filter(configuracao=config, ativa=True).exclude(data_referencia__in=days), 'Dados revisados: semana fora do critério')
     return True
 
 

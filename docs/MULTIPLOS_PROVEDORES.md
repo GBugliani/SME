@@ -66,7 +66,7 @@ docker compose exec backend python manage.py collect_sources --source 1
 docker compose exec backend python manage.py process_lotes
 ```
 
-`collect_infodengue` permanece como alias histórico para `collect_sources`. O ID do DAG `sme_infodengue_piloto` foi conservado para preservar histórico e impedir dois agendamentos concorrentes; apesar do nome, ele atende todas as integrações habilitadas. Há no máximo duas tarefas de coleta simultâneas. Falhas de processamento aparecem como falha da execução, com os dados brutos mantidos para investigação.
+`collect_infodengue` permanece como alias histórico para `collect_sources`. A DAG `sme_infodengue_piloto`, definida em `infra/airflow/dags/infodengue_pilot.py`, atende todas as integrações habilitadas. O nome e o agendamento existentes são preservados nesta atualização. Há no máximo duas tarefas de coleta simultâneas. Falhas de processamento aparecem como falha da execução, com os dados brutos mantidos para investigação.
 
 Os arquivos originais ficam no PostgreSQL nesta etapa. Planejar retenção, capacidade e armazenamento externo antes de ampliar o volume em produção. O limite é 5 MiB por resposta InfoDengue, 8 MiB por CSV InfoGripe e 32 MiB por XLSX SIVEP-Gripe/e-SUS (até 256 MiB expandido). Arquivos maiores geram falha.
 

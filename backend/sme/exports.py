@@ -56,8 +56,8 @@ def csv_cell(value):
 @authorized(permission='exportar_dados')
 def export_data(request):
     mode, fmt = request.GET.get('modo', 'agregados'), request.GET.get('formato', 'csv')
-    if mode not in ('brutos', 'agregados') or fmt not in ('csv', 'json') or (mode == 'brutos' and fmt != 'json'):
-        return error('Use CSV ou JSON para agregados; JSON para registros brutos.')
+    if mode not in ('brutos', 'agregados') or fmt not in ('csv', 'json', 'pdf') or (mode == 'brutos' and fmt != 'json'):
+        return error('Use CSV, JSON ou PDF para agregados; JSON para registros brutos.')
     try:
         data = query_indicators(request.GET)
         if not data['fontes']:
@@ -75,7 +75,11 @@ def export_data(request):
                       'No SIVEP e e-SUS, são as linhas municipais extraídas do XLSX, com lacunas explícitas. '
                       'Não são os bytes do arquivo original. Revisões vigentes são as mesmas do painel.') if mode == 'brutos' else
                      'Série semanal do recorte. Contagens ausentes permanecem nulas; cobertura parcial não representa toda a região.'})
-    if fmt == 'json':
+    if fmt == 'pdf':
+        from .pdf_report import build_report
+        content = build_report(data)
+        content_type = 'application/pdf'
+    elif fmt == 'json':
         content = json.dumps({'metadados': metadata, 'registros': rows}, ensure_ascii=False, cls=DjangoJSONEncoder).encode('utf-8')
         content_type = 'application/json; charset=utf-8'
     else:

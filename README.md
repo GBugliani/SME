@@ -64,3 +64,7 @@ pnpm install --frozen-lockfile
 pnpm test
 pnpm run build
 ```
+
+O acompanhamento operacional está em **Fontes de dados → Saúde das coletas**. Veja [estados, limites e atualização do Airflow](docs/SAUDE_COLETAS.md).
+
+No Monitoramento, **Copiar link da consulta** compartilha município ou região, agravo, origem e período. O link exige login e consulta os dados atuais. Se a cópia automática estiver bloqueada, a janela permite selecionar o endereço manualmente. Links locais só funcionam em dispositivos com acesso ao mesmo ambiente.

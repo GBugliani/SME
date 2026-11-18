@@ -126,7 +126,16 @@ class LoteColeta(models.Model):
         constraints = [models.UniqueConstraint(fields=["fonte", "sha256"], name="lote_fonte_hash_unique")]
 
 
+class RotinaColeta(models.Model):
+    run_id = models.CharField(max_length=250, unique=True)
+    tipo = models.CharField(max_length=15)
+    fontes_previstas = models.JSONField(default=list)
+    iniciada_em = models.DateTimeField(auto_now_add=True)
+    finalizada_em = models.DateTimeField(null=True)
+
+
 class ExecucaoColeta(models.Model):
+    rotina = models.ForeignKey(RotinaColeta, null=True, blank=True, on_delete=models.PROTECT, related_name="coletas")
     fonte = models.ForeignKey(FonteEpidemiologica, on_delete=models.PROTECT, related_name="coletas")
     status = models.CharField(max_length=15, choices=[("executando", "Executando"), ("sucesso", "Sucesso"), ("vazia", "Sem registros"), ("erro", "Falha")])
     iniciada_em = models.DateTimeField(auto_now_add=True)
@@ -258,6 +267,25 @@ class LeituraAlerta(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['usuario', 'alerta'], name='leitura_usuario_alerta_unica')]
+
+
+class EventoSinalizacao(models.Model):
+    alerta = models.ForeignKey(AlertaSurto, on_delete=models.PROTECT, related_name='eventos')
+    tipo = models.CharField(max_length=25)
+    estado = models.JSONField()
+    registrado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-pk']
+
+
+class MunicipioFavorito(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    codigo = models.CharField(max_length=7)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['usuario', 'codigo'], name='favorito_usuario_municipio')]
 
 
 class ReanaliseDeteccao(models.Model):

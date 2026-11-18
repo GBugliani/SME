@@ -1,3 +1,4 @@
+from .alert_history import close_alerts
 """Configurações administrativas, leitura de alertas e comparação territorial."""
 from datetime import date
 from django.core.paginator import Paginator
@@ -51,7 +52,7 @@ def configurations(request):
             else:
                 overrides = ConfiguracaoDeteccao.objects.filter(ativa=True).exclude(indicador='').values_list('indicador', flat=True)
                 alerts = alerts.exclude(indicador__in=overrides)
-            alerts.update(ativa=False, motivo_encerramento='Configuração substituída', atualizada_em=timezone.now())
+            close_alerts(alerts, 'Configuração substituída')
             job = ReanaliseDeteccao.objects.create(configuracao=config)
             RegistroAuditoria.objects.create(usuario=request.user, acao='detector_configurado', entidade='ConfiguracaoDeteccao',
                 entidade_id=config.pk, detalhes={'antes':configuration_data(current), 'depois':configuration_data(config)})
@@ -92,8 +93,7 @@ def inherit_configuration(request, indicator):
         if config is None:
             return error('A configuração padrão não está disponível.', 409)
         override.ativa=False; override.save(update_fields=['ativa'])
-        AlertaSurto.objects.filter(indicador=indicator, ativa=True).update(ativa=False,
-            motivo_encerramento='Origem retornou à configuração padrão', atualizada_em=timezone.now())
+        close_alerts(AlertaSurto.objects.filter(indicador=indicator, ativa=True), 'Origem retornou à configuração padrão')
         job, _ = ReanaliseDeteccao.objects.get_or_create(configuracao=config,
             status__in=['pendente', 'executando'], defaults={'status':'pendente'})
         RegistroAuditoria.objects.create(usuario=request.user, acao='detector_padrao_restaurado',

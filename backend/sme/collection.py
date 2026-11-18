@@ -147,7 +147,7 @@ def get_adapter(source):
 ADAPTERS = {"infodengue": InfoDengueAdapter()}
 
 
-def collect_source(source_id, *, origin="manual", user=None):
+def collect_source(source_id, *, origin="manual", user=None, routine=None):
     with transaction.atomic():
         source = FonteEpidemiologica.objects.select_for_update().select_related("recorte").get(pk=source_id)
         if source.arquivada_em is not None:
@@ -157,7 +157,7 @@ def collect_source(source_id, *, origin="manual", user=None):
         source.coletas.filter(status="executando", iniciada_em__lt=timezone.now() - timedelta(minutes=10)).update(status="erro", finalizada_em=timezone.now(), mensagem="Execução interrompida; liberada para nova tentativa.")
         if source.coletas.filter(status="executando").exists():
             raise CollectionError("Já existe uma coleta em execução para esta fonte.")
-        run = ExecucaoColeta.objects.create(fonte=source, status="executando", origem=origin)
+        run = ExecucaoColeta.objects.create(fonte=source, status="executando", origem=origin, rotina=routine)
     try:
         from .collection_period import collection_source
         effective = collection_source(source)
@@ -232,6 +232,3 @@ def collect_all(*, origin="airflow"):
         except CollectionError:
             continue
     return runs
-
-
-collect_pilot = collect_all

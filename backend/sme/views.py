@@ -2,7 +2,7 @@ import hashlib
 import secrets
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
-from .collection import eligible_source_ids, collect_source, collect_pilot, CollectionError
+from .collection import eligible_source_ids, collect_source, collect_all, CollectionError
 from .collection_period import collection_source
 from .models import ExecucaoColeta
 import json
@@ -317,18 +317,39 @@ def scheduled_collection(request):
             return error("Requisição inválida.", 400)
     except ValueError:
         return error("JSON inválido.", 400)
+    from .models import RotinaColeta
+    from .collection_health import routine_data
+    run_id = body.get('run_id')
+    if run_id is not None and (not isinstance(run_id, str) or not 1 <= len(run_id) <= 250):
+        return error('Identificador de execução inválido.')
     if body.get("action") == "list":
-        return JsonResponse({"fontes": eligible_source_ids()})
+        ids = eligible_source_ids()
+        if run_id:
+            routine, _ = RotinaColeta.objects.get_or_create(run_id=run_id, defaults={
+                'tipo': 'scheduled' if run_id.startswith('scheduled__') else 'manual', 'fontes_previstas': ids})
+            ids = routine.fontes_previstas
+        return JsonResponse({"fontes": ids})
+    if body.get('action') == 'finish':
+        routine = RotinaColeta.objects.filter(run_id=run_id).first() if run_id else None
+        if routine is None:
+            return error('Início da execução não registrado.', 409)
+        if routine.finalizada_em is None:
+            routine.finalizada_em = timezone.now()
+            routine.save(update_fields=['finalizada_em'])
+        return JsonResponse({'rotina': routine_data(routine)})
+    routine = RotinaColeta.objects.filter(run_id=run_id).first() if run_id else None
+    if run_id and (routine is None or routine.finalizada_em is not None):
+        return error('Execução não registrada ou já finalizada.', 409)
     if "fonte_id" in body:
         source_id = body["fonte_id"]
         if type(source_id) is not int or source_id not in eligible_source_ids():
             return error("Fonte não habilitada para coleta.", 400)
         try:
-            runs = [collect_source(source_id, origin="airflow")]
+            runs = [collect_source(source_id, origin="airflow", routine=routine)]
         except CollectionError as exc:
             return error(str(exc), 409)
     else:
-        runs = collect_pilot()
+        runs = collect_all()
     return JsonResponse({"execucoes": [run_data(r) for r in runs]}, status=502 if any(r.status == "erro" for r in runs) else 200)
 
 

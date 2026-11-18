@@ -67,3 +67,5 @@ EMAIL_USE_TLS = SMTP_SECURITY == "starttls"
 EMAIL_TIMEOUT = 15
 DEFAULT_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "")
 APP_PUBLIC_URL = os.environ.get("APP_PUBLIC_URL", "")
+
+COLLECTION_STALE_HOURS = max(1, int(os.environ.get("COLETA_ATRASO_HORAS", "26")))

@@ -2,8 +2,15 @@ from django.urls import path
 from sme import views
 from sme import administration, exports, email_views, version
 from sme import sprint4_views
+from sme import collection_health
+from sme import monitoring_features
 
 urlpatterns = [
+    path('api/favoritos/', monitoring_features.favorites),
+    path('api/favoritos/<str:code>/', monitoring_features.remove_favorite),
+    path('api/alertas/<int:alert_id>/historico/', monitoring_features.alert_history),
+    path('api/administracao/coletas/avisos/', monitoring_features.operational_notices),
+    path('api/fontes/saude/', collection_health.health),
     path('api/version/', version.version),
     path('api/administracao/email/', email_views.email_settings),
     path('api/administracao/email/teste/', email_views.test_email),

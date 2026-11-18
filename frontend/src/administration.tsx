@@ -1,3 +1,4 @@
+import {Modal} from './modal';
 import {ActionIcon} from './action-icon';
 import {useEffect, useRef, useState, type FormEvent} from 'react';
 import {api, ApiError, type User} from './api';
@@ -88,7 +89,8 @@ export function Administration({user,onExpired,onUserChanged}:{user:User;onExpir
       {(['usuarios','perfis','auditoria','deteccao','email'] as const).map(t=><button key={t} className={tab===t?'':'secondary'} aria-current={tab===t?'page':undefined} disabled={busy} onClick={()=>navigate(t)} data-icon="tab"><ActionIcon name={t==='usuarios'?'users':t==='perfis'?'shield':t==='deteccao'?'activity':t==='email'?'mail':'history'}/>{t==='usuarios'?'Usuários':t==='perfis'?'Perfis de acesso':t==='deteccao'?'Detecção':t==='email'?'E-mail':'Auditoria'}</button>)}
     </nav>
     <Notice message={error}/><Notice message={success} kind="success"/>
-    {tab==='deteccao'?<DetectionSettings onExpired={onExpired}/>:tab==='email'?<EmailSettings onExpired={onExpired}/>:resetUser ? <section className="card form-card"><div className="section-heading"><h2>Redefinir senha</h2><button className="secondary" disabled={busy} onClick={()=>setResetUser(null)} data-icon="close"><ActionIcon name="close"/>Cancelar</button></div>
+    {tab==='deteccao'?<DetectionSettings onExpired={onExpired}/>:tab==='email'?<EmailSettings onExpired={onExpired}/>:null}
+    {resetUser && <Modal title="Redefinir senha" onClose={()=>{if(!busy)setResetUser(null);}}><section className="card form-card"><div className="section-heading"><h2>Redefinir senha</h2><button className="secondary" disabled={busy} onClick={()=>setResetUser(null)} data-icon="close"><ActionIcon name="close"/>Cancelar</button></div>
       <p><strong>{resetUser.nome}</strong><br/>{resetUser.email}</p>
       <form onSubmit={resetPassword}>
         <label>Sua senha de administrador<PasswordInput name="admin_password" visibilityLabel="sua senha de administrador" autoComplete="current-password" required maxLength={1024}/></label>
@@ -96,7 +98,8 @@ export function Administration({user,onExpired,onUserChanged}:{user:User;onExpir
         <p className="muted">Use pelo menos 12 caracteres. As sessões dessa conta serão encerradas.{resetUser.id===user.id?' Você precisará entrar novamente.':''}</p>
         <div className="form-actions"><button type="submit" disabled={busy} data-icon="key"><ActionIcon name="key"/>{busy?'Redefinindo…':'Salvar nova senha'}</button></div>
       </form>
-    </section> : editUser ? <section className="card form-card"><div className="section-heading"><h2>{editUser==='new'?'Cadastrar usuário':'Editar usuário'}</h2><button className="secondary" disabled={busy} onClick={()=>setEditUser(null)} data-icon="close"><ActionIcon name="close"/>Cancelar</button></div>
+    </section></Modal>}
+    {editUser && <Modal title={editUser==='new'?'Cadastrar usuário':'Editar usuário'} onClose={()=>{if(!busy)setEditUser(null);}}><section className="card form-card"><div className="section-heading"><h2>{editUser==='new'?'Cadastrar usuário':'Editar usuário'}</h2><button className="secondary" disabled={busy} onClick={()=>setEditUser(null)} data-icon="close"><ActionIcon name="close"/>Cancelar</button></div>
       <form key={selectedUser?.id||'new'} onSubmit={saveUser}>
         <div className="form-grid"><label>Nome<input name="nome" defaultValue={selectedUser?.nome||''} required maxLength={150} autoComplete="name"/></label><label>E-mail<input name="email" type="email" defaultValue={selectedUser?.email||''} required maxLength={254} autoComplete="email"/></label></div>
         <label>Perfil de acesso<select aria-label="Perfil de acesso" name="perfil_id" required defaultValue={selectedUser?.perfil_id??profiles.perfis.find(p=>selectedUser?.administrador?p.administrador:p.nome==='Usuário')?.id}>
@@ -106,7 +109,8 @@ export function Administration({user,onExpired,onUserChanged}:{user:User;onExpir
         {editUser==='new'?<><div className="form-grid"><label>Senha inicial<PasswordInput name="password" visibilityLabel="senha inicial" minLength={12} maxLength={1024} required autoComplete="new-password"/></label><label>Confirmar senha<PasswordInput name="password_confirmation" visibilityLabel="confirmação da senha" minLength={12} maxLength={1024} required autoComplete="new-password"/></label></div><p className="muted">Use pelo menos 12 caracteres. A redefinição de senha é feita pela administração.</p></>:<p className="muted">Desativar uma conta bloqueia seu acesso e preserva o histórico. Use Redefinir senha na lista de usuários quando necessário.</p>}
         <div className="form-actions"><button disabled={busy} type="submit" data-icon="save"><ActionIcon name="save"/>{busy?'Salvando…':'Salvar usuário'}</button></div>
       </form>
-    </section> : editProfile ? <section className="card form-card"><div className="section-heading"><h2>{editProfile==='new'?'Criar perfil':'Editar perfil'}</h2><button className="secondary" disabled={busy} onClick={()=>setEditProfile(null)} data-icon="close"><ActionIcon name="close"/>Cancelar</button></div>
+    </section></Modal>}
+    {editProfile && <Modal title={editProfile==='new'?'Criar perfil':'Editar perfil'} onClose={()=>{if(!busy)setEditProfile(null);}}><section className="card form-card"><div className="section-heading"><h2>{editProfile==='new'?'Criar perfil':'Editar perfil'}</h2><button className="secondary" disabled={busy} onClick={()=>setEditProfile(null)} data-icon="close"><ActionIcon name="close"/>Cancelar</button></div>
       <form key={selectedProfile?.id||'new'} onSubmit={saveProfile}>
         <label>Nome do perfil<input name="nome" defaultValue={selectedProfile?.nome||''} maxLength={80} required/></label>
         <fieldset className="permission-options"><legend>Permissões</legend><p className="muted">Todos os perfis podem consultar o monitoramento e as fontes. Selecione as ações adicionais.</p>
@@ -115,7 +119,8 @@ export function Administration({user,onExpired,onUserChanged}:{user:User;onExpir
         <p className="muted">Gerenciar usuários e perfis é exclusivo do perfil Administrador.</p>
         <div className="form-actions"><button disabled={busy} type="submit" data-icon="save"><ActionIcon name="save"/>{busy?'Salvando…':'Salvar perfil'}</button></div>
       </form>
-    </section> : <section className="card source-list admin-list">
+    </section></Modal>}
+    {tab!=='deteccao'&&tab!=='email'&&<section className="card source-list admin-list">
       <div className="section-heading"><h2>{tab==='usuarios'?'Usuários cadastrados':tab==='perfis'?'Perfis de acesso':'Histórico de ações'}</h2>
         {tab!=='auditoria'&&<button disabled={loading} onClick={()=>{setError('');tab==='usuarios'?setEditUser('new'):setEditProfile('new');}} data-icon="plus"><ActionIcon name="plus"/>{tab==='usuarios'?'Cadastrar usuário':'Criar perfil'}</button>}
       </div>

@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.utils import timezone
-from .collection import collect_source, CollectionError, InfoDengueAdapter, collect_pilot, MUNICIPIOS_SP
+from .collection import collect_source, CollectionError, InfoDengueAdapter, collect_all, MUNICIPIOS_SP
 from .models import FonteEpidemiologica, RecorteGeografico, ExecucaoColeta, LoteColeta
 
 URL = "https://info.dengue.mat.br/api/alertcity?geocode=3550308&disease=dengue&format=json&ew_start=1&ew_end=52&ey_start=2024&ey_end=2024"
@@ -191,10 +191,10 @@ class CollectionTests(TestCase):
         for i, source in enumerate(FonteEpidemiologica.objects.exclude(pk=self.source.pk)):
             source.url = URL.replace("ew_start=1", "ew_start=" + "0" * (i + 1) + "1")
             source.save()
-        self.assertEqual(len(collect_pilot()), 7)
+        self.assertEqual(len(collect_all()), 7)
         self.source.ativa = False
         self.source.save()
-        self.assertEqual(len(collect_pilot()), 6)
+        self.assertEqual(len(collect_all()), 6)
 
     @override_settings(COLLECTION_TOKEN="test-token")
     def test_scheduler_lists_and_collects_individual_sources(self):

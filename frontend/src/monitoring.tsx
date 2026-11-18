@@ -1,3 +1,5 @@
+import {createPortal} from 'react-dom';
+import {clearSharedQuery,readSharedQuery,sharedQueryUrl} from './shared-query';
 import {ActionIcon} from './action-icon';
 import {Notice,useTimedMessage} from './notifications';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
@@ -34,9 +36,11 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
   const [error,setError]=useTimedMessage();
   const filterDialog=useRef<HTMLDialogElement>(null);
   const [expanded,setExpanded]=useState(false);
+  const [locating,setLocating]=useState(false);
   const requestVersion = useRef(0);
   const lastMapSelectionId = useRef<number|null>(null);
   const previousResetSelection=useRef(resetSelection);
+  const sharedQueryHandled=useRef(false);
   const callback = useRef(onData); callback.current=onData;
   const optionsCallback = useRef(onOptions); optionsCallback.current=onOptions;
   const appliedDataRef = useRef(appliedData); appliedDataRef.current=appliedData;
@@ -46,7 +50,7 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
       const params = new URLSearchParams({tipo:t,codigo:c,agravo:a,indicador:i});
       if(s)params.set('inicio',s); if(e)params.set('fim',e);
       const data=await api<Indicators>(`/indicadores/?${params}`);
-      if(version===requestVersion.current){callback.current(data);if(closeOnSuccess)filterDialog.current?.close();}
+      if(version===requestVersion.current){callback.current(data);window.history.replaceState(null,'',sharedQueryUrl(window.location.href,{tipo:t,codigo:c,agravo:a,inicio:s,fim:e,indicador:i}));if(closeOnSuccess)filterDialog.current?.close();}
     } catch(err) {if(version===requestVersion.current){if(err instanceof ApiError&&err.status===401)onExpired();else setError(err instanceof Error?err.message:'Falha na consulta.');}}
     finally {if(version===requestVersion.current)setBusy(false);}
   }
@@ -70,6 +74,21 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
       setEnd(hasTerritory?applied?.filtros?.fim||'':'');
       setDisease(agravo);setIndicator(chosen?.codigo||'');
       setBusy(false);
+      if(!sharedQueryHandled.current){
+        sharedQueryHandled.current=true;
+        try{
+          const shared=readSharedQuery(window.location.search);
+          if(shared&&!applied){
+            const origin=data.integracoes.find(item=>item.codigo===shared.indicador&&item.agravo===shared.agravo);
+            const covered=origin&&(shared.tipo==='municipio'
+              ?data.municipios.some(city=>city.codigo===shared.codigo&&origin.codigos_com_dados?.includes(city.codigo))
+              :data.regioes.some(region=>region.codigo===shared.codigo)&&data.municipios.some(city=>city.regiao_codigo===shared.codigo&&origin.codigos_com_dados?.includes(city.codigo)));
+            if(!covered)throw new Error('O município, região ou origem deste link não tem dados disponíveis. Escolha outra consulta pelos filtros.');
+            setType(shared.tipo);setCode(shared.codigo);setDisease(shared.agravo);setIndicator(shared.indicador);setStart(shared.inicio);setEnd(shared.fim);
+            void query(shared.tipo,shared.codigo,shared.agravo,shared.inicio,shared.fim,shared.indicador);
+          }
+        }catch(err){setError(err instanceof Error?err.message:'Não foi possível abrir o link da consulta.');}
+      }
     }).catch(err=>{if(active){setBusy(false);if(err instanceof ApiError&&err.status===401)onExpired();else setError(err.message);}});
     return()=>{active=false;requestVersion.current++;optionsCallback.current(null);};
   },[refresh]);
@@ -78,6 +97,7 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
     previousResetSelection.current=resetSelection;
     requestVersion.current++;
     lastMapSelectionId.current=null;
+    sharedQueryHandled.current=true;clearSharedQuery();
     setBusy(false);setCode('');setType('municipio');setStart('');setEnd('');setError('');
     filterDialog.current?.close();
   },[resetSelection]);
@@ -95,7 +115,29 @@ export function IndicatorFilters({ onData, onOptions, onExpired, refresh, mapSel
   const territories=type==='municipio'?availableCities:availableRegions;
   useEffect(()=>{if(options&&code&&!territories.some(t=>t.codigo===code))setCode('');},[indicator,type,options]);
   function submit(event:FormEvent){event.preventDefault();void query(type,code,disease,start,end,indicator);}
-  return <div className="filter-control"><button className="filter-trigger secondary" aria-haspopup="dialog" aria-expanded={expanded} onClick={()=>{filterDialog.current?.showModal();setExpanded(true);}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="#171717"/><circle cx="15" cy="17" r="3" fill="#171717"/></svg>Filtrar</button>
+  async function locate(){
+    if(!window.isSecureContext||!navigator.geolocation){setError('Use HTTPS ou localhost para permitir a localização.');return;}
+    if(!options)return;
+    setLocating(true);setError('');
+    navigator.geolocation.getCurrentPosition(async position=>{
+      try{
+        const params=new URLSearchParams({format:'jsonv2',lat:String(position.coords.latitude),lon:String(position.coords.longitude),zoom:'10','accept-language':'pt-BR'});
+        const response=await fetch(`https://nominatim.openstreetmap.org/reverse?${params}`,{signal:AbortSignal.timeout(12000)});
+        if(!response.ok)throw new Error('Serviço de localização indisponível. Use os filtros.');
+        const {address}=await response.json();
+        if(address?.country_code!=='br'||address?.state!=='São Paulo')throw new Error('Localização fora de São Paulo. Use os filtros para selecionar um município de SP.');
+        const normalize=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s*\/\s*SP$/i,'').trim().toLowerCase();
+        const name=address.city||address.town||address.village||address.municipality||'';
+        const city=options.municipios.find(c=>normalize(c.nome)===normalize(name));
+        const available=options.integracoes.filter(i=>city&&i.codigos_com_dados?.includes(city.codigo));
+        const integration=available.find(i=>i.codigo===indicator)||available[0];
+        if(!city||!integration)throw new Error(`Sem dados disponíveis para ${name||'o município encontrado'}. Use os filtros.`);
+        setType('municipio');setCode(city.codigo);setDisease(integration.agravo);setIndicator(integration.codigo);setStart('');setEnd('');
+        await query('municipio',city.codigo,integration.agravo,'','',integration.codigo);
+      }catch(err){setError(err instanceof Error?err.message:'Falha ao identificar o município.');}finally{setLocating(false);}
+    },err=>{setLocating(false);setError(err.code===1?'Permissão de localização negada. Libere o acesso no navegador ou use os filtros.':'Localização indisponível. Tente novamente ou use os filtros.');},{timeout:15000,maximumAge:60000});
+  }
+  return <div className="filter-control"><button className="filter-trigger secondary location-trigger" disabled={locating||busy} aria-busy={locating} onClick={locate}><ActionIcon name="locate"/>{locating?'Localizando…':'Usar minha localização'}</button>{createPortal(<button type="button" className={`location-floating${locating?' locating':''}`} aria-label={locating?'Localizando município':'Usar minha localização'} title="Usar minha localização" aria-busy={locating} disabled={locating||busy} onClick={locate}><ActionIcon name="locate" width="24" height="24"/></button>,document.body)}<button className="filter-trigger secondary" aria-haspopup="dialog" aria-expanded={expanded} onClick={()=>{filterDialog.current?.showModal();setExpanded(true);}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="#171717"/><circle cx="15" cy="17" r="3" fill="#171717"/></svg>Filtrar</button>
   <Notice message={!expanded?error:''}/>
   <dialog ref={filterDialog} className="filter-dialog" aria-labelledby="filter-title" onClose={()=>setExpanded(false)}><div className="filter-dialog-heading"><h2 id="filter-title">Filtros</h2><button className="secondary filter-close" type="button" aria-label="Fechar filtros" onClick={()=>filterDialog.current?.close()}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><form onSubmit={submit}>
     <label>Recorte<select aria-label="Recorte" value={type} onChange={e=>{setType(e.target.value);setCode('');}}><option value="municipio">Município</option><option value="regiao">Região imediata</option></select></label>

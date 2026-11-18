@@ -1,8 +1,11 @@
 import type {ReactNode, SVGProps} from 'react';
 
-export type ActionIconName = 'home'|'database'|'users'|'shield'|'activity'|'mail'|'history'|'close'|'save'|'plus'|'edit'|'key'|'arrowLeft'|'arrowRight'|'refresh'|'send'|'check'|'search'|'filter'|'download'|'eye'|'eyeOff'|'logout'|'archive'|'restore'|'trash'|'play'|'help'|'zoomIn'|'zoomOut'|'list'|'settings'|'pause'|'bell'|'external';
+export type ActionIconName = 'home'|'database'|'users'|'shield'|'activity'|'mail'|'history'|'close'|'save'|'plus'|'edit'|'key'|'arrowLeft'|'arrowRight'|'refresh'|'send'|'check'|'search'|'filter'|'download'|'eye'|'eyeOff'|'logout'|'archive'|'restore'|'trash'|'play'|'help'|'zoomIn'|'zoomOut'|'list'|'settings'|'pause'|'bell'|'external'|'locate'|'link'|'star';
 
 const paths: Record<ActionIconName, ReactNode> = {
+  star: <path d="m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>,
+  link: <><path d="m10 13 4-4M8 16l-1 1a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0M16 8l1-1a4 4 0 0 1 6 6l-5 5a4 4 0 0 1-6 0"/></>,
+  locate: <><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></>,
   home: <><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-7h6v7"/></>,
   database: <><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></>,
   users: <><circle cx="9" cy="8" r="3"/><path d="M2 20v-2a7 7 0 0 1 14 0v2M16 5a3 3 0 0 1 0 6m2 3a6 6 0 0 1 4 6"/></>,

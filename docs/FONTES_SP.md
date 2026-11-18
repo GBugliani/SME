@@ -2,7 +2,7 @@
 
 ## Escopo atual
 
-O piloto começou com **dengue em São Paulo capital**, usando **InfoDengue**, e já foi ampliado para os municípios paulistas do catálogo de 645 municípios do IBGE. Apenas fontes cadastradas, compatíveis e habilitadas são coletadas.
+A coleta começou com **dengue em São Paulo capital**, usando **InfoDengue**, e já foi ampliado para os municípios paulistas do catálogo de 645 municípios do IBGE. Apenas fontes cadastradas, compatíveis e habilitadas são coletadas.
 
 O sistema também integra **chikungunya e zika pelo InfoDengue**, **SRAG de São Paulo capital pelo InfoGripe**, **SRAG total municipal pelo SIVEP-Gripe** e **síndrome gripal por COVID-19 pelo e-SUS Notifica**. Nas duas fontes do Ministério da Saúde, o administrador escolhe os municípios paulistas e um ano fixo ou acompanhamento contínuo; dados só aparecem quando a fonte tem registros publicados e foi coletada. Veja [Múltiplos provedores e agravos](MULTIPLOS_PROVEDORES.md) para definições e limites.
 
